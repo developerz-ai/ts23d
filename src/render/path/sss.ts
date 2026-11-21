@@ -1,9 +1,17 @@
 // Subsurface scattering for skin: Burley's normalised diffusion profile (Christensen & Burley
 // 2015), R(r) = A·(e^(−r/d) + e^(−r/3d)) ÷ (8π d r), sampled exactly as its two-exponential
 // mixture, with the exit point found by a disk probe along the normal (no random walk): pick a
-// channel, a radius and an angle, shoot a short ray back at the surface, keep the first skin hit.
-// The weight per channel is R ÷ (mixture pdf · |n·n_exit|): light enters at one point and leaves
-// a few millimetres away, red farthest — ears and nostrils glow, terminators go warm.
+// channel, a radius and an angle, shoot a short ray back at the surface and collect the skin it
+// crosses (up to MAX_HITS), then keep one hit chosen in proportion to the profile at its distance.
+// The weight per channel is R ÷ (mixture pdf · |n·n_exit| · pick probability): light enters at
+// one point and leaves a few millimetres away, red farthest — terminators go warm, and on a thin
+// part (an ear, a nostril's wing, a lid) the probe also finds the far face, so light from behind
+// shines through (D510; a first-hit-only probe never left a sheet by its back). The exits on one
+// probe share one profile's worth of light, in proportion to the profile at each: summing a full
+// profile per exit gave a sheet thinner than the diffusion length twice its albedo (D530). Which
+// way an exit faces comes from its triangle's winding: on layered skin (scales over a body) the
+// second crossing is often another outward face, and calling it a far face by count lit it from
+// inside (D515: single-pixel colour grain).
 
 import { dmath } from '../../core/index.ts';
 import type { V3 } from '../lighting.ts';
@@ -41,16 +49,48 @@ export function sampleRadius(u: number, d: number): number {
   return -3 * d * dmath.log(Math.max(1e-12, 1 - (u - 0.25) / 0.75));
 }
 
+/** Skin crossings a probe collects: twice through an ear, four times through scales on a body. */
+const MAX_HITS = 8;
+
 const tx = new Float64Array(3);
 const bx = new Float64Array(3);
 const o = new Float64Array(3);
+const at = new Float64Array(3);
 const dir = new Float64Array(3);
 const shape = new Float64Array(3);
 const probeHit: Hit = newHit();
+const hits: Hit[] = Array.from({ length: MAX_HITS }, newHit);
+const dists = new Float64Array(MAX_HITS);
+const cosE = new Float64Array(MAX_HITS);
+const pick = new Float64Array(MAX_HITS);
+const prof = new Float64Array(MAX_HITS * 3);
+const share = new Float64Array(3);
 
 /**
- * Exit point for light entering skin surface `s` (colour `s.albedo`). Fills `exit` (a hit on the
- * probe ray `po`, `pd`) and `weight`; false when the probe found no skin (use the entry point).
+ * Cosine between `n` and the outward (winding) normal of triangle `tri`. Its sign says which way
+ * the exit faces: positive, back toward the probe's start (a face the probe entered); negative,
+ * away (a face it left by). Only the winding knows: counting crossings fails on layered skin.
+ */
+function exitCos(w: World, tri: number, n: ArrayLike<number>): number {
+  const P = w.scene.positions;
+  const I = w.scene.indices;
+  const ia = (I[tri * 3] ?? 0) * 3;
+  const ib = (I[tri * 3 + 1] ?? 0) * 3;
+  const ic = (I[tri * 3 + 2] ?? 0) * 3;
+  const e1 = [0, 1, 2].map((k) => (P[ib + k] ?? 0) - (P[ia + k] ?? 0));
+  const e2 = [0, 1, 2].map((k) => (P[ic + k] ?? 0) - (P[ia + k] ?? 0));
+  const nx = (e1[1] ?? 0) * (e2[2] ?? 0) - (e1[2] ?? 0) * (e2[1] ?? 0);
+  const ny = (e1[2] ?? 0) * (e2[0] ?? 0) - (e1[0] ?? 0) * (e2[2] ?? 0);
+  const nz = (e1[0] ?? 0) * (e2[1] ?? 0) - (e1[1] ?? 0) * (e2[0] ?? 0);
+  return dot3([nx, ny, nz], n) / (dmath.hypot(nx, ny, nz) || 1);
+}
+
+/**
+ * Exit point for light entering skin surface `s` (colour `s.albedo`); `uc`, `ur`, `ua` pick the
+ * channel, radius and angle, `uh` the crossing. Fills `exit` (a hit on the probe ray `po`, `pd`)
+ * and `weight`. Returns 0 when the probe found no skin (use the entry point), 1 for an exit whose
+ * winding faces back up the probe (surfAt's normals already face out), −1 for one facing down it
+ * (the far face of a thin part: the caller turns that hit's normals round).
  */
 export function probeExit(
   w: World,
@@ -58,11 +98,12 @@ export function probeExit(
   uc: number,
   ur: number,
   ua: number,
+  uh: number,
   exit: Hit,
   po: Float64Array,
   pd: Float64Array,
   weight: Float64Array,
-): boolean {
+): 0 | 1 | -1 {
   let dmax = 0;
   for (let k = 0; k < 3; k++) {
     const a = Math.max(0.01, Math.min(0.99, s.albedo[k] ?? 0));
@@ -72,7 +113,7 @@ export function probeExit(
   const c = Math.min(2, Math.floor(uc * 3));
   const r = sampleRadius(ur, shape[c] ?? dmax);
   const rmax = REACH * dmax;
-  if (r >= rmax) return false;
+  if (r >= rmax) return 0;
   basis(s.n);
   axes(tx, bx);
   const hh = Math.sqrt(rmax * rmax - r * r);
@@ -82,38 +123,98 @@ export function probeExit(
     o[k] = (s.p[k] ?? 0) + (tx[k] ?? 0) * ca + (bx[k] ?? 0) * sa + (s.n[k] ?? 0) * hh;
     dir[k] = -(s.n[k] ?? 0);
   }
-  const found = w.bvh.closest(o, dir, 2 * hh, probeHit, (t) => w.cls[t] === CLS.skin);
-  if (!found) return false;
-  exit.t = probeHit.t;
-  exit.tri = probeHit.tri;
-  exit.b1 = probeHit.b1;
-  exit.b2 = probeHit.b2;
+  // Every skin crossing along the probe, nearest first: each search starts just past the last.
+  const skin = (t: number): boolean => w.cls[t] === CLS.skin;
+  let n = 0;
+  let from = 0;
+  while (n < MAX_HITS) {
+    for (let k = 0; k < 3; k++) at[k] = (o[k] ?? 0) + (dir[k] ?? 0) * from;
+    if (!w.bvh.closest(at, dir, 2 * hh - from, probeHit, skin)) break;
+    const h = hits[n] as Hit;
+    h.t = from + probeHit.t;
+    h.tri = probeHit.tri;
+    h.b1 = probeHit.b1;
+    h.b2 = probeHit.b2;
+    let dist = 0;
+    for (let k = 0; k < 3; k++) {
+      const x = (o[k] ?? 0) + (dir[k] ?? 0) * h.t - (s.p[k] ?? 0);
+      dist += x * x;
+    }
+    dists[n] = Math.sqrt(dist);
+    cosE[n] = exitCos(w, h.tri, s.n);
+    from = h.t + w.eps;
+    n++;
+  }
+  // Light leaves skin only where skin meets air. The winding says whether the probe goes in (+)
+  // or out (−) at each crossing; a crossing between nested layers (a scale over the body under
+  // it) is inside the skin and no exit. A probe starting under an overlapping plate starts at
+  // the depth that never goes below zero.
+  let depth = 0;
+  let low = 0;
+  for (let i = 0; i < n; i++) {
+    depth += (cosE[i] ?? 1) >= 0 ? 1 : -1;
+    low = Math.min(low, depth);
+  }
+  depth = -low;
+  let total = 0;
+  let sum0 = 0;
+  let sum1 = 0;
+  let sum2 = 0;
+  let top0 = 0;
+  let top1 = 0;
+  let top2 = 0;
+  for (let i = 0; i < n; i++) {
+    const into = (cosE[i] ?? 1) >= 0;
+    const air = depth === (into ? 0 : 1);
+    depth += into ? 1 : -1;
+    // Pick an exit in proportion to the profile summed over the channels at its distance.
+    const r0 = dists[i] ?? 0;
+    const p0 = air ? burley(r0, shape[0] ?? 1) : 0;
+    const p1 = air ? burley(r0, shape[1] ?? 1) : 0;
+    const p2 = air ? burley(r0, shape[2] ?? 1) : 0;
+    prof[i * 3] = p0;
+    prof[i * 3 + 1] = p1;
+    prof[i * 3 + 2] = p2;
+    sum0 += p0;
+    sum1 += p1;
+    sum2 += p2;
+    top0 = Math.max(top0, p0);
+    top1 = Math.max(top1, p1);
+    top2 = Math.max(top2, p2);
+    pick[i] = air ? p0 + p1 + p2 : 0;
+    total += pick[i] ?? 0;
+  }
+  if (!(total > 0)) return 0;
+  // One profile's worth of light per probe, the nearest exit's (what a single surface returns),
+  // split over the exits in proportion to the profile at each: exactly 1 with one exit.
+  share[0] = sum0 > 0 ? top0 / sum0 : 0;
+  share[1] = sum1 > 0 ? top1 / sum1 : 0;
+  share[2] = sum2 > 0 ? top2 / sum2 : 0;
+  let j = 0;
+  let acc = 0;
+  for (let i = 0; i < n; i++) {
+    if (!((pick[i] ?? 0) > 0)) continue;
+    j = i;
+    acc += (pick[i] ?? 0) / total;
+    if (uh < acc) break;
+  }
+  const h = hits[j] as Hit;
+  exit.t = h.t;
+  exit.tri = h.tri;
+  exit.b1 = h.b1;
+  exit.b2 = h.b2;
   po.set(o);
   pd.set(dir);
-  // Exit geometric normal for the area-measure pdf.
-  const sc = w.scene;
-  const P = sc.positions;
-  const ia = (sc.indices[exit.tri * 3] ?? 0) * 3;
-  const ib = (sc.indices[exit.tri * 3 + 1] ?? 0) * 3;
-  const ic = (sc.indices[exit.tri * 3 + 2] ?? 0) * 3;
-  const e1 = [0, 1, 2].map((k) => (P[ib + k] ?? 0) - (P[ia + k] ?? 0));
-  const e2 = [0, 1, 2].map((k) => (P[ic + k] ?? 0) - (P[ia + k] ?? 0));
-  const nx = (e1[1] ?? 0) * (e2[2] ?? 0) - (e1[2] ?? 0) * (e2[1] ?? 0);
-  const ny = (e1[2] ?? 0) * (e2[0] ?? 0) - (e1[0] ?? 0) * (e2[2] ?? 0);
-  const nz = (e1[0] ?? 0) * (e2[1] ?? 0) - (e1[1] ?? 0) * (e2[0] ?? 0);
-  const cosE = Math.max(0.3, Math.abs(dot3([nx, ny, nz], s.n)) / (dmath.hypot(nx, ny, nz) || 1));
-  let dist = 0;
-  for (let k = 0; k < 3; k++) {
-    const x = (o[k] ?? 0) + (dir[k] ?? 0) * exit.t - (s.p[k] ?? 0);
-    dist += x * x;
-  }
-  dist = Math.sqrt(dist);
+  const pj = (pick[j] ?? 0) / total;
+  // Area-measure pdf at the exit: |cos| floored at 0.3 so a grazing face cannot blow up.
+  const cosJ = Math.max(0.3, Math.abs(cosE[j] ?? 1));
   const pdf =
-    (radiusPdf(r, shape[0] ?? 1) + radiusPdf(r, shape[1] ?? 1) + radiusPdf(r, shape[2] ?? 1)) /
-    (3 * 2 * Math.PI * Math.max(r, 1e-9));
+    ((radiusPdf(r, shape[0] ?? 1) + radiusPdf(r, shape[1] ?? 1) + radiusPdf(r, shape[2] ?? 1)) /
+      (3 * 2 * Math.PI * Math.max(r, 1e-9))) *
+    pj;
   for (let k = 0; k < 3; k++) {
     const a = s.albedo[k] ?? 0;
-    weight[k] = Math.min(4, (a * burley(dist, shape[k] ?? 1)) / (pdf * cosE));
+    weight[k] = Math.min(4, (a * (prof[j * 3 + k] ?? 0) * (share[k] ?? 0)) / (pdf * cosJ));
   }
-  return true;
+  return (cosE[j] ?? 1) >= 0 ? 1 : -1;
 }

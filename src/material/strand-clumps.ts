@@ -37,6 +37,9 @@ export interface Clump {
   readonly tone: readonly (readonly [number, number])[];
   /** Per-strand value × base + span · random (default 0.72 + 0.5 · r): a wider span streaks. */
   readonly shade?: readonly [number, number];
+  /** Fibre roughness in the ORM (default 0.5, a coat): head hair is smoother, so the path
+   *  tracer's strand lobes (render/path/hair.ts) give it a sheen band (D525). */
+  readonly rough?: number;
 }
 
 export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
@@ -98,6 +101,7 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [0.45, 0.9],
       [1, 1.05],
     ],
+    rough: 0.4,
   },
   // Flyaways and outline: a few stray strands, long, barely clumped.
   wisp: {
@@ -115,6 +119,7 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [0, 0.7],
       [1, 1.1],
     ],
+    rough: 0.4,
   },
   beard: {
     count: 18,
@@ -132,6 +137,7 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [0.6, 0.85],
       [1, 0.95],
     ],
+    rough: 0.5,
   },
   // The lock style's under-layer: many strands, barely converging, dark from root to tip, so
   // the gaps between the locks over it read as depth, not as a pale cap.
@@ -151,13 +157,14 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [0.5, 0.6],
       [1, 0.72],
     ],
-    shade: [0.8, 0.4],
+    shade: [0.88, 0.24],
+    rough: 0.42,
   },
   // One or two pointed locks per (narrow) card: dark roots, light tips, strands streaked light
   // and dark side by side so the lock reads as hair and catches a highlight as a streak.
   lock: {
-    count: 12,
-    width: 0.06,
+    count: 20,
+    width: 0.036,
     spread: 0.8,
     clump: 0.75,
     subs: 2,
@@ -172,7 +179,8 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [0.75, 0.95],
       [1, 1.02],
     ],
-    shade: [0.65, 0.7],
+    shade: [0.88, 0.22],
+    rough: 0.4,
   },
   // A few long strays, barely clumped: flyaways over the top and the outline.
   fly: {
@@ -191,6 +199,7 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [1, 1.1],
     ],
     shade: [0.85, 0.35],
+    rough: 0.4,
   },
   // Thick wavy strands with gaps: wiry hair (goblin, orc) and beards.
   coarse: {
@@ -210,5 +219,6 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [1, 1],
     ],
     shade: [0.6, 0.7],
+    rough: 0.5,
   },
 };

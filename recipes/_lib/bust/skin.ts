@@ -70,7 +70,22 @@ export interface SkinOptions {
   /** Map the skin onto the shared pore strip (../face/skin-strip.ts) instead of `plain`: pore
    *  relief in the normal map and a roughness that follows it; `oil` (0 … 1) marks the glossier
    *  T-zone, `matte` (0 … 1) the dry scalp. The tone stays in vertex colour. */
-  readonly strip?: { readonly oil?: Field; readonly matte?: Field };
+  readonly strip?: {
+    readonly oil?: Field;
+    readonly matte?: Field;
+    /** The lips: the wet strip. */
+    readonly moist?: Field;
+    /** The thin skin round the eyes: the fine strip. */
+    readonly fine?: Field;
+    /** Freckles' cluster (soft, dithered): the freckled strip (D520). */
+    readonly freckle?: Field;
+    /** Clear skin off the nose and cheeks (soft, dithered): the finest pores' strip (D520). */
+    readonly clear?: Field;
+  };
+  /** Light through thin skin (D522): inside `region` (> 0 there, 0 … 1), skin with its own other
+   *  side within 8 mm behind it (an ear's rim and helix) is warmed toward `color`, the glow a
+   *  backlit ear shows, painted so it reads in any light and any engine. */
+  readonly translucent?: { readonly color: V; readonly region: Field };
   /** Far LOD: every vertex takes the mean of the paint at the centres of its faces, so one
    *  sample in a crevice (a nostril, a lid line) no longer colours a whole 2 cm triangle. */
   readonly far?: boolean;
@@ -117,6 +132,14 @@ function scalpPaint(c: V, p: V, scalp: readonly ScalpPaint[], jitter: Field, str
     out = mix(out, [s.color[0] * k, s.color[1] * k, s.color[2] * k], t * t * (3 - 2 * t));
   }
   return out;
+}
+
+/** How thin the skin at `p` (outward normal `n`) is: 1 − the depth (of 2 … 8 mm) at which a
+ *  probe into it comes out of its other side / 1 cm; 0 for skin thicker than 8 mm. */
+function thinAt(field: Field, p: V, n: V): number {
+  for (const d of [0.002, 0.0035, 0.005, 0.0065, 0.008])
+    if (field([p[0] - n[0] * d, p[1] - n[1] * d, p[2] - n[2] * d]) > 0) return 1 - d / 0.01;
+  return 0;
 }
 
 export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOptions): Mesh {
@@ -186,18 +209,28 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     if (isSkin > 0) {
       const up = n[2];
       const warm = mix(c, T.warm, clamp(up * 0.55 + Math.max(0, curv) * 0.6) * isSkin);
-      c = mix(warm, T.cool, clamp(-up * 0.6) * isSkin);
+      // (Undersides a step toward `cool`, not into it: at 0.6 a pale face's sockets and the
+      // underside of its brow went mauve-grey, a bruise in the hero (D512).)
+      c = mix(warm, T.cool, clamp(-up) * 0.3 * isSkin);
+      // Mottle along the two axes real skin varies on, blood (rose) and melanin (gold), as a
+      // shift of the colour at hand: the old warm/cool mix read as grey camouflage blotches.
       const m = mottle(p);
-      // (Soft: at 0.35 it read as grey camouflage blotches on a pale face at portrait distance.)
-      c = mix(c, m > 0 ? T.warm : T.cool, Math.abs(m) * 0.2 * isSkin);
+      const shift: V = m > 0 ? [c[0], c[1] * 0.92, c[2] * 0.92] : [c[0], c[1] * 0.98, c[2] * 0.86];
+      c = mix(c, shift, Math.min(1, Math.abs(m) * 1.2) * isSkin);
       if (speckle > 0) {
         const k = speck(p);
         c = mix(c, k > 0 ? T.warm : T.cavity, Math.min(1, Math.abs(k) * 1.4) * speckle * isSkin);
       }
     }
+    const tr = o.translucent;
+    // (Not gated on `isSkin`: the ears carry the zones' flush, which that test reads as paint.)
+    const inEar = tr ? clamp(tr.region(p)) : 0;
+    if (tr && inEar > 0) c = mix(c, tr.color, thinAt(raw, p, n) * 0.6 * inEar);
     if (o.scalp) c = scalpPaint(c, p, o.scalp, jitter, streak);
-    // Crevices: darker, deeper olive; ridges catch a little light on everything.
-    c = mix(c, mix(T.cavity, c, 0.35), cav * 0.75);
+    // Crevices: a shade darker and deeper; ridges catch a little light on everything. (The
+    // renderer shades a crease itself: at 0.75 toward the cavity colour, painted on top of that
+    // shade, sockets and lid folds read as bruises, D512.)
+    c = mix(c, mix(T.cavity, c, 0.45), cav * 0.55);
     const lift = 1 + Math.max(0, curv) * 0.18;
     return [clamp(c[0] * lift), clamp(c[1] * lift), clamp(c[2] * lift)];
   };
@@ -226,7 +259,7 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     ...(o.detail ? { detail: o.detail } : {}),
   });
   const toned = o.far ? faceAveraged(mesh, paint, o.scalp ?? []) : mesh;
-  const mapped = o.strip ? onSkin(toned, o.strip.oil, undefined, undefined, o.strip.matte) : toned;
+  const mapped = o.strip ? onSkin(toned, o.strip) : toned;
   // The field it was meshed from, for the hero bake (ADR 012; bust.ts passes it on when opted in).
   return withBakeSource(mapped, { field, lipschitz, color: paint });
 }

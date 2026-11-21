@@ -33,6 +33,12 @@ const paint = (at: Vec3, size: Vec3, color: Vec3, blend: number): SculptEdit => 
   blend,
 });
 
+/** A broad tone zone: a gradient, not a disc. Its fade (2.5 × its smallest semi-axis) puts 90 %
+ *  of the colour at the centre and runs out past its edge (D512: blends of a quarter of the
+ *  radius painted the sockets as mauve goggles and the cheeks as rouge circles). */
+const zone = (at: Vec3, size: Vec3, color: Vec3): SculptEdit =>
+  paint(at, size, color, 2.5 * Math.min(...size));
+
 /** Paint edits for the tone zones (left side; the sculpt mirrors). `H` = head height, metres. */
 export function zoneEdits(k: SkullLandmarks, H: number, z: Zones): SculptEdit[] {
   const out: SculptEdit[] = [];
@@ -41,62 +47,31 @@ export function zoneEdits(k: SkullLandmarks, H: number, z: Zones): SculptEdit[] 
   // Shaven beard shadow first: the redness and the lips paint over its edges.
   if (z.shadow) {
     out.push(
-      paint(
-        [s[0] - 0.03 * H, cy * 0.9, s[2] - 0.05 * H],
-        [0.06 * H, cy * 1.5, 0.07 * H],
-        z.shadow,
-        0.03 * H,
-      ),
-      paint(
+      zone([s[0] - 0.03 * H, cy * 0.9, s[2] - 0.05 * H], [0.06 * H, cy * 1.5, 0.07 * H], z.shadow),
+      zone(
         [k.gonion[0] + 0.06 * H, k.gonion[1] * 0.85, k.gonion[2] - 0.005 * H],
         [0.09 * H, 0.04 * H, 0.05 * H],
         z.shadow,
-        0.03 * H,
       ),
-      paint(
-        [s[0] - 0.004 * H, 0, s[2] + 0.03 * H],
-        [0.02 * H, cy * 1.05, 0.016 * H],
-        z.shadow,
-        0.012 * H,
-      ),
+      zone([s[0] - 0.004 * H, 0, s[2] + 0.03 * H], [0.02 * H, cy * 1.05, 0.016 * H], z.shadow),
     );
   }
   if (z.forehead)
     out.push(
-      paint(
-        add(k.glabella, -0.012 * H, 0, 0.11 * H),
-        [0.05 * H, 0.22 * H, 0.08 * H],
-        z.forehead,
-        0.05 * H,
-      ),
+      zone(add(k.glabella, -0.012 * H, 0, 0.11 * H), [0.05 * H, 0.22 * H, 0.08 * H], z.forehead),
     );
   out.push(
-    // Eye socket: cooler and darker round the lids.
-    paint(
+    // Eye socket: a shade cooler and darker round the lids, fading out over the cheek's top.
+    zone(
       add(k.eye, k.eyeR * 0.8, 0, -k.eyeR * 0.2),
-      [k.eyeR * 1.3, k.eyeR * 1.9, k.eyeR * 1.6],
+      [k.eyeR, k.eyeR * 1.5, k.eyeR * 1.2],
       z.socket,
-      0.02 * H,
     ),
-    // Redness: nose tip and wings, the cheek apples, the ears.
-    paint(
-      add(k.pronasale, -0.012 * H, 0, -0.004 * H),
-      [0.03 * H, 0.032 * H, 0.03 * H],
-      z.flush,
-      0.025 * H,
-    ),
-    paint(
-      add(k.cheek, 0.004 * H, 0.004 * H, 0),
-      [0.05 * H, 0.045 * H, 0.04 * H],
-      z.flush,
-      0.04 * H,
-    ),
-    paint(
-      add(k.tragion, -0.03 * H, 0.03 * H, 0.03 * H),
-      [0.06 * H, 0.06 * H, 0.1 * H],
-      z.flush,
-      0.02 * H,
-    ),
+    // Redness: nose tip and wings, the cheek apples, the ears (centred behind the tragus, so
+    // the ear's red does not spill onto the cheek in front of it).
+    zone(add(k.pronasale, -0.012 * H, 0, -0.004 * H), [0.03 * H, 0.032 * H, 0.03 * H], z.flush),
+    zone(add(k.cheek, 0.004 * H, 0.004 * H, 0), [0.05 * H, 0.045 * H, 0.04 * H], z.flush),
+    zone(add(k.tragion, -0.045 * H, 0.035 * H, 0.02 * H), [0.03 * H, 0.035 * H, 0.07 * H], z.flush),
     // Lips: the upper vermilion between the white roll and the stomion, the fuller lower lip.
     paint(
       [s[0] - 0.006 * H, 0, s[2] + 0.009 * H],

@@ -4,7 +4,7 @@
 // their own closed solids, one per material strip (clothes.ts: linen shirt, leather vest, wool
 // hood and scarf), merged as the `clothes` part under the same `face` node
 // (they breathe with the chest). Parts: `head`, `bust` (split under the scarf), `clothes`,
-// `toggle`, `hair`, `eye_l` / `eye_r`, `plinth`. LOD2 keeps the ears (features.ts), the garments
+// `toggle`, `teeth` (LOD0/1), `hair`, `eye_l` / `eye_r`, `plinth`. LOD2 keeps the ears (features.ts), the garments
 // in their colours and a few wisps of hair.
 
 import { type BuildContext, hex, sculpt } from '@developerz.ai/ts23d';
@@ -13,7 +13,7 @@ import { buildDressedBust } from '../_lib/bust/layers.ts';
 import { armCut, neckSeam } from '../_lib/bust/torso.ts';
 import { cardHair, farStyle } from '../_lib/face/hair-cards.ts';
 import { hiddenBody, outfitEdits, outfitLayers, toggleEdits } from './clothes.ts';
-import { farEars, featureEdits } from './features.ts';
+import { farEars, featureEdits, goblinTeeth } from './features.ts';
 import { goblinCardHair, hairBaseEdits } from './hair.ts';
 import { C, CHARACTER, EAR, EYE, L, LT, NECK, SPEC, TORSO } from './spec.ts';
 import { bodyEdits } from './torso.ts';
@@ -32,7 +32,7 @@ export const GOBLIN_BUST: BustRecipe = {
   zones: {
     lips: C.lips,
     flush: hex('#b07a48'),
-    socket: hex('#5e6a3a'),
+    socket: hex('#56622f'),
     brows: hex('#747650'),
     forehead: hex('#a0a854'),
     lashes: hex('#3a3a20'),
@@ -55,6 +55,8 @@ export const GOBLIN_BUST: BustRecipe = {
   split: (p) => SEAM(p) - 2 * Math.max(0, Math.abs(p[1]) - 0.055),
   body: () => bodyEdits(),
   features: (stage, skin, lod, rng) => featureEdits(stage, skin, lod, rng),
+  // The teeth: their own part, finer than the head's cell (features.ts `goblinTeeth`).
+  extras: (ctx) => (ctx.lod < 2 ? { teeth: goblinTeeth(ctx.lod) } : {}),
   hair: hairBaseEdits,
   outfit: outfitEdits,
 };

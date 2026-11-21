@@ -2,10 +2,11 @@
 // everything but LOD0's trim material identical to the plain export — nodes, pivots, animations,
 // LOD1/2 meshes. HTTP adapter: request shape and failures carry T3D_FINISH_* codes.
 
-import { describe, expect, it } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { validateBytes } from 'gltf-validator';
 import { compile } from '../core/index.ts';
 import { exportLodGlb, readGlbChunks } from '../export/index.ts';
+import { materialSnapshot, resetMaterials } from '../material/index.ts';
 import { cart, repaint } from './fixtures.ts';
 import { finishAsset, finishedGlb, httpFinish, mockFinish } from './index.ts';
 
@@ -31,6 +32,14 @@ async function validate(glb: Uint8Array) {
 }
 
 describe('finishedGlb', () => {
+  // Against the built-in materials only: recipes loaded earlier in the same process leave theirs
+  // defined, and two of them sharing a custom row made the finished meshes ambiguous (D527).
+  let restore: () => void = () => {};
+  beforeAll(() => {
+    restore = materialSnapshot();
+    resetMaterials();
+  });
+  afterAll(() => restore());
   it('refuses a rejected finish unless forced, and records why', async () => {
     const bad = await finishAsset(compile(cart, { lod: 0 }), {
       ...SMALL,

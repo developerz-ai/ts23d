@@ -33,9 +33,11 @@ import { meshField } from './mesh-field.ts';
 import { paintSkin, type SkinWear } from './paint.ts';
 import { quadToMesh, stripUv, subdivide } from './quad.ts';
 import { characterStrokes, molesOf, relieve, wartsOf } from './relief.ts';
-import { lipZone, onFineStrip, onSkin, scalpZone, tZone } from './skin-strip.ts';
+import { eyeZone, lipZone, onFineStrip, onSkin, scalpZone, tZone } from './skin-strip.ts';
+import { complexionZones } from './skin-zones.ts';
 import type { Character } from './spec.ts';
-import { teethRows, tusks } from './teeth.ts';
+import { teethRows } from './teeth.ts';
+import { tusks, wrapTusks } from './tusks.ts';
 
 export interface FaceBust {
   readonly character: Character;
@@ -76,6 +78,10 @@ function wearOf(head: FaceHead, c: Character, hair: HairStyle): SkinWear | undef
               region: beardlineOf(head),
               colour: w.stubble.colour,
               amount: w.stubble.amount,
+              // The hairs are the stubble strip's dots: a faint shade under them, feathered
+              // over 2 cm (D523).
+              wash: 0.22,
+              feather: 0.02,
             },
           }
         : {}),
@@ -134,7 +140,9 @@ function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle, 
 
 export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
   const c = b.character;
-  const head = faceHead(c, ctx.rng.fork('face'));
+  // (An orc's lower lip swells round its tusks' bases: tusks.ts `wrapTusks`.)
+  const raw = faceHead(c, ctx.rng.fork('face'));
+  const head = c.tusks ? wrapTusks(raw, c.tusks) : raw;
   const s = head.scale;
   const lift: Vec3 = [0, 0, PLINTH_TOP - CUT_Z];
   const up = (m: Mesh): Mesh => translate(m, lift);
@@ -146,7 +154,7 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
 
   // Teeth only where the lips part enough to show them (a closed mouth hides them).
   const shows = (c.mouth ?? 1) > 0.2 || (c.tusks ?? 0) > 0;
-  if (ctx.lod < 2 && shows) parts['teeth'] = teethRows(head, ctx.lod);
+  if (ctx.lod < 2 && shows) parts['teeth'] = teethRows(head, ctx.lod, c.teeth);
   if (c.tusks) {
     const t = tusks(head, c.tusks, ctx.lod);
     parts['tusk_l'] = t.l;
@@ -183,18 +191,41 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
     inf: head.map(MIDLINE.labraleInf),
     corner: head.map(LEFT.cheilion),
   });
+  const beard = wearOf(head, c, b.hair)?.stubble;
+  // Freckles gathered over the bridge and cheekbones, clear skin off the nose and cheeks (D520).
+  const complexion = complexionZones(
+    {
+      nasion: head.map(MIDLINE.nasion),
+      pronasale: head.map(MIDLINE.pronasale),
+      cheek: head.map(LEFT.cheek),
+      zygion: head.map(LEFT.zygion),
+      eye: head.map(LEFT.eye),
+      tragion: head.map(LEFT.tragion),
+    },
+    s,
+    c.complexion,
+  );
   for (const [name, m] of Object.entries(parts)) {
     let mesh = ao(m);
     // The painted, shaded base at its LOD's triangle count, then onto the pore strip.
     if (name === 'skin')
-      mesh = onSkin(
-        baseLod(mesh, ctx.lod),
+      mesh = onSkin(baseLod(mesh, ctx.lod), {
         oil,
-        ctx.lod < 2 ? moist : undefined,
-        b.garment ? { mask: clothMask(head, b.garment), strip: WOOL, metres: 1 } : undefined,
+        ...(ctx.lod < 2 ? { moist } : {}),
+        ...(b.garment
+          ? { cloth: { mask: clothMask(head, b.garment), strip: WOOL, metres: 1 } }
+          : {}),
         // The scalp matte (a bald or shaven dome caught wet hot spots on the face's strip).
-        scalpZone({ forehead: brow, tragion: head.map(LEFT.tragion) }),
-      );
+        matte: scalpZone({ forehead: brow, tragion: head.map(LEFT.tragion) }),
+        // The thin skin round the eyes (fine pores and lines) and a shaven beard's cut hairs
+        // as the strips' own detail (D511, D514).
+        fine: eyeZone({ eye: head.map(LEFT.eye), r: 0.0128 * head.sizeAt(LEFT.eye) }),
+        // (Soft near: full 6 mm inside the beard line, none 6 mm outside, dithered; the hard
+        // line drew a top edge across the cheek, D523. The far LOD's 2 cm triangles keep it.
+        // The dots' density is the stubble's amount: 0 draws none, D531.)
+        ...(beard ? { stubble: stubbleMask(beard, s, ctx.lod === 2) } : {}),
+        ...(ctx.lod < 2 ? complexion : {}),
+      });
     if (name === 'collar') mesh = onFineStrip(mesh, WOOL, 1);
     ctx.part(name, up(mesh), {
       ...(name === 'teeth' ? { connect: { as: 'rest' as const, to: 'skin' } } : {}),
@@ -252,3 +283,15 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
     lidShadow: 0.55,
   });
 }
+
+/** A beard (region ≤ 0 inside, amount) as the stubble strip's mask: `amount` from 6 mm inside its
+ *  line to 0 at 6 mm outside it, or a hard line at `far` (1 inside its line × `amount`). */
+const stubbleMask =
+  (beard: { region: (p: Vec3) => number; amount: number }, s: number, far: boolean) =>
+  (p: Vec3): number => {
+    const d = beard.region(p);
+    return (
+      beard.amount *
+      (far ? (d < 0 ? 1 : 0) : Math.min(1, Math.max(0, (0.006 * s - d) / (0.012 * s))))
+    );
+  };

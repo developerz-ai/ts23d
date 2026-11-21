@@ -261,9 +261,16 @@ function shapeVertex(w: World, r: Float64Array): void {
   }
   const r1 = (r[1] ?? 0) * 3;
   const ch = Math.floor(r1);
-  if (probeExit(w, s, (ch + 0.5) / 3, r1 - ch, r[2] ?? 0, exitHit, po, pd, sw)) {
+  const side = probeExit(w, s, (ch + 0.5) / 3, r1 - ch, r[2] ?? 0, r[3] ?? 0, exitHit, po, pd, sw);
+  if (side !== 0) {
     for (let k = 0; k < 3; k++) tp[k] = ((tp[k] ?? 0) * (wt[k] ?? 0) * (sw[k] ?? 0)) / keep;
     surfAt(w, exitHit, po, pd, s);
+    // The far face of a thin part: surfAt turned its normals to the probe (inward); out again.
+    if (side < 0)
+      for (let k = 0; k < 3; k++) {
+        s.n[k] = -(s.n[k] ?? 0);
+        s.ng[k] = -(s.ng[k] ?? 0);
+      }
     for (let k = 0; k < 3; k++) wo[k] = s.n[k] ?? 0;
   } else
     for (let k = 0; k < 3; k++) tp[k] = ((tp[k] ?? 0) * (wt[k] ?? 0) * (s.albedo[k] ?? 0)) / keep;

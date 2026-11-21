@@ -20,7 +20,8 @@ import {
 } from '@developerz.ai/ts23d';
 import { featureStrokes } from '../face/features.ts';
 import { type Forms, HERO_FORMS, muscleStrokes, planeStrokes } from '../face/planes.ts';
-import { scalpZone, tZone } from '../face/skin-strip.ts';
+import { eyeZone, lipZone, scalpZone, tZone } from '../face/skin-strip.ts';
+import { type Complexion, complexionZones } from '../face/skin-zones.ts';
 import { skullEdit, skullLandmarks, skullOf } from '../face/skull.ts';
 import type { Character } from '../face/spec.ts';
 import { type Zones, zoneEdits } from '../face/zones.ts';
@@ -79,6 +80,15 @@ export interface BustRecipe {
   /** Skin on the shared pore strip (../face/skin-strip.ts): pore relief and a roughness that
    *  follows it, glossier on the T-zone of a skull-stage head. Default: the `plain` strip. */
   readonly pores?: boolean;
+  /** Freckles gathered over the bridge and cheekbones, fine skin (../face/skin-zones.ts, D520);
+   *  a skull-stage head on the pore strip gets clear skin off its nose and cheeks either way. */
+  readonly complexion?: Complexion;
+  /** A beard's line (≤ 0 inside): its edge fades into the skin as the stubble strip's cut hairs,
+   *  dithered from 4 mm inside to 1.2 cm outside (D523); omit for none. */
+  readonly stubble?: Field;
+  /** The glow of light through thin ear skin (rim, helix, a long tip), painted on a skull-stage
+   *  head's ears (skin.ts `translucent`, D522); omit for none. */
+  readonly translucent?: V;
   /** The asset's finish for `head` and `bust` (a skin sheen declared in `finishes`). */
   readonly finish?: string;
   /** The bust's arm cut (torso.ts `armCut`; kept where ≤ 0), applied to the skull stage too: the
@@ -139,6 +149,43 @@ export function scalpOf(b: BustRecipe): Field | undefined {
     forehead: [k.glabella[0], 0, k.glabella[2] + SCALP_FROM * b.spec.H],
     tragion: k.tragion,
   });
+}
+
+/** The thin skin round the eyes (fine pores and lines) and the lips (wet) of a skull-stage head
+ *  as the pore strips' masks (../face/skin-strip.ts, D511). */
+export function lidsAndLipsOf(b: BustRecipe): { readonly fine?: Field; readonly moist?: Field } {
+  if (!b.skull) return {};
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  return {
+    fine: eyeZone({ eye: k.eye, r: k.eyeR }),
+    moist: lipZone({ sup: k.labraleSup, inf: k.labraleInf, corner: k.cheilion }),
+  };
+}
+
+/** A skull-stage head's freckle and clear-skin masks (../face/skin-zones.ts, D520). */
+export function complexionOf(b: BustRecipe): { readonly freckle?: Field; readonly clear?: Field } {
+  if (!b.skull) return {};
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  // (Scale: the eye ball is 12.8 mm on the measured base.)
+  return complexionZones(k, k.eyeR / 0.0128, b.complexion);
+}
+
+/** A beard line as a soft stubble mask: 1 from 4 mm inside it, 0 at 1.2 cm outside. */
+const stubbleEdge =
+  (line: Field): Field =>
+  (p) =>
+    Math.min(1, Math.max(0, (0.012 - line(p)) / 0.016));
+
+/** A skull-stage head's ears as a region (1 on them): beside the head past the tragion's
+ *  width less 6 mm, behind the cheek's front, from under the lobe up past the helix tip. */
+export function earsOf(b: BustRecipe): Field | undefined {
+  if (!b.skull) return undefined;
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  const y0 = Math.abs(k.tragion[1]) - 0.006;
+  const front = k.tragion[0] + 0.012;
+  const low = k.earLobe[2] - 0.006;
+  return (p) =>
+    Math.min(1, Math.max(0, (Math.abs(p[1]) - y0) / 0.004)) * (p[0] < front && p[2] > low ? 1 : 0);
 }
 
 /** The skull field's sample spacing per LOD, metres (and the face box's, LOD0). */
@@ -324,11 +371,24 @@ export function buildBust(
   const { l } = b;
   const oil = b.pores ? oilOf(b) : undefined;
   const matte = b.pores ? scalpOf(b) : undefined;
+  const ears = b.translucent ? earsOf(b) : undefined;
   const look = {
     tone: b.tone,
     ...b.paint,
+    ...(b.translucent && ears ? { translucent: { color: b.translucent, region: ears } } : {}),
     ...(b.scalp ? { scalp: b.scalp } : {}),
-    ...(b.pores ? { strip: { ...(oil ? { oil } : {}), ...(matte ? { matte } : {}) } } : {}),
+    ...(b.pores
+      ? {
+          strip: {
+            ...(oil ? { oil } : {}),
+            ...(matte ? { matte } : {}),
+            ...lidsAndLipsOf(b),
+            // (Dithered per triangle: the far LOD's 2 cm triangles would patch it.)
+            ...(lod < 2 ? complexionOf(b) : {}),
+            ...(lod < 2 && b.stubble ? { stubble: stubbleEdge(b.stubble) } : {}),
+          },
+        }
+      : {}),
   };
   const meshes: Record<string, Mesh> =
     lod === 2

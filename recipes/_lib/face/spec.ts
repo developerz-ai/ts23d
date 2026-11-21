@@ -4,6 +4,7 @@
 // hair). `HUMAN` is the identity: every warp of it is the base itself.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import type { Complexion } from './skin-zones.ts';
 
 export interface FaceSpec {
   /** Head size × the base's (H = 0.2336 m). Applied to the whole bust. */
@@ -82,7 +83,8 @@ export interface Wear {
   /** Wind- or forge-reddened skin: a broad raw redness over the cheekbones and the nose
    *  (default 0). */
   readonly wind?: number;
-  /** Shaven-beard shadow over the beardline. */
+  /** Shaven-beard shadow over the beardline; `amount` also sets the density of the cut-hair dots
+   *  on the stubble strip (0 draws none, D531). */
   readonly stubble?: { readonly colour: Vec3; readonly amount: number };
   /** Healed cuts as polylines of BASE points (landmarks ± a few mm), warped with the face. */
   readonly scars?: readonly (readonly Vec3[])[];
@@ -102,7 +104,11 @@ export interface Character {
   readonly mouth?: number;
   /** Tusks from the lower jaw (orc), length ΔH. */
   readonly tusks?: number;
+  /** Tooth rows (./teeth.ts): human (default), crooked (orc), sharp (goblin). */
+  readonly teeth?: 'human' | 'crooked' | 'sharp';
   /** Seeded warts (raised, darker): 0–8 on the vault, nose and cheeks. */
   readonly warts?: number;
   readonly wear?: Wear;
+  /** Freckles gathered over the bridge and cheekbones, fine skin (./skin-zones.ts, D520). */
+  readonly complexion?: Complexion;
 }

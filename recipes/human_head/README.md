@@ -82,8 +82,8 @@ Blender ≥ 5.2); a cache miss, LOD1 and LOD2 build the card hair (CPU). The sca
 the cards are painted a shaded hair brown (`scalp`), held by `scalpCoverCheck` (D57).
 
 ## Known gaps
-The skin's detail is the shared tiling pore strip (`pores: true`: matte cheeks, a glossier
-T-zone) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the cloth takes no finish (the
+The skin's detail is the shared tiling pore strip (`pores: true`: true-scale pores and micro-relief; freckles gathered over the bridge and cheekbones, `complexion.freckles` 0.35; clear skin off the nose and cheeks; the beard's cheek line fading into the stubble strip's cut hairs, `stubble: beardline`, D523; matte cheeks, a glossier
+T-zone, fine thin skin and lines round the eyes, wet lips) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the cloth takes no finish (the
 linen and wool strips carry their own roughness); the mantle covers the shoulders and back only, so from the front it reads close to
 sleeves; the braid is a 4 mm-cell cord, lumpy up close; eyelashes are a painted lash line (cards
 at the lid margin need a finer root mesh than the 4 mm card surface); the face's planes are softer

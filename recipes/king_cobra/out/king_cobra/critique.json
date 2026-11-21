@@ -20,10 +20,11 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Ventral cream scutes, a crisp dark scale net on the coil and pale crossbands; in hero.png the coil crossbands are a little clearer as pale chevrons on the top turn, and the hood edge and throat carry dark bands. The dorsum is still matte and the bands fade on the lower turn.",
+      "reason": "Ventral cream scutes, a crisp dark scale net on the coil and pale crossbands; the coil crossbands read as pale chevrons on the top turn, and the hood edge and throat carry dark bands. The dorsum is still matte and the bands fade on the lower turn. At 4x the cream throat and hood scutes are clean and even, and the hood rims where the dark dorsal pattern wraps the edge now carry about 40 % fewer stray single pixels than before, but orange/teal speckle is still visible along both rims (hero.png, hood edges beside the head), so the outline stays slightly gritty up close.",
       "fixes": [
         "sharpen the crossbands into chevrons that point toward the head",
-        "low roughness on the dorsal scales"
+        "low roughness on the dorsal scales",
+        "clean the chroma speckle on the hood rims (more samples or denoise the thin-edge transmission) so the rim reads as solid dark scales"
       ]
     },
     "detail": {
@@ -60,7 +61,7 @@
     }
   },
   "renders": {
-    "hero.png": "fbfd9ab49f07df321b733307ef7300da3338e5bcac3a75f194edfacd985c0811",
+    "hero.png": "a18dce78cb978e5b6752189a925f217cf18211f1c413fb8e8ca658cc25966e2d",
     "sheet.png": "c4f00c7bf744f140267a236a61609a3ae1123b43579e4aab094fd3c60e2c4d06"
   }
 }

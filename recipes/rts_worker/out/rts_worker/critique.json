@@ -19,9 +19,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Olive canvas, brown leather gloves and boots, red hat, steel pack, and the face has nose, brow and moustache; canvas and leather share one roughness.",
+      "reason": "Olive canvas, brown leather gloves and boots, red hat, steel pack, and the face has nose, brow and moustache; canvas and leather share one roughness. Thin-part transmission changed nothing visible on the face or hands, apart from one new bright red pixel in the moustache under the nose (hero.png, ~501,110).",
       "fixes": [
-        "rougher canvas than leather (roughness contrast)"
+        "rougher canvas than leather (roughness contrast)",
+        "remove the red firefly in the moustache (clamp the transmitted sample)"
       ]
     },
     "detail": {
@@ -56,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "fd8f6b8e7acc641d77acc48866c46461c56ffd035d2086754fbb32b8f132fbc9",
+    "hero.png": "94e4cd79628d0d7bb517e4807a3efd70d52370786176aac6b51282b8c0ff39f5",
     "sheet.png": "e139653a58693f23135e11ba786c9ade1c5159055cb357357fd65a212f217514"
   }
 }

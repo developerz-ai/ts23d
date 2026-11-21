@@ -4,14 +4,17 @@
 // painted eyebrows as streaked hair bands, a dark mouth interior, curvature (crevices darker,
 // ridges lifted) and a low-frequency mottle so the skin never reads as one flat colour.
 
-import { dmath, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
+import { dmath, type Vec3, valueNoise } from '@developerz.ai/ts23d';
 import type { QuadMesh } from './base.ts';
 import { curvature } from './curvature.ts';
 import type { FaceHead } from './head.ts';
 import { LEFT, MIDLINE, mirrorY } from './landmarks.ts';
+import type { PaintOptions } from './paint-types.ts';
 import { quadNormals } from './quad.ts';
 import { segDist } from './relief.ts';
-import type { SkinTone } from './spec.ts';
+import { thinness } from './thinness.ts';
+
+export type { PaintOptions, SkinWear } from './paint-types.ts';
 
 const clamp = (v: number): number => Math.min(1, Math.max(0, v));
 const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
@@ -32,44 +35,11 @@ const soft = (dist: number, r: number): number => {
   return e * e;
 };
 
-/** What life has done to a skin, painted on top of its zones. All dials 0..1. */
-export interface SkinWear {
-  /** Sun on the skin that faces up and forward: darker, warmer forehead, nose, cheek tops,
-   *  shoulders; freckles gather there. */
-  readonly sun: number;
-  /** Uneven colour: redder and paler blotches. */
-  readonly freckles: number;
-  /** Dirt in the hollows and on the neck. */
-  readonly grime: number;
-  /** Wind- or forge-reddened skin over the cheekbones and the nose, 0 … 1 (default 0). */
-  readonly wind?: number;
-  /** Shaven-beard shadow: where the beard would grow, its colour, how strong. */
-  readonly stubble?: {
-    readonly region: (p: Vec3) => number;
-    readonly colour: Vec3;
-    readonly amount: number;
-  };
-  /** Healed cuts, as segments in bust space: a pale ridge with a darker rim. */
-  readonly scars?: readonly { readonly a: Vec3; readonly b: Vec3; readonly width: number }[];
-}
-
-export interface PaintOptions {
-  readonly tone: SkinTone;
-  readonly brows: Vec3;
-  readonly rng: Rng;
-  /** Hairline region (≤ 0 where hair grows): the skin under its edge takes the hair colour, so
-   *  the hair grows out of a soft line instead of sitting on the skin like a cap. */
-  readonly hairline?: (p: Vec3) => number;
-  readonly hair?: Vec3;
-  /** 0 young … 1 old: darker under the eyes, forehead lines, deeper folds beside the mouth. */
-  readonly age?: number;
-  readonly wear?: SkinWear;
-  /** Seeded marks (moles, warts): a spot of `colour` × the skin under it, radius `r`. */
-  readonly marks?: readonly { readonly at: Vec3; readonly r: number; readonly tone: number }[];
-  /** The far LOD: the zones only (lips, brows, sockets, flush, beard, hairline). Noise-driven
-   *  colour (mottle, blotches, grit, curvature) on a 1 000-triangle face is a patchwork. */
-  readonly far?: boolean;
-}
+/** `c` shifted along the two axes skin colour varies on: t > 0 toward blood (rose, less green
+ *  and blue), t < 0 toward melanin (gold, less blue). A relative shift, so any tone keeps its
+ *  hue family (a green orc's mottle stays green). */
+const hue = (c: Vec3, t: number): Vec3 =>
+  t > 0 ? [c[0], c[1] * 0.9, c[2] * 0.9] : [c[0], c[1] * 0.97, c[2] * 0.84];
 
 /** Colour per vertex of the (already warped and scaled) face mesh. */
 export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: number) => Vec3 {
@@ -96,13 +66,14 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
   const far = o.far === true;
   const patch = valueNoise(o.rng.fork('patch'), { scale: 0.02 * s, octaves: 2 });
   const grit = valueNoise(o.rng.fork('grit'), { scale: 0.006 * s, octaves: 2 });
-  const dots = valueNoise(o.rng.fork('dots'), { scale: 0.0022 * s, octaves: 1 });
   const fh = at(MIDLINE.forehead);
   const lidLine = [LEFT, null].map((side) => {
     const m = (q: Vec3): Vec3 => at(side ? q : mirrorY(q));
     return [m(LEFT.endocanthion), m(LEFT.upperLid), m(LEFT.exocanthion)] as const;
   });
-  const LASH: Vec3 = mix(o.brows, [0.04, 0.025, 0.02], 0.75);
+  // The lashes' margin: a warm near-black from the skin's own crevice tone (mixed from golden
+  // brows it was olive, and read as eye shadow on a fair elf, D521).
+  const LASH: Vec3 = mix(T.cavity, [0.04, 0.025, 0.02], 0.6);
   // Blood under thin skin: the flush a step redder than the tone's own; the sockets cool and a
   // step darker; the lips deeper than their tone (the hero's sky washes out a near-skin red).
   const FLUSH: Vec3 = [T.flush[0], T.flush[1] * 0.86, T.flush[2] * 0.84];
@@ -126,6 +97,10 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
     0.55,
   );
   const DIRT: Vec3 = [T.cavity[0] * 0.8, T.cavity[1] * 0.8, T.cavity[2] * 0.75];
+  // Light through thin skin (ear rims, the helix, an elf's long tip): red-orange (D522).
+  const thin = far ? undefined : thinness(m, n, 0.006 * s);
+  const trag = at(LEFT.tragion);
+  const THROUGH: Vec3 = [T.flush[0] * 1.1, T.flush[1] * 0.62, T.flush[2] * 0.45];
   return (v) => {
     const p: Vec3 = [m.p[v * 3] ?? 0, m.p[v * 3 + 1] ?? 0, m.p[v * 3 + 2] ?? 0];
     const nz = n[v * 3 + 2] ?? 0;
@@ -142,17 +117,18 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
     for (const f of flushPath) {
       const dist = Math.min(segDist(p, f[0], f[1]), segDist(p, f[1], f[2]));
       near = Math.min(near, dist);
-      band = Math.max(band, soft(dist, 0.034 * s) * 0.3 + soft(dist, 0.06 * s) * 0.14);
+      band = Math.max(band, soft(dist, 0.034 * s) * 0.22 + soft(dist, 0.06 * s) * 0.12);
     }
     const flush =
       band +
-      blob(p, nose, 0.026 * s) * 0.5 +
+      blob(p, nose, 0.03 * s) * 0.4 +
       // (The ears' own redness stays on the ear: at 4.5 cm it spilt onto the cheek's side as a
       // pink disc in the front view.)
       Math.max(blob(p, ear[0], 0.032 * s), blob(p, ear[1], 0.032 * s));
     c = mix(c, FLUSH, clamp(flush));
     const jaw = clamp((mouth[2] + 0.004 * s - p[2]) / (0.025 * s));
-    c = mix(c, mix(T.cool, T.base, 0.4), jaw * 0.4);
+    // (A step cooler, not mauve: at 0.4 the neck under the jaw read as a grey-violet wash.)
+    c = mix(c, mix(T.cool, T.base, 0.4), jaw * 0.25);
     // Cool and dark: round the eyes, under the jaw.
     const socket = Math.max(blob(p, eye[0], 0.032 * s), blob(p, eye[1], 0.032 * s));
     c = mix(c, SOCKET, clamp(socket * 0.62 + clamp(-nz - 0.2) * 0.35));
@@ -186,7 +162,13 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
       // (Distance across the face only: the chord between the two landmarks runs up to a
       // centimetre under the brow's curve, so a 3D distance left the brow's middle bare.)
       const across = dmath.hypot(p[1] - q[1], p[2] - q[2]);
-      const band = clamp((1 - across / w) * 2.5) * clamp((p[0] - q[0] + 0.014 * s) / (0.004 * s));
+      // (Off the upper lid: the band reached to its margin and the hero showed it as a stripe
+      // of brown eye shadow above the eye, D521.)
+      const lidTop = (lidLine[i]?.[1][2] ?? q[2]) + 0.003 * s;
+      const band =
+        clamp((1 - across / w) * 2.5) *
+        clamp((p[0] - q[0] + 0.014 * s) / (0.004 * s)) *
+        clamp((p[2] - lidTop) / (0.003 * s));
       const hair = 0.8 + 0.2 * streak([p[0] * 0.3, p[1] * 3, p[2] * 0.3]);
       c = mix(c, o.brows, clamp(band * hair * 1.8));
       // The lash line: the upper lid's margin, dark from corner to corner.
@@ -198,12 +180,14 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
           segDist(p, flat(lid[1]), flat(lid[2])),
         );
         const near = clamp((p[0] - lid[1][0] + 0.012 * s) / (0.004 * s));
-        // The lid's fold above it in shadow (the crease's band), then the lash line itself: a
-        // dark margin wide enough to read at hero distance (2 mm vanished between vertices).
+        // The lid's fold above it a soft shade of the socket (the renderer shades the crease
+        // itself), then the lash line: a dark margin wide enough to read at hero distance (2 mm
+        // vanished between vertices). (Toward the cavity at 0.45, and a lash line 5 mm deep,
+        // the upper lid read as a band of brown eye shadow, D521.)
         const up = p[2] - (lid[1][2] + 0.0045 * s);
         const fold = clamp(1 - dmath.hypot(dl * 0.8, up) / (0.006 * s));
-        c = mix(c, mix(T.cavity, SOCKET, 0.4), fold * 0.45 * near);
-        c = mix(c, LASH, clamp(1.7 - dl / (0.003 * s)) * near);
+        c = mix(c, mix(SOCKET, T.cavity, 0.2), fold * 0.22 * near);
+        c = mix(c, LASH, clamp(1.4 - dl / (0.0024 * s)) * near);
       }
     }
     // Age: tired skin under the eyes, lines across the forehead, the folds beside the mouth.
@@ -243,16 +227,21 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
         const raw = soft(near, 0.08 * s) * 0.4 + blob(p, nose, 0.04 * s) * 0.45;
         c = mix(c, [FLUSH[0] * 1.02, FLUSH[1] * 0.8, FLUSH[2] * 0.78], clamp(raw * wind));
       }
-      // Blotches: uneven colour, redder patches and paler ones (soft: a strong one is a stain).
+      // Blotches: uneven colour along blood and melanin, never toward grey (soft: a strong one
+      // is a stain).
       const pt = far ? 0 : patch(p);
-      c = mix(c, pt > 0 ? T.flush : T.cool, Math.abs(pt) * 0.12 * (0.4 + W.freckles));
+      c = mix(c, hue(c, pt), Math.min(1, Math.abs(pt) * 0.8 * (0.4 + W.freckles)));
       if (W.stubble) {
         // (From 4 mm outside the line: the region's own values are only millimetres deep on a
         // jaw, so a ramp starting at the line left a shaven chin clean.)
-        // Fine dark dots (the cut hairs) over a soft shadow, so it reads as stubble, not a wash.
+        // An even shadow: the cut hairs are the stubble strip's dots (skin-texture.ts). (Dots
+        // of vertex colour 2 mm across on a 3 mm mesh read as a grey worm pattern, D514.)
+        // (A shaven beard's wash is faint and feathered: at 0.7 over 9 mm it read as a tan
+        // under-wash with a hard top edge across the cheek, D523.)
+        // The far LOD has no strip to draw the hairs: its wash carries them as before.
+        const ramp = (far ? 0.009 : (W.stubble.feather ?? 0.009)) * s;
         const k =
-          clamp((0.004 * s - W.stubble.region(p)) / (0.009 * s)) *
-          (far ? 0.86 : 0.62 + 0.38 * clamp(0.5 + dots(p) * 1.6));
+          clamp((0.004 * s - W.stubble.region(p)) / ramp) * (far ? 0.86 : (W.stubble.wash ?? 0.7));
         c = mix(c, W.stubble.colour, k * W.stubble.amount);
       }
       for (const sc of W.scars ?? []) {
@@ -278,11 +267,17 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
       const t = clamp(1.5 - d(p, mk.at) / mk.r);
       c = mix(c, [c[0] * mk.tone, c[1] * mk.tone * 0.86, c[2] * mk.tone * 0.74], t);
     }
+    // Thin ear skin, behind the cheek's front: the blood-warm glow of light through it.
+    const side = clamp((Math.abs(p[1]) - Math.abs(trag[1]) + 0.006 * s) / (0.004 * s));
+    if (thin && side > 0 && p[0] < trag[0] + 0.012 * s)
+      c = mix(c, THROUGH, clamp((thin[v] ?? 0) * 1.3) * 0.55 * side);
     // Curvature: crevices darker toward the cavity colour, ridges lifted.
     c = mix(c, T.cavity, clamp(-kv * 2.2) * 0.6);
     const lift = 1 + clamp(kv * 2) * 0.12;
+    // Mottle along blood (rose) and melanin (gold): the old flush/cool mix greyed a face in
+    // blotches (D512).
     const mt = far ? 0 : mottle(p);
-    c = mix(c, mt > 0 ? T.flush : T.cool, Math.abs(mt) * 0.18);
+    c = mix(c, hue(c, mt), Math.min(1, Math.abs(mt) * 1.1));
     // A little more chroma than the mixes leave: blended zones drift toward grey.
     const grey = (c[0] + c[1] + c[2]) / 3;
     const sat = (x: number): number => clamp((grey + (x - grey) * 1.18) * lift);

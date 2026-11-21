@@ -62,9 +62,9 @@ with the chest. The skin under them is cut away (`hiddenBody`).
 ## Palette (sRGB)
 | Role | Hex |
 |---|---|
-| skin / warm / cool / crevice / lips | `#e8c4a4` / `#f2d0ae` / `#b8a0a4` / `#7a4a44` / `#c47a76` |
+| skin / warm / cool / crevice / lips | `#e8c4a4` / `#f2d0ae` / `#c4a296` / `#7a4a44` / `#c47a76` |
 | eyes: sclera / iris | `#f0ece6` / `#3a8a6a` |
-| hair root → tip | `#9a7038` → `#f0d890` |
+| hair root → tip | `#8a5620` → `#f6d27e` (golden, D525) |
 | tunic / cloak / cape / braid (`brass`) / clasp (`chrome`) | `#2f5a3a` / `#3f7a6a` / `#1f3f3a` / `#e8c878` / `#d8dce0` |
 | wear: frayed wool / mud | `#8aa39a` / `#4a4a3a` |
 
@@ -72,7 +72,7 @@ with the chest. The skin under them is cut away (`hiddenBody`).
 The face is softer than a hero elf from a pro sculptor; the hair is strand cards in the lock style (`locks`, D461; LOD0 ≈ 13k
 triangles: dark mass cards under narrow clumped locks 1.8 cm across in tones 0.8–1.04 of the hair
 colour, so the fall reads as a mass of straight strands; the longest lock is 24.5 cm, to the shoulders); the skin's detail is the shared tiling pore strip
-(`pores: true`: matte cheeks, a glossier T-zone) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a
+(`pores: true`: true-scale pores and micro-relief; `complexion: { freckles: 0.85, fine: true }`: freckles gathered over the bridge and cheekbones on `face_skin_freckled`, the coarse pores only on the nose and the cheeks' centres, the clear strip `face_skin_clear` elsewhere, D520; a glossier T-zone, fine thin skin and lines round the eyes, wet lips; `translucent`: thin ear rims and tips painted a red-orange glow, D522) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a
 per-face texture; the braid is a 4 mm-cell cord, lumpy up close; the cloak's hem lies below the bust's cut, so its fraying shows only as the ragged, muddy
 band at the base; the cut arms give the bust square shoulders under the cloak.
 

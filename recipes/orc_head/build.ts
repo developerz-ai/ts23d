@@ -15,7 +15,14 @@ import {
   sculptField,
   weather,
 } from '@developerz.ai/ts23d';
-import { type BustRecipe, bustEdits, faceDetail, oilOf, scalpOf } from '../_lib/bust/bust.ts';
+import {
+  type BustRecipe,
+  bustEdits,
+  faceDetail,
+  lidsAndLipsOf,
+  oilOf,
+  scalpOf,
+} from '../_lib/bust/bust.ts';
 import { eyes } from '../_lib/bust/eye.ts';
 import { faceRigOf, withFace } from '../_lib/bust/face-rig.ts';
 import { type Surface, surface } from '../_lib/bust/kit.ts';
@@ -78,7 +85,11 @@ export function buildOrc(ctx: BuildContext): void {
   // The hide on the shared pore strip: matte, cratered cheeks, a glossier brow, nose and chin.
   const oil = oilOf(ORC_BUST);
   const matte = scalpOf(ORC_BUST);
-  const strip = { ...(oil ? { oil } : {}), ...(matte ? { matte } : {}) };
+  const strip = {
+    ...(oil ? { oil } : {}),
+    ...(matte ? { matte } : {}),
+    ...lidsAndLipsOf(ORC_BUST),
+  };
   const meshes: Record<string, Mesh> =
     lod === 2
       ? // (No pore speckle and a wider stencil at the far cell: per-vertex specks 3 cm apart read

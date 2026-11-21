@@ -15,10 +15,10 @@ way a character artist starts from a base mesh and moves big forms before detail
 | Asset | Race preset | Age / weight / asymmetry | Look |
 |---|---|---|---|
 | `face_human` | identity (the base itself) | 0.25 / 0 / 0.3 | short swept-back brown hair, blue-grey eyes |
-| `face_orc` | jaw ×1.52 (+0.08 H drop), brow shelf +0.1 H set 0.032 H lower with a relief ridge over it, lids ×0.7 open, nose ×2.25 wide ×0.58 projection with a flat bridge (−0.05 H), underbite +0.04 H, neck ×1.5, trapezius +0.2 H, head ×1.12 | 0.4 / 0.3 / 0.8 | olive skin, amber eyes, lower tusks, black crest |
+| `face_orc` | jaw ×1.52 (+0.08 H drop), brow shelf +0.1 H set 0.032 H lower with a relief ridge over it, lids ×0.7 open, nose ×2.25 wide ×0.58 projection with a flat bridge (−0.05 H), underbite +0.04 H, neck ×1.5, trapezius +0.2 H, head ×1.12 | 0.4 / 0.3 / 0.8 | olive skin, amber eyes, lower tusks over crooked yellowed teeth, black crest |
 | `face_elf` | jaw ×0.85, zygoma high, nose ×0.85 narrow, face ×1.08 long, eyes tilted +0.032 H, ears ×1.25 pulled into a longer back-swept point (tip +0.28 H up) | 0.05 / −0.4 / 0.3 | pale skin, green eyes, long honey-gold hair swept back, falling behind the ears |
 | `face_dwarf` | nose ×1.6 wide ×1.25 projection, brow +0.05 H, jaw ×1.25, face ×0.88 short, vault ×1.08 wide | 0.9 / 0.5 / 0.6 | ruddy skin, brown eyes, copper hair, spade beard and moustache |
-| `face_goblin` | vault ×1.16 wide ×1.12 tall, nose ×2.6 projection + a stronger hook, eyes ×1.42, brow +0.035 H, chin −0.03 H, jaw ×0.82, mouth ×1.35, ears ×1.7 swung out 40°, head ×0.84 | 0.3 / −0.3 / 1 | yellow-green skin, slit amber eyes, lips parted on small teeth |
+| `face_goblin` | vault ×1.16 wide ×1.12 tall, nose ×2.6 projection + a stronger hook, eyes ×1.42, brow +0.035 H, chin −0.03 H, jaw ×0.82, mouth ×1.35, ears ×1.7 swung out 40°, head ×0.84 | 0.3 / −0.3 / 1 | yellow-green skin, slit amber eyes, lips parted on small sharp crooked teeth and two short lower fangs |
 
 ## Measured spec
 - Eye spacing: base IPD 61.6 mm × race spacing × head scale (QA `measures`, ±2 %).
@@ -40,6 +40,16 @@ out of the temple, D478), short wisps along the hairline and a few 2.6 cm strays
 lying on its own sculpted locks over the upper lip), `teeth` (only where the lips part),
 `tusk_l` / `tusk_r` (orc), `plinth`.
 
+Teeth and tusks (`../_lib/face/teeth.ts`, `../_lib/face/tusks.ts`; tested in `teeth.test.ts`): a
+character's `teeth` style picks the rows — `crooked` (orc: blunt, uneven, gapped, yellowed, the
+lower row tall in front of the upper behind the underbite, gaps at the canines), `sharp` (goblin:
+small pointed irregular teeth, two short lower fangs) or `human` — over a dark mouth interior.
+The orc's tusks are its lower canines (the boar's long lower tusks, the orc convention in game
+art): rooted in the chin behind the lower lip, leaving the mouth at the lower lip's top, rising in
+front of the upper lip to the nose wing's height, the tip curling back; the lower lip swells round
+each base (`wrapTusks` pushes the warped skin out to 1.3 × the tusk's radius). Old ivory: a narrow grime line where
+the lip lets go, graded into a darker yellowed root, paling to the tip; the left tip chipped (D526). References: the orc_head README "Tusk anatomy".
+
 Every LOD's skin is the painted, AO-baked base QEM-simplified to `SKIN_TRIS`
 (`recipes/_lib/face/base-lod.ts`; a CC0 base mesh, so ADR 011 allows it): ears, colour zones and
 the clean bust edge survive.
@@ -51,14 +61,24 @@ the clean bust edge survive.
 | 2 | the base topology, painted with the zones only (no mottle, blotches, marks or curvature tint: on a far mesh they are a patchwork), AO from 24 rays at 0.3, simplified to 1.5k (at 0.9k the face broke into a handful of flat plates of different tone) | cap at 17 mm with its painted hairline and no cards (the lock style's far rule: a handful of wide cards over it read as chips); a beard is a spade: a dark root mass along the jaw, a tapering body and three lock tips with open notches between them, a darker moustache mass standing proud of the lip (D478) |
 
 ## Materials
-Skin sits on four strips of `recipes/_lib/face/skin-strip.ts` plus the tunic's wool, one draw:
-`face_skin` (pores: roughness 0.5–0.68, cheeks and shoulders), `face_skin_oily` on the T-zone
-(the lower half of the forehead's centre, nose, chin: satin, 0.34–0.5), `face_skin_matte` on the
-scalp (above the forehead's middle and behind the ears: 0.76–0.9, so a bald or shaven dome has a
-broad soft sheen, not wet hot spots, D479) and `face_skin_wet` on the lips (0.12–0.2),
+Skin sits on eight strips of `recipes/_lib/face/skin-texture.ts` (mapped by `skin-strip.ts`, zones
+in `skin-zones.ts`) plus the tunic's wool, one draw, each painted at true scale (16 mm rows, 0.5 mm
+texels at 2048²): pores, the micro-relief network, a rose/gold mottle in albedo, normal and roughness.
+`face_skin` (~1 mm pores, roughness 0.52–0.7, the cheeks' centres), `face_skin_clear` off the nose
+and cheeks (forehead sides, temples, jaw, neck: the finest, near-invisible pores; on the elf it
+claims all but a small centre of each cheek), `face_skin_freckled` in a butterfly over the bridge
+and cheekbones (the character's `complexion.freckles`: human 0.5, elf 0.9, dwarf 0.35), dithered per
+triangle so freckle density and pore size fade instead of stopping at a line (D520), `face_skin_oily` on the T-zone
+(the lower half of the forehead's centre, nose, chin: coarser pores, satin 0.36–0.62),
+`face_skin_fine` round the eyes (lids, crow's feet: the finest pores and fine horizontal lines),
+`face_skin_stubble` on a shaven or bearded jaw (dark cut-hair dots ~1 mm apart; a shaven jaw's
+zone is dithered over 1.2 cm at its edge and its vertex shade is faint, D514, D523), `face_skin_matte` on the scalp (above the forehead's middle and
+behind the ears: 0.76–0.9, so a bald or shaven dome has a broad soft sheen, not wet hot spots,
+D479) and `face_skin_wet` on the lips (vertical lip lines, 0.13–0.24),
 all under the shared `skin` finish (`skinFinish`: a soft grazing sheen and a dielectric
 reflectance of 0.8, no clear coat: one coat over the whole part lit head and shoulders alike as wet
-latex; the path-traced hero adds subsurface diffusion to any `skin` finish); corneas a clearcoat.
+latex; the path-traced hero adds subsurface diffusion to any `skin` finish, through thin parts too:
+an ear lit from behind glows red); corneas a clearcoat.
 The hair takes no finish: the cutout strand cards carry the strand read, and the sculpted cap
 under them is on the `plain` strip in two tones by LOD. At LOD0/1, under the lock cards, it is
 0.55 of the root colour (`DEEP` in `_lib/face/hair.ts`): the gaps between locks read as depth (at

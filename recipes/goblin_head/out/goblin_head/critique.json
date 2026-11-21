@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The scalp is matte now with a broad sheen in hero.png, and green skin, leather vest, linen shirt and red scarf separate by hue; the vest patches are still flat grey squares on the cream panel in FRONT and SIDE.",
+      "reason": "The green skin is even with fine mottling and pores in hero.png, the ear rims and lids are a shade cooler and the ears carry no orange glow, the scalp is matte with a broad sheen, and skin, leather vest, linen shirt and red scarf separate by hue; the vest patches are still flat grey squares on the cream panel in FRONT and SIDE.",
       "fixes": [
         "give the vest patches a cloth texture and stitched border instead of flat grey",
         "a leather strip with darkened edges on the vest"
@@ -27,10 +27,10 @@
     },
     "detail": {
       "score": 7,
-      "reason": "Warts, lids, ear notches, teeth, a toggle bar on the vest and stitched patches hold at third person; the shirt and vest back are smooth.",
+      "reason": "Warts, lids, ear notches, ear-rim and small sharp teeth hold at third person; the two lower fangs now read as clean ivory points whose base grades into the gum with no stain band (hero.png 4x mouth crop, FRONT), beside the upper corner tusks; a toggle bar and stitched patches read; the shirt and vest back are smooth and the mouth line is still a faint broken dark slit.",
       "fixes": [
         "hem stitching and seam lines along the vest edges",
-        "a thicker ear rim so the cartilage edge reads in hero.png"
+        "a darker lip line and gum shadow so the mouth reads in hero.png"
       ]
     },
     "wear": {
@@ -51,7 +51,7 @@
     },
     "technical": {
       "score": 7,
-      "reason": "54.7k / 14k / 2.6k triangles and 5 draws; still heavy for a bust, the eye/cutout/finish parts each cost a draw.",
+      "reason": "55.9k / 14.4k / 2.6k tris, 5 / 5 / 5 draws; still heavy for a bust, the eye/cutout/finish parts each cost a draw.",
       "fixes": [
         "merge the cornea and cutout parts into the body draw where the material allows",
         "trim LOD0 toward ~40k on the plinth and shoulders"
@@ -59,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "e280c9cc48ccab86f0863406e004e88d4cd0f2d856650190d2cd7016ff0f207a",
-    "sheet.png": "c4d0b69b76a527177f7481f6003a64b7750a84043d228dde3f7c3594c6e6ab48"
+    "hero.png": "c2ca4eacd1b17f774f3eb5b6c612f98b3e5c390625877c5e79be2af07fc2486e",
+    "sheet.png": "684aba026b5655497b6ee13323c5df832bd420321b8582a942fc3b9aab29cc73"
   }
 }

@@ -1,7 +1,7 @@
 {
   "asset": "face_goblin",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -19,16 +19,18 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The scalp is matte now with a broad sheen in hero.png, the orange cheek patch is gone, and the green skin, ribbed shirt and clean brown collar band separate; a couple of small sharp highlights remain on the brow ridge and nose tip.",
+      "reason": "The green skin carries darker mottling and pores in FRONT and hero.png, the ear bowl is now a muted warm ochre instead of a bright orange rim, which reads as thin skin rather than paint, the scalp is matte with a broad sheen, and skin, ribbed shirt and brown collar separate; small sharp highlights remain on the brow ridge and nose tip, and the nose tip and upper lip are a salmon pink that reads sore.",
       "fixes": [
-        "skin roughness variation so the brow ridge does not catch pinpoint highlights"
+        "skin roughness variation so the brow ridge does not catch pinpoint highlights",
+        "tone the nose tip and lip pink down toward a darker olive-red"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Teeth, ears, a collared shirt and eyes shadowed under the upper lid; the face is still smooth: no wrinkles, pores or warts.",
+      "score": 6,
+      "reason": "Small sharp teeth with two lower fangs now show in FRONT and hero.png, the skin has pores and mottling, ears, collared shirt and eyes under shadowed lids hold; there are still no wrinkles or warts on the face.",
       "fixes": [
-        "LOD0 wrinkle/wart displacement on forehead, nose and cheeks"
+        "LOD0 wrinkle/wart displacement on forehead, nose and cheeks",
+        "a darker gum line behind the teeth so the mouth reads open"
       ]
     },
     "wear": {
@@ -49,14 +51,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 34.5k / 8.0k / 1.8k tris, 3 / 3 / 3 draws.",
+      "reason": "QA clean; 36.8k / 9.1k / 2.2k tris, 3 / 3 / 3 draws.",
       "fixes": [
         "drop the teeth at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "622758a162b335d5629acf860629d62f72437fd39d6b488db6550cc7b5f7a895",
-    "sheet.png": "12c5144b3cec7d31840b075c00926bc139c74175446b483e5bff42f2a77579e5"
+    "hero.png": "d53efddc46177cef92aa9ed28e1b424d7dd9ec9c1fff27bc7fe76bd03ba60523",
+    "sheet.png": "2aa10f99475e142c418d856b69601883707aae74e433e966c0a47fa2605f05d6"
   }
 }

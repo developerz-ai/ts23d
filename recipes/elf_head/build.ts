@@ -31,7 +31,7 @@ export const ELF_BUST: BustRecipe = {
   zones: {
     lips: C.lips,
     flush: hex('#e9b9a6'),
-    socket: hex('#d2ada2'),
+    socket: hex('#dab49e'),
     brows: hex('#b09070'),
     forehead: hex('#f4dcc6'),
     lashes: hex('#5a4030'),
@@ -43,8 +43,15 @@ export const ELF_BUST: BustRecipe = {
   saw: armCut(L, TORSO),
   neck: NECK,
   tone: { skin: C.skin, warm: C.warm, cool: C.cool, cavity: C.cavity },
-  // A wider curvature stencil (the skull's mesh field rings in 4 mm) and a faint pore speckle.
-  paint: { stencil: 0.007, speckle: 0.08 },
+  // A wider curvature stencil (the skull's mesh field rings in 4 mm); no vertex speckle (its
+  // 6 mm specks added to the sandy grain, D520: the strips carry the pores and freckles).
+  paint: { stencil: 0.007 },
+  // Fine skin: freckles gathered over the bridge and cheekbones, coarse pores only on the nose
+  // and the cheeks' centres (D520).
+  complexion: { freckles: 0.85, fine: true },
+  // Light through the thin rims and long tips of the ears: a red-orange glow, painted so it
+  // reads under the hero's front key and in any engine (D522).
+  translucent: hex('#e07a5c'),
   // The scalp under the cards: the cap's shadowed gold, never skin (D57).
   scalp: [{ line: hairline, color: SCALP }],
   plinth: { radius: 0.12, color: C.plinth },

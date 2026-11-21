@@ -3,6 +3,9 @@
 // shifted toward the root), TT (forward scatter through the fibre, tinted by √albedo) and TRT (the
 // coloured secondary highlight, shifted toward the tip). Longitudinal Gaussians in θh, simple
 // azimuthal shapes in φ; sampled uniformly over the sphere, the lights carry the highlights.
+// Smooth fibres (roughness under GLOSSY: head hair, D525) give R and TRT a real share of the
+// energy, taken from the diffuse term, so the sheen band along the strands shows; rough fibres
+// (fur, at the strand atlas's 0.5) keep the matte coat of D476 exactly.
 
 import { dmath } from '../../core/index.ts';
 import { schlick } from '../brdf.ts';
@@ -24,6 +27,16 @@ const LOBES = 0.12;
  * still carries a backlit card's glow.
  */
 const BACK = 0.97;
+/** Below this roughness a fibre counts as smooth (cuticle intact): its R and TRT lobes grow.
+ *  (Head hair sits at 0.4 in the atlas, not lower: an engine's GGX on a card at 0.3 shone like
+ *  grey plastic plates.) */
+const GLOSSY = 0.48;
+/** At full gloss (roughness GLOSSY − GLOSS_RAMP and under): the R and TRT scales, and the diffuse
+ *  share that keeps a white fibre's energy under one (hair.test.ts). */
+const GLOSS_RAMP = 0.08;
+const R_GLOSS = 0.6;
+const TRT_GLOSS = 0.7;
+const DIFFUSE_GLOSS = 0.66;
 const PDF = 1 / (4 * Math.PI);
 
 const gauss = (b: number, x: number): number =>
@@ -71,6 +84,11 @@ export function evalHair(
   const nTT = gauss(0.35, Math.PI - phi) / Math.PI;
   const nTRT = 0.25 * half;
   const inv = 1 / (cd * cd);
+  // 0 for a rough fibre (fur: unchanged), 1 for a smooth one.
+  const gloss = Math.max(0, Math.min(1, (GLOSSY - rough) / GLOSS_RAMP));
+  const kR = LOBES + (R_GLOSS - LOBES) * gloss;
+  const kTRT = LOBES + (TRT_GLOSS - LOBES) * gloss;
+  const kD = DIFFUSE + (DIFFUSE_GLOSS - DIFFUSE) * gloss;
   // The many-fibre term behaves like the hair mass's surface: mostly back toward the lit side.
   const ni = dot3(n, wi);
   const side = (ni >= 0 ? BACK : 1 - BACK) * Math.abs(ni);
@@ -80,8 +98,11 @@ export function evalHair(
     const r = mR * nR * F;
     const trans = mTT * nTT * (1 - Ft) * (1 - Ft) * tt;
     const trt = mTRT * nTRT * (1 - Ft) * (1 - Ft) * Ft * a * 4;
-    const diffuse = ((DIFFUSE * a) / Math.PI) * side;
-    f[k] = (r + trans + trt) * inv * LOBES * ci + diffuse;
+    const diffuse = ((kD * a) / Math.PI) * side;
+    // The gloss's extra R and TRT under min(1, ·): 1/cos²θd over-weights an oblique view, which
+    // LOBES' small share hid but a real one would turn into more light out than in.
+    const extra = ((kR - LOBES) * r + (kTRT - LOBES) * trt) * Math.min(1, inv * ci);
+    f[k] = (r + trans + trt) * inv * LOBES * ci + extra + diffuse;
   }
   return PDF;
 }

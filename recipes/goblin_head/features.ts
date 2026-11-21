@@ -1,15 +1,16 @@
-// Goblin face features beyond the shared head: a wide toothy grin (small pointed teeth along the
-// mouth slit, the cheeks bunched beside it), a worried brow (three forehead creases rising at the
+// Goblin face features beyond the shared head: a wide toothy grin (the cheeks bunched beside the
+// mouth slit; its teeth are their own part, `goblinTeeth`: small, pointed, crooked and yellowed,
+// two lower fangs rising in front of the upper lip), a worried brow (three forehead creases rising at the
 // inner ends), warts seeded over nose, cheeks and dome, and flush on the nose and ears.
 
-import type { Rng, SculptEdit } from '@developerz.ai/ts23d';
-import { dmath } from '@developerz.ai/ts23d';
-import { ball, cone2, creaseOn, type Surface, type V } from '../_lib/bust/kit.ts';
+import { dmath, type Mesh, merge, type Rng, type SculptEdit } from '@developerz.ai/ts23d';
+import { ball, cone2, creaseOn, norm, type Surface, spline, type V } from '../_lib/bust/kit.ts';
+import { mix, tooth } from '../_lib/face/teeth.ts';
+import { ivoryTusk } from '../_lib/face/tusks.ts';
 import { C, H, SK } from './spec.ts';
 
 export function featureEdits(stage: number, s: Surface, _lod: number, _rng: Rng): SculptEdit[] {
   const out: SculptEdit[] = [];
-  const line = grinLine();
   // Grin: cheeks bunched up at the mouth corners.
   out.push(
     ball(
@@ -20,28 +21,7 @@ export function featureEdits(stage: number, s: Surface, _lod: number, _rng: Rng)
       },
     ),
   );
-  // Pointed teeth along the slit, upper row pointing down, lower up, their roots behind the lips.
-  // (The row runs the whole grin, corner to corner: seven a side, the pair by the corner small.)
-  for (let i = 0; i < line.length - 1; i++) {
-    const p = line[i] ?? SK.stomion;
-    const k = i === 0 ? 0.6 : 1;
-    for (const [dz, tip] of [
-      [0.009 * H, -0.022 * H * k],
-      [-0.009 * H, 0.019 * H * k],
-    ] as const)
-      out.push(
-        cone2(
-          [p[0] - 0.004 * H, p[1], p[2] + dz],
-          [p[0] + 0.003 * H, p[1], p[2] + dz + tip],
-          0.0085 * H * k,
-          0.0015 * H,
-          {
-            blend: 0.002 * H,
-            color: C.teeth,
-          },
-        ),
-      );
-  }
+  out.push(fangLips());
   if (stage < 4) return out;
   // The ear's drawn-out tip: its cartilage edge thickened over the last 3 cm (the blade thins to
   // a film there, and the rim reads as an edge, not a paper cut-out).
@@ -104,4 +84,80 @@ export function grinLine(): V[] {
       a[2] + (b[2] - a[2]) * t,
     ],
   );
+}
+
+/** A lower fang's radius where it leaves the lip. */
+const FANG_R = 0.014 * H;
+
+/** A lower fang's centre line, root → tip: in the jaw below the slit a third of the way in from
+ *  the corner, out at the slit (a third of the way along), curling up in front of the upper lip. */
+export function fangPath(side: 1 | -1): V[] {
+  const p = grinLine()[2] ?? SK.stomion;
+  const at = (x: number, z: number): V => [p[0] + x * H, p[1] * side, p[2] + z * H];
+  return spline([at(-0.034, -0.045), at(-0.017, 0), at(0.016, 0.022), at(0.024, 0.04)], 10);
+}
+
+/** The lower lip swollen round each fang's base: a lip-coloured sleeve along its buried stretch
+ *  up to the slit, 1.35 × the fang's radius (the base never shows on the receding chin). */
+function fangLips(): SculptEdit {
+  const path = fangPath(1);
+  const from = path[1] ?? SK.stomion;
+  const gum = path[3] ?? SK.stomion;
+  return cone2(from, gum, FANG_R * 1.2, FANG_R * 1.35, { blend: FANG_R * 0.6, color: C.lips });
+}
+
+/** Per tooth along the grin, corner → centre: [length ×, lean outward (share), width ×, stain]. */
+const CROOKED: ReadonlyArray<readonly [number, number, number, number]> = [
+  [0.7, 0.1, 0.9, 0.3],
+  [1.15, -0.25, 1.05, 0.1],
+  [0.8, 0.3, 0.85, 0.35],
+  [1.25, 0.05, 1.1, 0.05],
+  [0.65, -0.2, 0.9, 0.25],
+  [1.05, 0.15, 1, 0.15],
+  [0.9, -0.1, 0.95, 0.2],
+];
+
+/** The goblin's teeth as a part (sculpted cones finer than the head cell were lost in it). Over
+ *  the closed grin: small pointed upper teeth rooted in the upper lip, their tips hanging out over
+ *  the lower lip, each a different length, lean and stain (none paper-white); and two lower
+ *  fangs a third of the way in from the corners, rooted in the jaw, leaving the lower lip at the
+ *  slit and curling up in front of the upper lip: the goblin's underbite. LOD1 keeps the fangs and every other tooth. */
+export function goblinTeeth(lod: number): Mesh {
+  const line = grinLine();
+  const seg = lod === 0 ? 7 : 3;
+  const out: Mesh[] = [];
+  for (const side of [1, -1] as const)
+    for (let i = 0; i < line.length - 1; i++) {
+      if (lod > 0 && i % 2 === 1) continue;
+      const p = line[i] ?? SK.stomion;
+      const j = CROOKED[(i + (side < 0 ? 3 : 0)) % CROOKED.length] ?? [1, 0, 1, 0];
+      const k = i === 0 ? 0.6 : 1;
+      out.push(
+        tooth(
+          [p[0] - 0.022 * H, p[1] * side, p[2] + 0.012 * H],
+          norm([0.45, j[1] * side * 0.4, -1]),
+          0.04 * H * k * j[0],
+          0.013 * H * k * j[2],
+          mix(C.teeth, C.teethStain, j[3]),
+          seg,
+          true,
+        ),
+      );
+    }
+  // The fangs: small curved tusks (../_lib/face/tusks.ts `ivoryTusk`), narrow in the jaw,
+  // thickest where they leave the lip at the slit, curling up in front of the upper lip.
+  for (const side of [1, -1] as const) {
+    const path = fangPath(side);
+    out.push(
+      ivoryTusk(path, {
+        radius: FANG_R,
+        gum: 1 / 3,
+        seg,
+        ivory: C.teeth,
+        tip: C.teeth,
+        stain: C.teethStain,
+      }),
+    );
+  }
+  return merge(out);
 }

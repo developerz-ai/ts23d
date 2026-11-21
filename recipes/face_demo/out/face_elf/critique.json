@@ -1,7 +1,7 @@
 {
   "asset": "face_elf",
   "reviewer": "agent",
-  "overall": 6.4,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
       "score": 6,
@@ -20,9 +20,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The V-neck trim is a crisp gold band with a hem edge in FRONT and hero.png, and the cheek warmth follows the cheekbone; the hair's under-layer now carries the same golden tint, so the shoulder locks in FRONT and SIDE no longer show olive-dark strands through the gaps, but the hair still reads as matte straw with no sheen and the tunic is a flat ribbed green.",
+      "reason": "Freckles cluster over the nose bridge and cheekbones and leave forehead and jaw clean, the lids are now a cooler thin grey fold, and the orange hot spot that sat inside the ear in the previous hero.png is gone: the ear rim carries a soft pink warmth that reads as thin skin; the V-neck trim is a crisp gold band; but the eyebrows are flat mustard-yellow slabs with no hair texture in FRONT and hero.png, the hair is golden but still matte straw, and the tunic is a flat ribbed green.",
       "fixes": [
-        "hair strip with anisotropic sheen and a golden value range from root to tip",
+        "brow strip with hair-direction strokes and a darker blond so the brows stop reading as painted slabs",
+        "hair strip with a visible anisotropic sheen band and a root-to-tip value range",
         "a wool or silk strip on the tunic instead of the flat rib"
       ]
     },
@@ -36,11 +37,11 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "A pale cheekbone scar shows in FRONT and collar grime and sun-faded shoulders now show on the tunic; the freckles are too faint to read at FRONT or hero.png distance, and the scar is a soft pale blotch rather than a line.",
+      "score": 7,
+      "reason": "Freckles now read in FRONT and hero.png, and collar grime and sun-faded shoulders show on the tunic; the cheekbone scar is still a soft pale blotch rather than a line.",
       "fixes": [
-        "raise freckle contrast so they read in FRONT",
-        "shape the cheekbone scar as a thin line with a slightly raised edge"
+        "shape the cheekbone scar as a thin line with a slightly raised edge",
+        "a little fraying at the tunic hem"
       ]
     },
     "lod": {
@@ -60,7 +61,7 @@
     }
   },
   "renders": {
-    "hero.png": "2190402f3e94028d98f54149274f5a6433a14ed14fbdeda2f35c84836b15dcd7",
-    "sheet.png": "8b4dee904ea8ebdb72b4819c1802c0e28732d379c389316024e312cba2a0ea55"
+    "hero.png": "0d50ced66bdaebfe334236f9bad53ac38cdce54a54fb153de6fd6869aa65837f",
+    "sheet.png": "39bf420eb203ec7f9cc719a5068177501562e71522c6a2f2963d44ba9f32e6c7"
   }
 }

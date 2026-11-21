@@ -5,7 +5,8 @@
 // strands start spread (dense, near-opaque root) and converge on their sub-clump's tip, the
 // outer strands shorter, so a card ends in pointed locks with alpha gaps, never a cut edge. Alpha =
 // coverage, a root → tip tone ramp (vertex colour carries the hue), a per-strand height ridge for
-// the normal map. The clump kinds are strand-clumps.ts. Cards map with `strandCells(strip, kind)`:
+// the normal map, a roughness per kind (head hair smoother than a coat, D525). The clump kinds are
+// strand-clumps.ts. Cards map with `strandCells(strip, kind)`:
 // the cell rects in sheet UV. Transparent texels carry their strands' tone (`bleed`, D460).
 
 import { createRng, dmath, Ts23dError } from '../core/index.ts';
@@ -193,13 +194,15 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
       }
     });
     bleed(cov, tone, w, h, layout.length);
+    const rough = layout.map((kind) => CLUMPS[kind].rough ?? 0.5);
     const rgba = new Uint8Array(w * h * 4);
     for (let j = 0; j < w * h; j++) {
       const a = cov[j] ?? 0;
       const g = Math.round(255 * dmath.pow(Math.min(1, tone[j] ?? 0.8), 1 / 2.2));
       rgba.set([g, g, g, Math.round(a * 255)], j * 4);
       s.height[j] = a * 0.0004;
-      s.rough[j] = 0.5;
+      s.rough[j] =
+        rough[Math.min(layout.length - 1, Math.floor(((j % w) * layout.length) / w))] ?? 0.5;
     }
     s.rgba = rgba;
   };

@@ -1,7 +1,7 @@
 {
   "asset": "face_human",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -19,33 +19,32 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Collar is a real band with a clean hem; skin is a sheen with a warm nose; the stubble is back but renders as a grey-violet speckled wash that reads as grime in hero.png, and the cheeks are still pink patches in FRONT.",
+      "reason": "Collar is a real band with a clean hem; the stubble is now sparser and lighter (fewer cut-hair dots) so the jaw reads as short growth over skin rather than grit in hero.png, and pores and a few freckles sit on the nose and cheek centres; the lids are slightly cooler and the ear glows less; the stubble dots are still one uniform size and still run down the neck well past the jaw line, and the shirt is a flat rib.",
       "fixes": [
-        "stubble as fine dark brown dots on a skin base, not a grey wash",
-        "move the cheek warmth onto the cheekbone with lower contrast",
+        "vary stubble dot size and fade it out under the jaw line instead of down the neck",
         "a linen strip with slub noise on the shirt"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Hair locks, ear shape, a collared shirt and eyes shadowed under the upper lid with a lash line in hero.png; no pores or creases at the portrait distance.",
+      "score": 7,
+      "reason": "Hair locks, ear shape, a collared shirt, eyes under a shadowed lid with a lash line, and now pores and stubble that read as hair dots in hero.png; no creases at the portrait distance.",
       "fixes": [
-        "LOD0 pore/crease displacement on the face"
+        "LOD0 crease displacement (nasolabial fold, under-eye)",
+        "stitching along the shirt neckline"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Stubble now covers the jaw and collar grime and sun-faded shoulders now show on the tunic; the claimed chin scar is not visible in FRONT or hero.png, and the stubble reads as dirt more than hair.",
+      "score": 7,
+      "reason": "The chin scar shows as a pale line through the stubble in FRONT and hero.png, the sparser stubble now reads as a day or two of growth, and collar grime and sun-faded shoulders show on the tunic.",
       "fixes": [
-        "make the chin scar visible at FRONT distance (a pale line through the stubble)",
-        "finer, darker stubble dots"
+        "dirt at the shirt hem",
+        "a little sun redness on nose and ear tops"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 face is smooth, the eyes and nose hold; the stubble vanishes at LOD2 so the far face is clean-shaven while LOD0 is stubbled, and the hair is a plain smooth cap.",
+      "score": 7,
+      "reason": "FAR LOD2 face is smooth, the eyes and nose hold, and the stubble now carries to the LOD2 jaw so the far face matches LOD0; the hair is still a plain smooth cap.",
       "fixes": [
-        "average the stubble tone into the LOD2 jaw colour",
         "keep a few locks on the LOD2 hair cap"
       ]
     },
@@ -58,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "5f4e655ea8cdfb26021590291498368c52f87eeb848d7bd45cc79c28f1377345",
-    "sheet.png": "e18ae560aabc2af02c85a85c2e93b2b12928bba8c245aff9f90910a8c1a59f4e"
+    "hero.png": "99406778a4b6098d2ca90961685058bdbf4525ca524d3f1631bf79e4b3acad3e",
+    "sheet.png": "975b2f41cfbed5d5e58dbaff8bb151f30e9b1284451e9dbe8a2032fe0783f83e"
   }
 }
