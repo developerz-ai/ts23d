@@ -20,10 +20,11 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The hair renders as a dark combed mass; the skin carries pores, freckles and a faint rose on the cheek in hero.png, the ear and lids are slightly cooler and less glowing, and skin, blue tunic, leather cape and brass studs separate, but tunic and cape share one roughness.",
+      "reason": "Re-shot after the skin and wool strip mapping changes, and nearly unchanged at full size and at 4x: the hair is a mid-brown combed mass with soft darker comb lines and a slightly softer hairline, the skin carries pores, freckles and a faint rose on the cheek, and the blue tunic rib runs unbroken under the cape with no seams or streaks. Skin, blue tunic, leather cape and brass studs separate, but tunic and cape share one roughness, and the cape leather is broad horizontal light and dark bands that read more like wood grain than hide in hero.png.",
       "fixes": [
         "leather roughness lower than the tunic cloth",
-        "a soft sheen on the leather cape edges where it is handled"
+        "a soft sheen on the leather cape edges where it is handled",
+        "break the cape banding into irregular hide grain and creases instead of even horizontal stripes"
       ]
     },
     "detail": {
@@ -51,14 +52,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "35k / 11k / 1.4k triangles and 3 draws for a bust; the scan face carries most of it.",
+      "reason": "35.2k / 11.2k / 1.4k tris, 3 / 3 / 3 draws for a bust; the scan face carries most of it.",
       "fixes": [
         "bake the scan pores to the normal map and lower the face density at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "c2e9ee38e1455236c8313de3d29cba1cf92fd79ea4674659e16b24a4b039671c",
-    "sheet.png": "852cdad22e65b10d7c9e8292231a24069402de7e236ee67e04f544590b8e143d"
+    "hero.png": "986a8ada3ba6be190adad0f14446d42e7ba3baa2326b6bb78ae4d3db70e15f41",
+    "sheet.png": "dd56f3eae424ac3a34f06847632545108286170b010d7e62b77d3eb97da3c351"
   }
 }

@@ -47,7 +47,8 @@ export const elf_head = defineAsset({
   // LOD0: the head's skin ≈ 31k (head 28k, bust 2.7k), the hair cards ≈ 15k, tunic, cloak and
   // braid ≈ 20k.
   // Draws: skin, face-node cloth, static fittings, corneas, hair cards.
-  budget: { triangles: [74000, 20000, 3400], draws: 5 },
+  // (LOD2 from 3400: its face box holds the sockets, nose and lips, ~400–630 triangles, D551.)
+  budget: { triangles: [74000, 20000, 3650], draws: 5 },
   // The eyeballs' cornea (a clear lacquer over the painted iris) and the skin: the pore strip's
   // own roughness (matte cheeks, a glossier T-zone) under a soft grazing sheen. The silk and the
   // wool are strips of their own (../_lib/bust/cloth-strips.ts): smooth against matte, no finish.

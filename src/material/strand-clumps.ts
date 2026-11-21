@@ -84,16 +84,18 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [1, 0.45],
     ],
   },
-  // Head hair: 2–3 locks per card, long, pointed, separated strands.
+  // Head hair: 2–3 locks per card, long, pointed. Ten fine strands, not sixteen (D544): across
+  // a 2048² sheet's 23-texel band more of them close up into a solid ribbon; these keep a gap
+  // between neighbours from root to tip, and end at staggered lengths (a feathered tip).
   hair: {
-    count: 16,
-    width: 0.034,
-    spread: 0.86,
+    count: 10,
+    width: 0.024,
+    spread: 0.88,
     clump: 0.5,
     subs: 3,
-    point: 0.3,
+    point: 0.4,
     start: 0.05,
-    length: [0.88, 1],
+    length: [0.7, 1],
     wave: 0.025,
     waves: 1.2,
     tone: [
@@ -162,15 +164,16 @@ export const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
   },
   // One or two pointed locks per (narrow) card: dark roots, light tips, strands streaked light
   // and dark side by side so the lock reads as hair and catches a highlight as a streak.
+  // Ten fine strands with gaps between them, staggered ends (D544, as `hair`).
   lock: {
-    count: 20,
-    width: 0.036,
-    spread: 0.8,
-    clump: 0.75,
+    count: 10,
+    width: 0.024,
+    spread: 0.86,
+    clump: 0.6,
     subs: 2,
     point: 0.55,
     start: 0.04,
-    length: [0.85, 1],
+    length: [0.7, 1],
     wave: 0.02,
     waves: 1,
     tone: [

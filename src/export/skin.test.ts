@@ -82,6 +82,31 @@ describe('skinned GLB', () => {
     });
   });
 
+  it('keeps the world yaw of a socket that rides a bone (D557)', () => {
+    const a = compile(arm());
+    const mount = {
+      name: 'mount',
+      mesh: null,
+      at: [0.8, 0, 0.5] as const,
+      parent: null,
+      yaw: Math.PI / 2,
+      motion: null,
+    };
+    const turned = {
+      ...a,
+      parts: a.parts.flatMap((p) =>
+        p.name === 'hand' ? [mount, { ...p, at: [0.2, 0, 0] as const, parent: 'mount' }] : [p],
+      ),
+    };
+    const { json } = readGlbChunks(toGlb(turned));
+    const nodes = json['nodes'] as (Node & { rotation?: number[] })[];
+    const hand = nodes.find((n) => n.name === 'hand');
+    const r6 = (v: number) => Math.round(v * 1e6) / 1e6;
+    // World (0.8, 0.2, 0.5) yawed 90°, on `lower` whose head is (0.5, 0, 0.5).
+    expect(hand?.translation?.map(r6)).toEqual([0.3, 0.2, 0]);
+    expect(hand?.rotation?.map(r6)).toEqual([0, 0, r6(Math.SQRT1_2), r6(Math.SQRT1_2)]);
+  });
+
   it('binds a rigid mesh merging into a skinned one to its nearest bone', () => {
     const a = compile(arm());
     const body = a.parts.find((p) => p.name === 'body')?.mesh;

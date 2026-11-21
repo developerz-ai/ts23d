@@ -12,7 +12,7 @@ import { add, cross, mul, norm, spline, sub, type V } from '../_lib/bust/kit.ts'
 import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { bodySurface } from './build.ts';
 import { foreheadLines, lipLine, SCARS, WARTS } from './features.ts';
-import { BALDRIC, cap, capPoint, SPIKES } from './fittings.ts';
+import { BALDRIC, cap, capPoint, LAP, SPIKES } from './fittings.ts';
 import { seamRing } from './fur.ts';
 import { KNOT, tailPath } from './hair.ts';
 import { L } from './landmarks.ts';
@@ -143,7 +143,7 @@ function gear(): IntendedCrease[] {
   // Spikes: each bone spike seated in its flared iron collar on the cap, root to tip.
   const spikes = [1, -1].flatMap((s) =>
     SPIKES.flatMap(([phi, theta, len], i) => {
-      const root = capPoint(s, phi, theta * s, -0.004);
+      const root = capPoint(s, phi, theta * s, LAP - 0.004);
       const c = cap(s);
       const dir = norm(add(mul(norm(sub(root, c.at)), 0.6), mul(c.axis, 0.8)));
       return creaseCurve(
@@ -160,7 +160,7 @@ function gear(): IntendedCrease[] {
     creaseCurve(
       `spike_collars_${s > 0 ? 'l' : 'r'}`,
       'spikes',
-      SPIKES.map(([phi, theta]) => capPoint(s, phi, theta * s, -0.004)),
+      SPIKES.map(([phi, theta]) => capPoint(s, phi, theta * s, LAP - 0.004)),
       0.02,
       'the two spike collars meeting on the cap',
     ),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type Clip, compile } from '../core/index.ts';
+import { type Clip, compile, defineAsset } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { clipSummary } from './clips.ts';
 import { readGlbChunks } from './finish-glb.ts';
@@ -52,6 +52,29 @@ describe('named clips', () => {
     ]);
     // Without --animations nothing is keyed.
     expect(readGlbChunks(toGlb(compile(arm()))).json['animations']).toBeUndefined();
+  });
+
+  it("keys a used child's morph weights on its own skinned node (D555)", () => {
+    const holder = defineAsset({
+      name: 'holder',
+      kind: 'creature',
+      budget: { triangles: [9999, 9999, 9999] },
+      build(ctx) {
+        ctx.part('plinth', box({ size: [0.4, 0.4, 0.1], color: [1, 1, 1] }));
+        ctx.use(arm(), { prefix: 'a' });
+      },
+    });
+    const { json } = readGlbChunks(toGlb(compile(holder), { animations: true }));
+    const nodes = json['nodes'] as { name: string; skin?: number; children?: number[] }[];
+    const wave = (json['animations'] as Anim[]).find((a) => a.name === 'a_wave');
+    expect(wave?.channels.map((c) => [nodes[c.target.node]?.name, c.target.path])).toEqual([
+      ['a_lower', 'rotation'],
+      ['a_body', 'weights'],
+    ]);
+    const body = nodes.findIndex((n) => n.name === 'a_body');
+    expect(nodes[body]?.skin).toBe(0);
+    // A skinned mesh sits on the LOD root (node 0), not under the `a` group.
+    expect(nodes[0]?.children).toContain(body);
   });
 
   it('keys every LOD tree from one sampler in a single-file GLB', () => {

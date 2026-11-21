@@ -20,15 +20,16 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The collar is a real olive band with a clean hem edge, the skin carries pores and broken rose mottling, and the cut-hair dots under the beard edge are now denser so the jaw stubble reads as a filled, darker shadow into the beard in hero.png rather than a sparse spray; the ear rim glows less and the lids are a little cooler; the tunic is still a flat ribbed red with an airbrushed pale wash over the shoulders.",
+      "reason": "The collar is a real olive band with a clean hem, the skin carries pores and broken rose mottling, and the stubble under the beard edge reads as a filled shadow. The beard now shows finer strand texture with more value range and darker roots, and the scalp hair has fewer pale flat card patches, though neither shows a sheen band in hero.png. The skin grain is more even but pores read a little weaker than before; the eyebrows are flat brown slabs; the tunic is still a flat ribbed red with an airbrushed pale wash over the shoulders, though the rib now runs unbroken across the near shoulder in hero.png.",
       "fixes": [
         "a wool strip with fibre noise on the tunic instead of the flat rib",
-        "lower the airbrushed shoulder fade so the red reads as dyed wool"
+        "lower the airbrushed shoulder fade so the red reads as dyed wool",
+        "a visible sheen band on the beard and hair so they stop reading matte"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Moustache, beard, hair locks, pores and a denser stubble edge under the beard hold in hero.png; the face still has no age wrinkles (crow's feet, forehead lines) at the portrait distance and the tunic has no seams, folds or hem.",
+      "reason": "Moustache, beard with finer strands, hair locks, pores and a denser stubble edge hold in hero.png; the face still has no age wrinkles (crow's feet, forehead lines) at the portrait distance and the tunic has no seams, folds or hem.",
       "fixes": [
         "LOD0 wrinkle displacement (forehead lines, crow's feet) driven by age",
         "seams and a few folds on the tunic"
@@ -51,14 +52,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 76.5k / 15.5k / 3.4k tris, 4 / 4 / 3 draws; heavy for a bust.",
+      "reason": "QA clean; 78.3k / 16.3k / 3.8k tris, 4 / 4 / 3 draws; heavy for a bust.",
       "fixes": [
         "coarser beard cell at LOD1 and fewer beard cards at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "93929a4320071e796839fe49555cebcb9472531bf7817b1c6eac9812bb0d6a57",
-    "sheet.png": "0d93af9fd272fed41429f437d1f1b273a10d6c255122408732320ab84816c024"
+    "hero.png": "54094a6f7b42edfce91f6694949b8c3020c3743de2b2ed69eb5577d9aef69f12",
+    "sheet.png": "0814eed6d3d4682cbbb3fd97ddc83ccf3752eb41c135359c04a079d801ba469c"
   }
 }

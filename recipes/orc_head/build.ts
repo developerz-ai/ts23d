@@ -9,6 +9,7 @@
 import {
   type BuildContext,
   bakeAo,
+  type Field,
   type Mesh,
   merge,
   type PartOptions,
@@ -28,9 +29,11 @@ import { faceRigOf, withFace } from '../_lib/bust/face-rig.ts';
 import { type Surface, surface } from '../_lib/bust/kit.ts';
 import { cardHair, farStyle } from '../_lib/face/hair-cards.ts';
 import { armour } from './armour.ts';
+import { farBeard } from './far.ts';
 import { featureEdits, toneEdits } from './features.ts';
 import { furMantle, necklace, seamField } from './fur.ts';
 import { beardRegion, hairKnot, orcCardHair, scalpLock } from './hair.ts';
+import { harness } from './harness.ts';
 import { C } from './palette.ts';
 import { plinth } from './plinth.ts';
 import { ORC_TONE, skinMesh } from './skin.ts';
@@ -50,7 +53,7 @@ export const ORC_BUST: BustRecipe = {
   torso: TORSO,
   tone: ORC_TONE,
   plinth: { radius: 0.13, color: C.plinth },
-  cells: { head: [0.0076, 0.014, 0.036], bust: [0.014, 0.024, 0.038] },
+  cells: { head: [0.0076, 0.014, 0.03], bust: [0.014, 0.024, 0.038] },
   // The torso's stage-4 neck veins ran over the skull stage's wider jaw: muscle borders only.
   body: (stage, skin) => torsoEdits(Math.min(stage, 3), skin),
   features: (stage, skin, lod, rng) => [
@@ -68,9 +71,19 @@ export function bodySurface(lod = 0): Surface {
 
 const FIELD = { color: SPEC.skin, mirror: 'y' } as const;
 
+/** How far the far LOD's eyeballs move forward: to where 30 % of the ball's radius stands out
+ *  of the far head's closed lids in front of the orbit. */
+function farEyeProud(face: Field, cell: number): number {
+  const [ex, ey, ez] = EYE.centre;
+  let x = ex + 0.06;
+  while (x > ex && face([x, ey, ez]) > 0) x -= 0.001;
+  // (A fifth of a cell more: the coarse mesh closes the orbit that far in front of the field.)
+  return Math.max(0, x - ex - EYE.r * 0.7 + cell * 0.2);
+}
+
 export function buildOrc(ctx: BuildContext): void {
   const lod = ctx.lod;
-  const { edits, skin } = bustEdits(ORC_BUST, ctx.pick([4, 4, 2]), lod, ctx.rng.fork('features'));
+  const { edits, skin } = bustEdits(ORC_BUST, ctx.pick([4, 4, 3]), lod, ctx.rng.fork('features'));
   const cell = ctx.pick(ORC_BUST.cells.head);
   const bustCell = ctx.pick(ORC_BUST.cells.bust);
   const rng = ctx.rng.fork('skin');
@@ -128,13 +141,14 @@ export function buildOrc(ctx: BuildContext): void {
           }),
         };
   meshes['tusks'] = tusks(lod);
-  const gear = armour(ctx, skin);
+  const gear = armour(ctx);
   meshes['pauldrons'] = gear.pauldrons;
   meshes['spikes'] = gear.spikes;
   // The fur and the strap carry the road: mud dried into the fur's lower clumps and the strap's
   // low end, dust on what faces up.
   const fresh: Record<string, Mesh> = { mantle: furMantle(ctx, skin) };
-  if (gear.harness) fresh['harness'] = gear.harness;
+  const straps = harness(ctx, skin);
+  if (straps) fresh['harness'] = straps;
   const soft = weather(ctx, fresh, {
     name: 'fur_and_strap',
     age: 0.7,
@@ -147,6 +161,11 @@ export function buildOrc(ctx: BuildContext): void {
   });
   Object.assign(meshes, soft);
   if (lod < 2) meshes['necklace'] = necklace(ctx, skin);
+  // The cards root on the finished head (brow shelf, jaw and all), not the stage-2 skin: the
+  // brow and beard roots would sit buried under the stage-3 strokes.
+  const finished = sculptField(edits, FIELD).field;
+  // The far beard is one solid mass (far.ts): a handful of wide cards read as a torn patch.
+  if (lod === 2) meshes['beard'] = farBeard(finished);
   meshes['hair_knot'] = hairKnot(ctx, skin);
   meshes['plinth'] = plinth(ctx);
   const all = merge(Object.values(meshes));
@@ -165,15 +184,16 @@ export function buildOrc(ctx: BuildContext): void {
       lod < 2 ? bakeAo(m, { samples: ctx.pick([14, 9, 6]), radius: 0.1, strength: 0.5 }, all) : m;
     ctx.part(name, withFace(name, lit, rig), opts[name] ?? {});
   }
-  // The cards root on the finished head (brow shelf, jaw and all), not the stage-2 skin: the
-  // brow and beard roots would sit buried under the stage-3 strokes.
-  // (The far LOD keeps the beard and the brows as a handful of wide cards: the beard has no
-  // sculpted mass, so the lock style's far rule, the mass alone, would shave it off.)
-  cardHair(ctx, orcCardHair(surface(sculptField(edits, FIELD).field)), 'hair', { far: farStyle });
+  // (The far LOD keeps only the brows as cards: its beard is the solid mass above.)
+  cardHair(ctx, orcCardHair(surface(finished)), 'hair', {
+    far: (style) => farStyle(style, { keep: ['brows'] }),
+  });
   eyes(ctx, EYE, {
     cell: ctx.pick([0.002, 0.0036, 0.01]),
     finish: 'cornea',
-    proud: lod === 0 ? 0 : cell * 0.3,
+    // The far head's lids close over the orbit at its cell: the ball stands out to the lid
+    // line there, so the ember eyes stay lit at a distance (D549).
+    proud: lod === 0 ? 0 : lod === 1 ? cell * 0.3 : farEyeProud(finished, cell),
     lidShadow: 0.55,
     // The orbit's seat resolves at LOD0 only (coarser cells close the hollow).
     ...(lod === 0 ? { socketIn: 'head' } : {}),

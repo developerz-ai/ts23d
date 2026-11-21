@@ -2,7 +2,12 @@
 // tusk ivory and root stain, scars, warts, eyes, iron, leather, fur, plinth. One table so the
 // dossier and the code agree.
 
-import { hex } from '@developerz.ai/ts23d';
+import { hex, type StripId } from '@developerz.ai/ts23d';
+
+/** The plates' strip: dark pitted iron, a metal (paint over steel read as grey plastic, D547). */
+export const PLATE_STRIP: StripId = 'aluminium';
+/** Rivets, bosses and the buckle: brighter worn steel. */
+export const FITTING_STRIP: StripId = 'aluminium';
 
 export const C = {
   // Weathered olive-grey hide (a saturated mid-green read as a toy, a painted human).
@@ -40,12 +45,20 @@ export const C = {
   hairRoot: hex('#2a2018'),
   hairTip: hex('#6e5842'),
   hairBand: hex('#5b3a22'),
-  /** Plate paint over the iron strip (dark, sooty), and the bare worn rims. */
-  plate: hex('#4a4842'),
-  plateRim: hex('#6a665e'),
-  rivet: hex('#b0a898'),
-  bareIron: hex('#d8d4cc'),
-  rust: hex('#7a4422'),
+  /** Forged plate: a dark steel tint over the `aluminium` metal strip (`PLATE_STRIP`). */
+  plate: hex('#5c5955'),
+  /** The wire every plate edge is rolled over, on the fitting strip: rubbed, brighter steel. */
+  plateRim: hex('#8a857c'),
+  /** What wear shows: bright iron (the strip's albedo, untinted). */
+  bareIron: hex('#b5b0a6'),
+  /** Rivet heads, the boss and the buckle, on the fitting strip (worn bright steel). */
+  rivet: hex('#7a756c'),
+  boss: hex('#5e5a53'),
+  /** A spike's iron collar (on the bone's plain strip: the dark iron itself). */
+  collar: hex('#3d3b37'),
+  /** Rust as a tint over the plate strip, and the soot and old grease in its hollows. */
+  rust: hex('#573019'),
+  soot: hex('#2b2927'),
   leather: hex('#8a6448'),
   /** Over the leather strip (which carries its own brown): a light tint. */
   strap: hex('#e6d2b8'),

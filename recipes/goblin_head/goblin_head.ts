@@ -45,7 +45,8 @@ export const goblin_head = defineAsset({
   },
   // LOD0: the head's skin ≈ 30k (eyes and ears meshed finer), the four garment layers ≈ 17k.
   // Draws: skin, face-node cloth, static fittings, corneas, hair cards.
-  budget: { triangles: [58000, 14500, 2700], draws: 5 },
+  // (LOD2 from 2700: its face box holds the sockets, nose and lips, ~400–630 triangles, D551.)
+  budget: { triangles: [58000, 14500, 3300], draws: 5 },
   // The cornea's lacquer, and the skin: the pore strip's roughness under a dull olive sheen.
   // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
   hero: portrait(0.482, { fill: 1.4, at: 0.7 }),

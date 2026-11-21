@@ -6,6 +6,10 @@ import { dmath } from '@developerz.ai/ts23d';
 import { add, cross, mul, norm, sub, type V } from '../_lib/bust/kit.ts';
 import { L } from './landmarks.ts';
 
+/** A pauldron's crown plate stands this far proud of its skirt: the lap's step, a plate and a
+ *  gap (the skirt keeps the cap's own radius). */
+export const LAP = 0.007;
+
 /** How far the pauldrons sit in from the deltoid's centre, metres. */
 export const INBOARD = 0.032;
 
@@ -33,11 +37,34 @@ export function capPoint(s: number, phi: number, theta: number, lift = 0): V {
   return add(add(at, mul(dir, (R + lift) * dmath.sin(p))), mul(z, (H + lift) * dmath.cos(p)));
 }
 
+/** The top lame's inner radius: the arm stub (6.2 cm, torso.ts) plus a 6 mm arming pad. */
+export const LAME_R = 0.068;
+
+/**
+ * The lames' axis (s = +1 left, −1 right): down the arm stub's own axis (torso.ts: deltoid to
+ * [−0.012, 0.262, 0.15]), so the bands wrap the arm. Round an axis tilted the other way and 2 cm
+ * wider than the arm they hung beside the shoulder with daylight between them and the body.
+ */
+export function lameAxis(s: number): { at: V; axis: V } {
+  const [dx, dy] = L.deltoid;
+  // (1.2 cm outside the stub's axis, no more: at 2.3 the bands stood off the flank as a tube
+  // beside the body.)
+  return { at: [dx - 0.012, (dy + 0.012) * s, 0], axis: norm([0.06, -0.07 * s, 1]) };
+}
+
 /** The bone spikes: [phi, theta (× side), length, radius] on each cap. */
 export const SPIKES = [
   [12, 90, 0.095, 0.019],
-  [50, 90, 0.065, 0.015],
+  // (At 44°: its collar stays on the crown plate, clear of the lap at 62°.)
+  [44, 90, 0.065, 0.015],
 ] as const;
+
+/** A spike's length and tip radius on side `s`: the right pauldron's raked spike was snapped
+ *  off short in some fight (the asymmetry a symmetric pair of pauldrons lacks). `i` indexes
+ *  `SPIKES`. */
+export function spikeEnd(s: number, i: number, len: number): { len: number; tip: number } {
+  return s === -1 && i === 1 ? { len: len * 0.5, tip: 0.0075 } : { len, tip: 0.002 };
+}
 
 /** The baldric's path: from under the left pauldron across the chest to the right flank. */
 export const BALDRIC: V[] = Array.from({ length: 12 }, (_, i) => {

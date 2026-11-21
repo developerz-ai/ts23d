@@ -1,167 +1,168 @@
 {
   "asset": "orc_head",
   "reviewer": "agent-panel",
-  "overall": 4.9,
+  "overall": 5.6,
   "scores": {
     "silhouette": {
-      "score": 5.8,
-      "reason": "panel-1: Front silhouette reads as an armoured orc bust: pointed ears, topknot, spiked pauldrons and tusks register in black. Side and rear read as a gourd/egg on a plinth; the cranium dome dominates, there is no jaw, brow or neck break, and the face is a shallow bump on the front of the egg. | panel-2: Front reads as an orc bust: pointed ears, topknot, two spiked pauldrons, tusks and beard. Side and rear read as a smooth egg or pear: one continuous ovoid from crown to chest with no neck, nape, trapezius or occipital break, so the shadow says 'gourd with shoulder pads' rather than 'orc'. Tusks are too small to break the profile, and the ears are thin slivers that disappear side-on. | panel-3: Front silhouette reads as a fantasy orc bust: pointed ears, topknot, spiked pauldrons and the plinth all break the outline. The side view is the weak one: the head is a smooth egg/gourd with a bulging occiput, the jaw and chin barely project, so in black the profile reads as a pear with a shoulder pad rather than a heavy-jawed orc. Tusks are too small to register in the silhouette at all.",
+      "score": 7,
+      "reason": "panel-1: Clearly an armoured orc warrior bust: spiked dome pauldrons, topknot, swept ears, lower tusks and a hulking trapezius read in every black view. Side view is a lumpy pear where the skull, traps and pauldron merge, and the beard's blocky rectangle flattens the jaw line in front. | panel-2: Strong, readable outline: spiked pauldrons, topknot, pointed ears, tusks and a wide neckless mass say armoured orc in every view. The front outline is a clear cross shape. Weak points: the topknot is a thick bent hose rather than hair, the tusks do not break the outline in front view, and the side view is a round ball with the face barely projecting. | panel-3: Front silhouette is instantly an orc warlord: wide spiked pauldrons, topknot, pointed ears, massive trapezius. The side view weakens it: head and torso merge into one pear/egg blob with no jaw-to-neck break, and the tusks barely break the outline.",
       "fixes": [
-        "Push the brow ridge and underbite jaw forward in side view so the profile shows a heavy brow shelf, flat nose bridge and protruding lower jaw",
-        "Carve a trapezius/neck transition so the head stops merging into the torso blob at the back",
-        "Enlarge the ears and tusks by ~30% so they break the outline in every view",
-        "Carve a neck and trapezius slope: pull the jaw/occiput mass in above the shoulder line so the side profile has a clear notch under the skull",
-        "Push the brow ridge and lower jaw forward 2-3 cm in profile; enlarge the lower tusks so they clear the upper lip and read in black",
-        "Thicken and angle the ears outward so they break the front and side outline",
-        "Push the lower jaw forward and widen it so the underbite and chin mass break the side profile",
-        "Lengthen and thicken the lower tusks (roughly 2x) so they poke past the upper lip line in front and side silhouettes",
-        "Flatten the back of the skull and add a thick trapezius/neck mass so the side view is not an egg on a ball"
+        "Separate the jaw from the traps in side view with a deeper under-jaw shadow line and a forward-thrust lower jaw",
+        "Taper the beard to a point or braids so it breaks the rectangular front block",
+        "Make the ears larger and angled outward so they clear the skull outline",
+        "Rebuild the topknot as a bound tail of strands with a flared end",
+        "Lengthen and splay the tusks so they clear the cheeks in front view",
+        "Push the brow and jaw forward in profile so the face projects past the chest",
+        "Push the lower jaw forward and down so an underbite and jaw corner separate head from trapezius in side view",
+        "Lengthen the tusks so they clear the upper lip and read in silhouette",
+        "Flatten the back of the torso and add a shoulder-blade plane so the side reads as a body, not an egg"
       ]
     },
     "proportions": {
-      "score": 4.5,
-      "reason": "panel-1: The cranium is far too tall and rounded for an orc: the face occupies only the lower third, eyes sit low and close under a huge dome, the forehead is a long smooth slope. Side view shows a pear-shaped skull with almost no depth from brow to occiput structure and a weak chin hidden by the beard. Pauldrons are oversized helmets relative to the shoulders and the torso has no readable pectoral/deltoid anatomy. | panel-2: The cranium is far too tall and deep for the face: the face sits on the lower third of a domed egg, the back of the skull runs straight into the shoulders, and there is no neck at all. Eyes are small and sit shallow with almost no orbit or brow shelf over them. The jaw is narrow for an orc (should be the widest part of the head with heavy masseters). Ears are thin and set low. Pauldrons are well scaled to the shoulders, but the torso under the beard reads as a soft blob with no pectoral or deltoid structure. | panel-3: Cranium is far too tall and domed relative to a small, recessed face; the face occupies only the lower front third of the head. Brow ridge is weak for an orc, nose is small and mushy, the mouth sits too low and narrow and the jaw is undersized. Eyes sit reasonably in the orbits, but the head reads more like a bald ogre/troll caricature than the heavy-browed, wide-jawed orc archetype. Ears are set high and slightly back, acceptable. Torso is a soft blob without clavicle or pectoral structure.",
+      "score": 5.5,
+      "reason": "panel-1: Good orc mass: no visible neck, huge traps, heavy brow. But the cranium is a tall narrow egg rising above a smallish face, the nose is a soft blob, the eyes sit high and tiny under the brow, and the lower jaw (which carries the tusks) is not wide or protruding enough; tusks look stuck on rather than rooted in an underbite. Pauldrons are large relative to the shoulder they sit on. | panel-2: Heavy jaw, wide skull and bull neck fit an orc, and the pauldrons are a believable size. Errors: the eyes are tiny glowing dots set high and close with no visible eyeball or lids, the nose is a soft lump, the ear is a thin vertical blade with no concha, the skull is a smooth egg merging into a spherical torso with no trapezius, clavicle or pectoral forms, and the lower teeth sit as a row of pegs on the lip. The pauldrons float beside the body without straps to the torso. | panel-3: Heavy brow, wide nose and huge trapezius are on-model for an orc, but the cranium is a smooth tall dome that is too small at the back, the ears are tiny and placed high above the eye line, eyes are tiny glowing slits sunk without lids, and the tusks root in the lip corners rather than the lower jaw.",
       "fixes": [
-        "Lower the skull vault by ~20% and widen the zygomatic/jaw region so the face fills half the head height",
-        "Raise the eye line to roughly mid-head and set eyes deeper into defined orbits under a brow ridge",
-        "Build a wide, square mandible with the lower canines rooted in it; add a short thick neck with sternocleidomastoid and trapezius masses",
-        "Scale pauldrons down ~15% and seat them on sculpted deltoids",
-        "Lower the vertex of the skull ~15% and shorten the back of the cranium; widen the jaw and cheekbones so face width is greater than cranium width",
-        "Add a heavy supraorbital ridge and sink the eyes into orbits under it",
-        "Build a short thick neck and sterno/trapezius masses between head and chest; add pectoral and deltoid planes under the pauldrons",
-        "Thicken the ears at the root and raise them to eye-to-brow level",
-        "Reduce cranial height ~15% and bring the hairline/brow forward so the face takes up more of the head",
-        "Sculpt a pronounced supraorbital ridge and a broad flat nose with flared nostrils",
-        "Widen the mandible and mouth to near cheekbone width; raise the mouth slightly",
-        "Add clavicle, sternocleidomastoid and pectoral planes to the chest so the bust has anatomy below the beard"
+        "Lower and widen the cranium; push the brow ridge forward as a heavy shelf",
+        "Widen and protrude the mandible so tusks emerge from a clear underbite",
+        "Define the nose with a broad flattened bridge and flared nostrils",
+        "Scale the pauldrons down ~10% or widen the deltoids under them",
+        "Model real eyeballs in deep orbits under the brow; keep the glow as emissive iris only",
+        "Sculpt nostrils and a broad nose with alar wings",
+        "Give the ears thickness, a concha and a notched rim",
+        "Add trapezius, clavicles and pectoral planes to the torso mass",
+        "Seat the teeth in a lower gum line; attach pauldrons with visible straps and buckles to the harness",
+        "Widen the jaw and cheekbones and lower the cranium height for a brutish wide-low skull",
+        "Move ears down to brow-to-nose height and enlarge them",
+        "Seat the tusks in a protruding lower jaw with visible gums",
+        "Give the eyes modelled lids under the brow shelf instead of emissive dots"
       ]
     },
     "materials": {
-      "score": 5.2,
-      "reason": "panel-1: Skin, leather belt, bone tusks/spikes and dark iron separate by hue and value, but the iron is a flat matte grey with almost no specular response, the skin has no subsurface or roughness breakup, and the back fur mantle reads as brown clay rather than hide or fur. The glowing eyes are the one strong material note. | panel-2: Skin, iron, leather, bone and hair separate by hue, and the skin has a mottled albedo. But the iron pauldrons are a flat uniform dark grey plastic with a soft generic highlight, no metallic response or roughness variation; the rust is circular stamped blotches. Bone spikes and tusks share one creamy plastic look. The skin has no subsurface warmth, the pale streaks on the face read like texture smears, and the beard is a dark smudge of strands. | panel-3: Skin, metal, leather, fur and bone separate by hue, and the glowing eyes read. But the steel pauldrons are uniform mid-grey with soft broad highlights, closer to plastic than worked iron; the leather strap and fur pelt are smooth, waxy surfaces with no grain or fibre; the topknot hair looks like melted clay. Skin has some mottling but no subsurface or roughness variation around nose, lips and brow.",
+      "score": 6,
+      "reason": "panel-1: Best material separation of the set: steel pauldrons reflect with a proper highlight and rust bleeding at rivets, bone spikes and tusks read as ivory, leather belt is brown and matte, skin has a mottled green with some sheen. Weak spots: the fur cape is smooth clay with no hair, the beard is dense but flat, and the topknot hair is a smooth rubbery tube. | panel-2: Best material read of the set: steel pauldrons are metallic with highlights and rust patches, bone spikes and tusks are matte ivory, leather strap is brown with a metal buckle, skin is mottled green. Skin is uniformly rough with a cloth-like grain, the topknot and the fur mantle read as brown clay, and the rust is orange decals rather than pitted metal. | panel-3: Steel pauldrons read as metal with specular, rivets and rust bleed; bone spikes and tusks separate as ivory; the leather belt and fur mantle read by hue. Skin is a uniform olive with odd pale vertical streaks on the face; the beard is a dark noisy curtain; the topknot looks like brown plastic.",
       "fixes": [
-        "Give pauldron iron metalness ~0.9 with roughness variation (polished edges, rougher hollows) so it reflects the environment",
-        "Add sheen/subsurface tint and oily roughness breakup on the skin (nose, forehead, lips)",
-        "Replace the clay mantle with a fur/hide strip: card fur or strand alpha along the edge, sheen finish",
-        "Give the pauldrons true metallic PBR with roughness breakup: polished edges, darker rough cavities, rust that runs from rivets downward instead of round dots",
-        "Separate bone (spikes, tusks, teeth) with yellowed cavity tint and lower roughness at tips",
-        "Add warm red tint in ears, nose, lips and eyelids to sell skin; remove or rework the pale vertical streaks on the face into proper scar tissue",
-        "Give the beard clumped cards with a lighter tip gradient instead of a dark smear",
-        "Give the pauldrons a darker, rougher base with sharp edge highlights and a hammered-metal roughness map",
-        "Add fibre/strand normal detail to the fur mantle and topknot instead of smooth tubes",
-        "Add leather grain and edge darkening to the belt/strap; vary skin roughness (oilier nose/forehead)"
+        "Give the cape fur cards or a fur shell with a ragged edge instead of a smooth draped slab",
+        "Make the topknot a braided strand set with roughness variation, not a smooth tube",
+        "Add skin roughness variation and subtle warmer tint at lips, ears and knuckles of the face",
+        "Add specular variation to skin and a pore normal in place of the woven grain",
+        "Give the topknot and fur mantle strand cards or a fur normal with anisotropy",
+        "Raise rust roughness and add height so it pits the steel; add edge wear highlights on plate rims",
+        "Yellow the tusk roots and add fine cracks",
+        "Replace the pale face streaks with deliberate war paint or scars with edges",
+        "Give the topknot strand clumping and a leather wrap instead of a smooth tube",
+        "Add skin colour zoning (darker brow and knuckles of the face, warmer lips and ears)",
+        "Raise roughness on the fur mantle and add tip highlights"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "panel-1: Beard strands, rivets, a buckle, a bead necklace and a forehead scar exist, but the skin is almost featureless at close range: no pores, wrinkles, nasolabial folds, knuckle-like brow creases or veins. Rivets are sparse and uniform, pauldron rims have no hammer marks or plate overlaps, and teeth are tiny pegs. The detail-density heat map shows large flat zones on the skull and pauldrons. | panel-2: LOD0 has rivets, riveted rims on the pauldrons, a belt with buckle, a bead necklace, a fur mantle and a topknot with wrap. But the face is under-sculpted for a hero bust: no wrinkles, pores, nasolabial folds, lip definition or brow creases; the nose is a soft lump. Raking light shows the skull as almost perfectly smooth. Rivets are evenly spaced dots with no head shape. The topknot strands are tube-like and the fur mantle is a smooth sheet with a ragged edge. | panel-3: Rivets, buckle, bead necklace and banded vambraces exist, and the beard has strand cards. Up close (raking_detail) the head is smooth: no pores, wrinkles, scars with depth, ear cartilage or eyelid forms; the ear is a flat leaf; the dreadlocks are fused into a rake. The scar on the brow is only painted. Teeth are small flat tiles. Holds up at third-person mid distance, not in a close-up.",
+      "score": 6,
+      "reason": "panel-1: Pauldrons have rivets, layered lames, banding and spikes; belt has a buckle; a bone-bead necklace and warpaint streak add interest. The face is softer: few wrinkles, little scarring relief, teeth are small pegs, and ears lack inner structure. The fur cape and back are underdeveloped. | panel-2: Rivets on the plates, layered lames, a buckle, a bone-bead necklace, strand beard, brow hairs and facial scars give real density, and the detail map is busy across the armour. Close up the back is weak: the topknot is a smooth tube with fused finger-like strands, the fur mantle is a draped sheet with drip-shaped ends, the skin is featureless on skull and back, and the beard is straight vertical cards with a hard top edge on the cheeks. | panel-3: Best detail of the set: riveted layered pauldrons, bone-bead necklace, buckle, belt, teeth row, brow wrinkles. Still missing scars, skin pores, ear structure, stitching on the leather and fur strand definition.",
       "fixes": [
-        "Add a skin height graph: pores, forehead wrinkles, crow's feet, nasolabial and brow furrows, veins at the temple",
-        "Model the nose with flared nostrils and a broken bridge; give lips thickness and a corner fold",
-        "Add plate overlaps, straps and buckles under the pauldrons and denser, varied rivets",
-        "Enlarge and irregularise the lower teeth; add chips to the tusks",
-        "Sculpt secondary/tertiary face forms: brow furrows, nasolabial folds, defined lips over the tusks, cheek and forehead scars with raised edges",
-        "Add skin pore/normal detail on head and shoulders so raking light shows texture",
-        "Model rivet heads as domes with a rim and add plate seams/hammer dents on the pauldrons",
-        "Break the fur mantle into tufted clumps and the hair into thinner braids with wraps",
-        "Sculpt forehead furrows, nasolabial folds, crow's feet and a real recessed scar with raised edges",
-        "Model ear helix/antihelix folds and a few notches or piercings",
-        "Separate the dreadlocks into individual tapered strands with wraps/beads",
-        "Model individual teeth with gum line and chips; add edge bevels and dents on pauldron rims"
+        "Sculpt brow furrows, nose-bridge creases and a raised scar across the face",
+        "Model gums and a fuller lower tooth row with the tusks set in sockets",
+        "Add straps and buckles holding the pauldrons to the torso",
+        "Detail the inner ear and add a ring or notch",
+        "Add wrinkles at the brow, nose and neck folds and veins on the skull",
+        "Replace the mantle with layered fur tufts and a stitched leather edge",
+        "Blend the beard into the cheeks with shorter cards and stubble; vary card direction",
+        "Add dents, scratches and a rolled edge to the pauldron plates",
+        "Add scars across brow and cheek, nicks in the ears and ear rings",
+        "Stitch the belt and add a strap holding each pauldron",
+        "Sculpt fur clumps on the mantle edge"
       ]
     },
     "wear": {
-      "score": 4.8,
-      "reason": "panel-1: Some rust smears on the pauldrons and one scar give a hint of history, but grime is not in the crevices, metal edges are not chipped, skin has no dirt, war paint or old wounds beyond the single scar, and everything is symmetric and clean. | panel-2: There is some story: facial scars, rust spots on the armour, a ragged fur mantle. But wear is uniform and decal-like: rust is round blotches, armour edges have no chipping or bright worn metal, the leather belt is clean, the bone spikes are clean and symmetric, and the body is near-symmetric. Nothing tells where this orc has been. | panel-3: Some rust-red spotting on the pauldrons, a painted scar and a ragged-edged pelt hint at history, but the armour has no dents, scratches or edge wear, the skin has no grime in creases, the leather is clean and the whole asset is fairly symmetrical. It looks freshly made rather than lived in by a warrior.",
+      "score": 5.5,
+      "reason": "panel-1: Some history: rust stains under rivets, scuffed steel, warpaint smear, ragged cape edge. Skin is too clean and evenly coloured, the steel is still mostly mirror-polished, and there are no dents or chipped edges on the armour. | panel-2: Rust on the pauldrons, pale scars across the cheek and brow, stained teeth and a ragged mantle tell some history. The rust sits in flat mid-panel patches rather than under rivets and in plate overlaps, the steel has no dents or cuts, the leather is clean, and both pauldrons wear nearly the same. | panel-3: Rust bleeding from rivets and a ragged mantle give the armour some history. Skin and tusks are clean, armour has no dents or scratches, and the face streaks look like texture error rather than story.",
       "fixes": [
-        "Drive grime from cavity/AO into armour crevices, rivet bases and the belt edges",
-        "Add edge chips and dents on pauldron rims and a broken spike tip on one side",
-        "Add asymmetry: a notched ear, a chipped tusk, extra scars or war paint across the face",
-        "Add edge wear and dents to the pauldrons, asymmetric damage (one broken or chipped spike)",
-        "Run rust streaks downward from rivets and pool grime in the plate overlaps",
-        "Crack and darken the belt leather at folds and buckle; stain the necklace beads",
-        "Make the face asymmetric: one chipped tusk, a notched ear, a deeper scar across one eye",
-        "Add dents, gouges and bright scratched edges on pauldrons; rust streaks running down from rivets",
-        "Darken creases (eye sockets, mouth corners, neck folds, under the beard) with grime/AO",
-        "Break symmetry: one chipped tusk, a notched ear, uneven pauldron sizes or a missing spike",
-        "Scuff and crack the leather strap, add dirt on the fur tips"
+        "Add dents and edge chipping to pauldron rims and dull the steel in recesses",
+        "Put battle scars, dirt and sweat sheen on the face and shoulders",
+        "Stain and fray the belt edges and dirty the bone beads",
+        "Drive rust from rivets, plate overlaps and lower edges with streaks running down",
+        "Add sword nicks and dents to one pauldron and a broken spike tip",
+        "Darken and crack the leather strap at the buckle holes",
+        "Add grime in skin folds and a chipped tusk",
+        "Dent and scratch the pauldrons, especially the leading edges",
+        "Chip a tusk and stain the tusk bases",
+        "Add dirt and dried blood in skin folds and under the beard"
       ]
     },
     "lod": {
-      "score": 3.5,
-      "reason": "panel-1: LOD2 loses the face entirely: eyes and brows vanish, the head turns into a cone, the beard becomes blotchy dark patches with holes, and the pauldrons collapse into crumpled flat shards. Colour blocks roughly hold but the shape shift would pop clearly at mid distance. | panel-2: LOD2 loses the character. The face disappears: the eyes are gone, the head becomes a faceted cone, the beard becomes a mottled black-brown decal pasted on a flat chest, and the pauldrons collapse into broken, torn grey shapes with missing rims and spikes reduced. The silhouette widens and the colour blocks shift (dark beard mass vanishes into blotches). This pop would be obvious at mid distance. | panel-3: LOD2 loses the face entirely: no eyes, brows, ears or nose, the beard becomes a perforated dark patch, the head turns into a featureless green lump, and the pauldrons fragment into faceted pieces with visible holes. Outline and big colour blocks roughly survive, but the identity of the asset (face, glowing eyes, ears) vanishes, which will pop clearly at mid distance.",
+      "score": 4.5,
+      "reason": "panel-1: LOD2 keeps the outline, pauldrons, spikes and topknot well, but the beard collapses into a smooth brown sack hanging off the chin, the eyes become flat orange hexagons, and the ears nearly vanish. The face identity shifts at mid distance. | panel-2: LOD2 keeps the main blocks (green body, grey pauldrons, spikes, topknot) so the far outline holds. But the beard turns into a smooth dark brown bib that looks like a bag hung from the chin, the eyes become oversized orange hexagons, the ears shrink to stubs, the pauldron lames, rust, belt and necklace vanish, and the tusks become thin spikes at a different angle. The face would pop visibly on the switch. | panel-3: LOD2 keeps the outline and pauldrons, but the beard becomes a solid brown blob covering the mouth like a muzzle, eyes become flat octagons, the brow and wrinkles vanish and the fur mantle is gone. Clear pop on the face at the switch.",
       "fixes": [
-        "Keep a low-poly but closed pauldron dome at LOD2 instead of decimated shards",
-        "Bake the beard into a solid shell with albedo at LOD2 rather than thinned strands",
-        "Keep eye emissive and a brow ridge at LOD2 so the face still reads",
-        "Keep the eye glow, brow ridge and jaw/tusk mass as explicit LOD2 geometry or texture so the face survives",
-        "Replace the LOD2 beard decal with a single solid beard mass of the LOD0 colour",
-        "Gate pauldrons to a clean low-poly dome with rim and two spikes instead of the shredded reduction",
-        "Preserve the neck/skull shape at LOD2 instead of the cone",
-        "Keep ears and a low-poly brow/nose/jaw block on LOD2 and keep the emissive eye quads",
-        "Replace beard strand cards at LOD2 with a solid low-poly beard mass in the beard colour",
-        "Keep pauldron domes closed (fewer segments, not holes); spend LOD2 triangles on the head instead of the plinth"
+        "Build the LOD2 beard as a tapered shell with a few strand cards, matching LOD0 value",
+        "Keep a rounded eye shape with a darker socket at LOD2",
+        "Preserve ear volume in the LOD2 mesh",
+        "Shape the LOD2 beard shell to the LOD0 beard outline with a ragged lower edge and matching colour",
+        "Keep eye glow the same screen size as LOD0",
+        "Keep ear length and tusk angle at LOD2",
+        "Keep the leather strap and rust tint as vertex colour at LOD2",
+        "Replace LOD2 beard blob with a tapered, jagged beard card shape matching LOD0 colour",
+        "Keep the brow shelf and eye sockets as geometry so eyes sit under the brow",
+        "Keep a simplified mantle silhouette at LOD2"
       ]
     },
     "technical": {
-      "score": 6,
-      "reason": "panel-1: QA is clean. 114k triangles at LOD0 is heavy for a bust and much of it is spent on smooth skull/pauldron surfaces that show no detail, while the face is under-resolved. LOD1 30.7k and LOD2 4.1k are reasonable counts but LOD2 spends them badly. | panel-2: QA is clean and LOD2 at 4.1k tris is reasonable. LOD0 at 114k triangles for a bust is heavy, and the detail heatmap shows the budget spread broadly (smooth skull, pauldron domes, pedestal) while the face, which carries the asset, is soft. LOD1 at 30k is also generous for what it shows. | panel-3: QA is clean, but 114k triangles at LOD0 for a bust is heavy given how smooth the head looks; many triangles go into the plinth, fur fringes and beard cards rather than facial form. LOD1 at 30.7k is reasonable; LOD2 at 4.1k is fine in count but broken in content (holes, lost face).",
+      "score": 5,
+      "reason": "panel-1: QA clean, but 115k triangles at LOD0 is heavy for a bust; density map shows a lot spent on armour rings and beard strands while the face stays soft. LOD1 at 30k is still large; LOD2 at 4.4k holds the outline but not the beard. | panel-2: QA is clean, but 115k triangles at LOD0 is heavy for a bust, roughly double the other heads, with much of it in beard cards and smooth pauldron domes while the skull, torso and topknot stay unsculpted. LOD2 at 4.4k is the highest of the set and still loses the beard shape and ears. | panel-3: QA clean, but 115k tris at LOD0 is very heavy for a bust; much is in the beard strands and smooth pauldron rings. LOD1 30k and LOD2 4.4k are steep but acceptable.",
       "fixes": [
-        "Move triangle budget from the smooth cranium and pauldron domes into the face, ears and hands of detail",
-        "Target ~60–80k at LOD0 with the saved budget on beard cards and face topology",
-        "Rebalance LOD2 to preserve armour silhouettes over beard noise",
-        "Move triangles from smooth skull, pauldron domes and pedestal into the face, tusks and ear rims",
-        "Target ~60-80k at LOD0 and ~15k at LOD1, using normal detail for skin pores instead of geometry",
-        "Trim LOD0 to ~60-80k by reducing plinth/pauldron ring segments and spend the remainder on facial forms",
-        "Make LOD2 reductions keep closed shells (no holes in pauldrons/beard)"
+        "Cut beard strand count and pauldron ring segments; spend the saved budget on facial planes",
+        "Target LOD1 around 15-20k",
+        "Remove hidden interior faces under the pauldrons and cape",
+        "Cut beard card count and pauldron dome segments; aim for 60-70k at LOD0",
+        "Move saved triangles to eyes, nose, ears and torso anatomy",
+        "Add a LOD2 colour-block and silhouette match check for the beard and ears",
+        "Reduce beard strand count and pauldron ring segments; target ~60k at LOD0",
+        "Spend saved triangles on face forms (jaw, lids, ears)"
       ]
     }
   },
   "renders": {
-    "hero.png": "e7fb5cfaea31bdb77cb28f695ab73cc67cc45b3b654e39e1ca4583261a96abc9",
-    "sheet.png": "ad434179577c1bdbeb66b25f5f8ad5f68e1d9448492923dad4f284d6c762f219",
-    "raking.png": "2890523aaf279fb8cafdcd17159192853a6520d2f3be7df37a527cc34070070b",
-    "raking_detail.png": "81aa4092de7a6a58f7038b3dc205ec941ae1223d181078bb7935421d20eb5c5c",
-    "lods.png": "004702d639ac77d9ab6b5f902f8df3ddefc52c8588964657e6f87e4f4137041e",
-    "silhouette.png": "e97685d7bd734ecfe17b56de8d1390880116e84396aff0f2838f1d0c7f700e47",
-    "value.png": "1105da04d1915479c14debfaa91fa34da9f56a67f9006fd407889a1dbc80badc",
-    "detail.png": "82ef66fbec9d924ebc912540c84094df3437a3ad6648bfbf0d53a8e03b9ff05c"
+    "hero.png": "e952f5f37e581e3bfdf19dd70f33edafd3d876e1b763bbec4ea14c4aad3d497e",
+    "sheet.png": "7a1c15f46e0f9d163e6241b05e348d33d892f81b1281948d0150f9e9aac07f02",
+    "raking.png": "dcc3d0440eede31cac4fcaf3af13e95f70291d70c4bf081314b21de6ce315d72",
+    "raking_detail.png": "ea76616afafd398341d8377f73c44563de1efc2859de99e020ac14e94fa0f74a",
+    "lods.png": "425a98110662fa65fde8d8b9c36309384ade1f49e6f16fff280a37a3b534b78d",
+    "silhouette.png": "2dbe1418cb46bfd8074a7beb8219a4015c06154329b0413d807e7b8ae565ae25",
+    "value.png": "27c94bd9b616c1ceacdc53c263e61624902f85cb3c68e55cee92b3f69a305ec9",
+    "detail.png": "298df810c3ccce93fd8392829c94d9910494ea3bddfb899c4524b4cf6670dc59"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 0.937
+        "iou": 0.951
       },
       {
         "view": "side",
-        "iou": 0.908
+        "iou": 0.93
       },
       {
         "view": "3/4",
-        "iou": 0.938
+        "iou": 0.949
       }
     ],
     "focal": {
-      "peakPart": "head",
+      "peakPart": "pauldrons",
       "peak": [
-        439,
-        206
+        201,
+        288
       ],
-      "focalShare": 0.331,
-      "focalArea": 0.298,
+      "focalShare": 0.151,
+      "focalArea": 0.286,
       "top": [
         {
-          "part": "head",
-          "share": 0.331
-        },
-        {
           "part": "pauldrons",
-          "share": 0.188
+          "share": 0.61
         },
         {
-          "part": "tusks",
-          "share": 0.12
+          "part": "head",
+          "share": 0.151
+        },
+        {
+          "part": "spikes",
+          "share": 0.08
         }
       ],
       "declared": [
@@ -169,66 +170,66 @@
       ]
     },
     "rest": {
-      "share": 0.499,
-      "spread": 0.681,
+      "share": 0.459,
+      "spread": 0.696,
       "min": 0.25
     },
     "grounded": {
-      "rise": 0.234,
+      "rise": 0.226,
       "bands": [
-        0.218,
-        0.235,
-        0.328,
-        0.349,
-        0.395
+        0.224,
+        0.233,
+        0.326,
+        0.365,
+        0.385
       ]
     },
     "shape": {
-      "acuteShare": 0.315,
-      "straightShare": 0.432,
-      "taper": 0.416,
-      "shape": "aggressive"
+      "acuteShare": 0.253,
+      "straightShare": 0.424,
+      "taper": 0.44,
+      "shape": "friendly"
     }
   },
   "panel": {
     "reviews": [
       {
         "reviewer": "panel-1",
-        "overall": 4.9,
+        "overall": 5.6,
         "scores": {
-          "silhouette": 6,
-          "proportions": 4.5,
-          "materials": 5.5,
-          "detail": 5,
-          "wear": 4.8,
-          "lod": 3.8,
-          "technical": 6
+          "silhouette": 7,
+          "proportions": 5.5,
+          "materials": 6,
+          "detail": 6,
+          "wear": 5.5,
+          "lod": 4.5,
+          "technical": 5
         }
       },
       {
         "reviewer": "panel-2",
-        "overall": 5,
+        "overall": 5.8,
         "scores": {
-          "silhouette": 5.8,
-          "proportions": 4.2,
-          "materials": 5.2,
-          "detail": 5,
-          "wear": 4.8,
-          "lod": 3.5,
-          "technical": 6
+          "silhouette": 7,
+          "proportions": 6,
+          "materials": 6.5,
+          "detail": 6,
+          "wear": 5.5,
+          "lod": 4.5,
+          "technical": 5
         }
       },
       {
         "reviewer": "panel-3",
-        "overall": 4.5,
+        "overall": 5.4,
         "scores": {
-          "silhouette": 5.5,
-          "proportions": 4.5,
-          "materials": 5,
-          "detail": 4.5,
-          "wear": 4,
-          "lod": 3,
-          "technical": 5
+          "silhouette": 6.6,
+          "proportions": 5,
+          "materials": 5.8,
+          "detail": 5.6,
+          "wear": 5.4,
+          "lod": 4,
+          "technical": 5.2
         }
       }
     ]

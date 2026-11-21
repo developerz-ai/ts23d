@@ -3,6 +3,7 @@
 // export turns it into the reserved `run` clip.
 
 import { Ts23dError } from './errors.ts';
+import { quatFromAxisAngle, quatRotate } from './vec.ts';
 
 export type TrackPath = 'rotation' | 'translation' | 'scale' | 'weights';
 
@@ -82,13 +83,36 @@ export function checkClip(asset: string, c: Clip): Clip {
   return c;
 }
 
-/** A child asset's clip seen from the parent: prefixed clip and target names. */
-export function useClip(c: Clip, prefix: string): Clip {
+/**
+ * Bone keys turned by the instance's world yaw (D556). Joints carry no rest rotation, so a bone's
+ * keys live in the asset frame: rotation keys are conjugated (yaw ⊗ key ⊗ yaw⁻¹), translation keys
+ * turn about Z. Scale keys stay: only a uniform scale reads the same in a turned frame.
+ */
+function turnBoneKeys(t: Track, yaw: number): Float32Array {
+  if (yaw === 0 || (t.path !== 'rotation' && t.path !== 'translation')) return t.values;
+  const out = new Float32Array(t.values.length);
+  const v = (i: number): number => t.values[i] ?? 0;
+  const q = quatFromAxisAngle([0, 0, 1], yaw);
+  if (t.path === 'translation') {
+    for (let i = 0; i < out.length; i += 3) out.set(quatRotate(q, [v(i), v(i + 1), v(i + 2)]), i);
+    return out;
+  }
+  for (let i = 0; i < out.length; i += 4) {
+    const axis = quatRotate(q, [v(i), v(i + 1), v(i + 2)]);
+    out.set([axis[0], axis[1], axis[2], v(i + 3)], i);
+  }
+  return out;
+}
+
+/** A child asset's clip seen from the parent: prefixed names, bone keys turned by `yaw`. */
+export function useClip(c: Clip, prefix: string, yaw = 0): Clip {
   return {
     ...c,
     name: `${prefix}_${c.name}`,
     tracks: c.tracks.map((t) =>
-      'bone' in t ? { ...t, bone: `${prefix}_${t.bone}` } : { ...t, part: `${prefix}_${t.part}` },
+      'bone' in t
+        ? { ...t, bone: `${prefix}_${t.bone}`, values: turnBoneKeys(t, yaw) }
+        : { ...t, part: `${prefix}_${t.part}` },
     ),
   };
 }

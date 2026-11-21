@@ -33,6 +33,33 @@ export function worldTransforms(parts: readonly Part[]): Map<string, WorldTransf
   return out;
 }
 
+/**
+ * One part's world transform from its ancestor chain alone (O(depth)), for a caller that needs a
+ * single node while the scene is still growing (`ctx.use`): `worldTransforms` walks every part.
+ */
+export function transformOf(parts: ReadonlyMap<string, Part>, name: string): WorldTransform {
+  const chain: Part[] = [];
+  const seen = new Set<string>();
+  for (
+    let p = parts.get(name);
+    p && !seen.has(p.name);
+    p = p.parent ? parts.get(p.parent) : undefined
+  ) {
+    seen.add(p.name);
+    chain.push(p);
+  }
+  let origin: Vec3 = [0, 0, 0];
+  let yaw = 0;
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const p = chain[i];
+    if (!p) continue;
+    const at = rotZ(p.at, yaw);
+    origin = [origin[0] + at[0], origin[1] + at[1], origin[2] + at[2]];
+    yaw += p.yaw;
+  }
+  return { origin, yaw };
+}
+
 export function toWorld(t: WorldTransform, p: Vec3): Vec3 {
   const r = rotZ(p, t.yaw);
   return [r[0] + t.origin[0], r[1] + t.origin[1], r[2] + t.origin[2]];

@@ -250,6 +250,29 @@ export function humanCardHair(b: BustRecipe, lod: number): CardHairStyle {
         tone: [0.6, 0.9],
         hug: 1,
       },
+      // Baby hairs (D543): sparse fine strands from 4 mm inside the hairline to 8 mm out on the
+      // skin of the forehead and temples, so the hair thins out into the skin instead of ending
+      // on a ruled edge.
+      {
+        name: 'hair_baby',
+        kind: 'wisp',
+        region: (p: Vec3) =>
+          Math.max(
+            hairline(p) - 0.008,
+            -hairline(p) - 0.004,
+            (SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]) - 0.48,
+          ),
+        density: 36000,
+        length: 0.028,
+        width: 0.009,
+        lift: 0.25,
+        bend: 0.7,
+        droop: 0.1,
+        roll: 0.4,
+        fold: 0,
+        tone: [0.55, 0.9],
+        hug: 0.4,
+      },
       // Flyaways: stray strands, lifted, they break the outline.
       {
         name: 'hair_fly',

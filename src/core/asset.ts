@@ -23,6 +23,7 @@ import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.
 import { checkSeed, createRng, forkSeed } from './rng.ts';
 import { type Bone, boneOf, checkBoneBudget, checkSkeleton, useBone } from './skeleton.ts';
 import { checkTune, type TunedValues, tunedReader } from './tune.ts';
+import { type UsedDeclarations, useDeclarations } from './use-decl.ts';
 import { rebaseJoints, useSocket } from './use-skin.ts';
 import {
   checkAsset,
@@ -32,7 +33,7 @@ import {
   checkUsePrefix,
 } from './validate-asset.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
-import { worldTransforms } from './world.ts';
+import { transformOf } from './world.ts';
 
 export * from './definition.ts';
 export * from './finish.ts';
@@ -75,6 +76,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
   const weather: WeatherCoverage[] = [];
   const bones = new Map<string, Bone>();
   const usedClips: Clip[] = [];
+  const usedDecls: UsedDeclarations[] = [];
   const bone = (b: Bone): string => {
     if (bones.has(b.name) || (b.parent !== undefined && !bones.has(b.parent)))
       throw new Ts23dError('T3D_RECIPE_INVALID', {
@@ -186,12 +188,12 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
       }
     }
     for (const w of sub.weather ?? []) weather.push({ ...w, target: `${o.prefix}_${w.target}` });
-    if (sub.joints?.length || sub.skeleton) {
-      const xf = worldTransforms([...parts.values()]).get(o.prefix);
-      for (const j of sub.joints ?? []) if (xf) joint(useJoint(j, o.prefix, xf));
-      for (const b of sub.skeleton?.bones ?? []) if (xf) bone(useBone(b, o.prefix, xf));
-    }
-    for (const c of sub.clips ?? []) usedClips.push(useClip(c, o.prefix));
+    // The instance's own ancestor chain, not the whole growing scene: N uses stay linear.
+    const xf = transformOf(parts, o.prefix);
+    for (const j of sub.joints ?? []) joint(useJoint(j, o.prefix, xf));
+    for (const b of sub.skeleton?.bones ?? []) bone(useBone(b, o.prefix, xf));
+    for (const c of sub.clips ?? []) usedClips.push(useClip(c, o.prefix, xf.yaw));
+    usedDecls.push(useDeclarations(sub, o.prefix, xf));
   };
   const ctx: BuildContext = {
     lod,
@@ -234,6 +236,9 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     part: (n) => parts.has(n),
   });
   const variant = options.variant;
+  const glow = [...(asset.glow ?? []), ...usedDecls.flatMap((d) => d.glow)];
+  const gaps = [...(asset.gaps ?? []), ...usedDecls.flatMap((d) => d.gaps)];
+  const creases = [...(asset.creases ?? []), ...usedDecls.flatMap((d) => d.creases)];
   return {
     name: asset.name,
     kind: asset.kind,
@@ -241,17 +246,17 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     ...(asset.medium ? { medium: asset.medium } : {}),
     budget: asset.budget,
     real: asset.real ?? null,
-    checks: asset.checks ?? [],
+    checks: [...(asset.checks ?? []), ...usedDecls.flatMap((d) => d.checks)],
     parts: variant === undefined ? built : repaint(asset.name, built, paintSet, variant),
     ...metaOf(asset),
-    ...(asset.glow?.length ? { glow: asset.glow } : {}),
+    ...(glow.length ? { glow } : {}),
     ...(asset.lodCoverage ? { lodCoverage: asset.lodCoverage } : {}),
     ...(paintSet ? { paintSet } : {}),
     ...(finishes ? { finishes } : {}),
     ...(optics ? { optics } : {}),
     ...(variant !== undefined ? { variant } : {}),
-    ...(asset.gaps?.length ? { gaps: asset.gaps } : {}),
-    ...(asset.creases?.length ? { creases: asset.creases } : {}),
+    ...(gaps.length ? { gaps } : {}),
+    ...(creases.length ? { creases } : {}),
     ...(joints.size ? { joints: [...joints.values()] } : {}),
     ...(asset.physics ? { physics: asset.physics } : {}),
     ...(weather.length ? { weather } : {}),

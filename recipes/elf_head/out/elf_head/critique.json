@@ -1,69 +1,236 @@
 {
   "asset": "elf_head",
-  "reviewer": "agent",
-  "overall": 6.3,
+  "reviewer": "agent-panel",
+  "overall": 4,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Pointed ear tips break the outline in FRONT, SIDE and hero.png, so it reads as an elf; the crown is fuller and the pale scalp is gone, but a smooth dark-brown whorl patch still shows through the strands at the crown in hero.png and FRONT, and the hair is still thin straight strands hanging off a slicked crown.",
+      "score": 4.6,
+      "reason": "panel-1: Reads as a long-haired bust, but the signature elf feature, the pointed ear, is a small thin spike mostly buried in the hair and barely registers in black (front silhouette shows only a tiny nub). Shoulders are a rounded pillow; straggly hair cards break the outline into noise at the back and sides. | panel-2: Front view shows two pointed ear tips and long hair, so the outline says elf, but only just: the ears are thin short spikes that the hair mostly hides in side and 3/4 views, and the hair outline is a ragged curtain of loose strands with wire-like loops floating off the back of the head. The shoulders are a rounded lump with no neckline shape. | panel-3: The signature elf feature, the pointed ear, is a thin spike barely poking out of the hair and does not read in the black silhouettes; without it the outline is a generic long-haired bust. Hair hangs on one side only and the shoulder block is a lumpy pillow.",
       "fixes": [
-        "close the crown whorl with cards radiating over it so no smooth brown patch shows (hair.ts)",
-        "denser, wider locks so the hair reads as a mass, not single strands"
+        "Lengthen the ear tip and angle it up and back so it clears the hair mass in front and side silhouettes",
+        "Tuck the hair behind the ears or part it around them so the ears read",
+        "Shape the shoulder line with a clavicle/trapezius break instead of a soft blob",
+        "Lengthen and widen the ears into a leaf shape that clears the hair in every view; tuck the hair behind them",
+        "Remove the detached strand loops behind the crown and clump the hair into 5-8 clear locks",
+        "Shape the shoulders with a slope and shoulder points instead of a pillow",
+        "Make the ears longer and swept back so the tip clears the hair outline in front and side views",
+        "Part the hair behind the ear so the ear sits on top of it instead of buried",
+        "Give the shoulders a trapezius slope and clean deltoid caps"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "Face is doll-like: mid-face long, eyes small and set high, neck thin against broad puffed shoulders.",
+      "score": 4.5,
+      "reason": "panel-1: Face is long and narrow with a reasonable elf elegance, but the profile is flat: brow, cheekbones and lips barely project, the chin recedes into the neck, and the eyes are small and set shallow with no lid thickness. Neck is long and tubular. Cranium behind the ears is thin under the hair. | panel-2: Front view is a plausible slim face, but the profile is wrong: the face is nearly a flat vertical plane, the forehead, eye and cheek sit on one line, the eye has no depth in the orbit and reads as a closed slit from the side, the nose is a short peg and the chin is weak under a long flat jaw. The ear is a narrow blade attached high and too far back with no concha. Eyes are small and wall-eyed in the hero view. Neck is long and tube-like without muscle. | panel-3: The ear sits too high and too far forward (tip above the brow, root near the temple) rather than at brow-to-nose height. Profile is flat: little brow ridge, shallow orbits, weak chin and jaw angle. Eyes are small, set shallow with no lid thickness, giving a mannequin stare. Mouth is a small pink blob; neck is long and tube-like.",
       "fixes": [
-        "shorten the mid-face 3% and enlarge the eyes slightly (spec.ts)",
-        "slimmer, less puffed shoulders on the tunic (torso.ts)"
+        "Deepen the orbits and add upper/lower lid shells; enlarge the eyeballs slightly",
+        "Push cheekbones high and forward, define the jawline and a forward chin",
+        "Build lip volumes with a clear vermilion border and philtrum",
+        "Shorten the neck slightly and add SCM forms; enlarge the occiput",
+        "Set the eyeball back behind the brow and cheekbone and model upper and lower lids with thickness",
+        "Give the profile a brow ridge, nose bridge projection and a chin that comes forward to the lip line",
+        "Rebuild the ear with a concha at the jaw hinge level, base spanning brow to nose base, then extend the tip",
+        "Converge the irises so both eyes look at one point; enlarge the eye openings",
+        "Add sternomastoid and clavicle forms to the neck and chest",
+        "Move the ear root down and back to sit between brow and nose base behind the jaw ramus",
+        "Deepen the orbits and add upper and lower lid thickness; enlarge the eyes slightly for an elven read",
+        "Define a sharper jawline and chin projection with a high cheekbone plane",
+        "Shorten the neck a little and add sternocleidomastoid definition"
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Freckles sit on the nose bridge and upper cheeks and fade out on forehead and jaw, so the face reads as fair, smooth skin with a light freckle dusting in hero.png and FRONT; the lids are a touch cooler and the ear tip is now a plain pale cream with almost no warm transmission, a few orange specks fringe the nostril and lip edges, the hair is golden but still reads as dry straw with no visible sheen, and the tunic is still blotchy green with grey smears.",
+      "score": 4,
+      "reason": "panel-1: Skin is pale with freckle-like noise but waxy and uniform. Hair is a mass of flat yellow ribbons with dark scalp showing through at the crown, so it reads as straw, not hair. Tunic is a saturated green with grey camouflage-like blotches; no cloth roughness, the gold trim and grey gem are barely visible. | panel-2: Skin is a flat matte beige with a faint fabric-like grain and no specular variation; eyes are dull teal discs without highlight or pupil definition. Hair is one straw yellow with dark scalp patches showing through at the crown and no sheen band. The green garment has blurry lighter smears that read as a painted blob rather than cloth, and the brooch is a grey dot. | panel-3: Skin is a flat pale beige with faint freckles but no colour zoning or subsurface warmth. Hair reads as stiff straw cards, with scalp showing through in dark patches. The green tunic has blotchy grey camouflage patches rather than cloth shading; the clasp is a plain grey bead with no metal response.",
       "fixes": [
-        "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches",
-        "hair strip with darker roots and a clear anisotropic sheen band so the strands read as hair, not straw",
-        "a thin red-orange subsurface tint on the ear tips (albedo or transmission colour) so they read as backlit skin",
-        "keep freckle dots off the nostril and lip silhouette edges"
+        "Add a hair-coloured scalp underlayer so gaps between cards do not show dark skin",
+        "Give hair cards root-to-tip value gradient, alpha-tapered tips and anisotropic highlight",
+        "Replace the grey blotches with a woven roughness map and fold-crease shading; make trim metallic",
+        "Add roughness variation to skin (oilier forehead, nose, lips) and remove the woven grain from the skin strip",
+        "Give the eyes a glossy cornea, dark pupil and limbal ring",
+        "Add root-to-tip colour variation and an anisotropic highlight to the hair; add a hair-coloured scalp cap under the cards",
+        "Replace the garment smears with a weave normal and fold-driven shading; make the brooch metallic",
+        "Add a dense hair-cap base layer under the strands so no scalp shows",
+        "Zone the skin (warmer cheeks, nose, ear tips) and add a wet specular to the eyes",
+        "Replace the grey tunic blotches with fabric weave roughness and a darker trim colour",
+        "Make the clasp and gold trim metallic with low roughness"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Clasp, gold trim and collar exist; pores and freckles now give the skin tertiary detail in hero.png, the eyes sit in shadow under the upper lid and a brow line is drawn, but the lips still have no defined line and the hair has no strand grooves over the crown.",
+      "score": 3.9,
+      "reason": "panel-1: Eyebrow strands and faint freckles exist, but the face lacks eyelids, lip edges, nasolabial forms; the ear has no helix/antihelix structure; the tunic is a lumpy sculpt with no seams, embroidery or folds befitting elven costume. | panel-2: Eyebrows are strand-built and the hair has many cards, but close up the cards are flat straight ribbons with see-through gaps and a dark blocky patch on top of the skull. The face has no lid crease, nostril depth, lip detail or ear interior. The garment has a gold trim line and one brooch but no seams, stitching or folds; the collar is a soft smear. | panel-3: Strand hair and freckles add some LOD0 density, and the gold trim line on the tunic is a nice touch. Face lacks lip definition, nasolabial forms, eyelid creases; the ear has no helix or inner fold; cloth has no seams or folds.",
       "fixes": [
-        "strand grooves over the crown",
-        "a defined lip line and philtrum",
-        "embroidery on the trim"
+        "Model the ear's helix, antihelix and lobe with the elongated tip",
+        "Add elven costume detail: embroidered trim bands, a proper brooch, layered collar",
+        "Sculpt eyelid creases, lip corners and subtle cheek planes",
+        "Add an under-layer of short dense cards and a scalp cap so no bare patch shows at the crown",
+        "Sculpt lids, nostrils, philtrum and lip line; sculpt the inner ear",
+        "Model a collar hem, a real brooch with a setting, and trim with thickness",
+        "Add fold geometry at the shoulders and chest",
+        "Sculpt the ear helix, antihelix and concha along the elongated shape",
+        "Model lip vermilion and corners, eyelid creases and tear ducts",
+        "Add seams, stitched trim and gathered folds to the tunic"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "The grey on the tunic now sits on the shoulder tops and sleeves, so it reads as sun fading in FRONT and SIDE; it is still blotchy enough to pass for texture noise, and there is no fray or soiled hem.",
+      "score": 3.3,
+      "reason": "panel-1: No meaningful story. The only variation is random grey splotches on the tunic that read as texture errors; skin and hair are uniform with no asymmetry or imperfection. | panel-2: A few freckles and patchy garment tones are the only imperfection. The patches look like random noise, not dirt, fading or wear along hems and folds. No asymmetry in the face, no jewellery tarnish, no story. | panel-3: No believable history: tunic patches look like texture noise, skin is pristine, hair is clumpy but not purposefully styled or windblown. Nothing places the character anywhere.",
       "fixes": [
-        "a softer, directional fade (top-down) instead of grey blotches",
-        "fray and dirt along the cloak hems"
+        "Put grime and darkening in tunic fold crevices and hem edges instead of random patches",
+        "Add subtle facial asymmetry and flyaway strands that follow gravity rather than random spikes",
+        "Tarnish the trim and brooch in recesses",
+        "Fade the garment on the shoulders and darken it in folds and under the collar from cavity masks",
+        "Add an asymmetric feature: a braid on one side, a small scar, an ear ring",
+        "Add subtle skin tone zones (redder ears, nose, cheeks; cooler jaw)",
+        "Add soft fading at shoulders and darker grime in the tunic folds",
+        "Add subtle facial asymmetry and fine hair flyaways around the hairline",
+        "Scuff the trim and add tarnish to the clasp"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 face is smooth now with readable eyes instead of dark holes, but the hair is still a few blocky slabs and the tunic smears into green-grey camouflage.",
+      "score": 2.5,
+      "reason": "panel-1: LOD2 face collapses into a mask: eye sockets become hollow with floating eyeballs, the nose turns into a long wedge, lips disappear, and hair turns into a fan of detached ribbon slabs. Outline and colour blocks roughly survive but the head is unrecognisable as the same character. | panel-2: LOD2 is broken: the face turns into a mask with a long snout-like nose, no mouth, bulging grey eyes and a stray dark polygon beside the eye; the ears vanish; the hair becomes a fan of wide flat planes standing off the skull with bald scalp on the near side; the garment loses its trim and brooch and shifts to a muddy olive. Outline and colour blocks both change. | panel-3: LOD2 face collapses into a mask: nose becomes a long wedge, eyes are floating discs with a stray card beside one, the brow and lips disappear. Hair turns into big flat ribbons fanning outward and the ear vanishes. Big pop at the switch.",
       "fixes": [
-        "thinner, more numerous LOD2 hair cards",
-        "average tunic colour per LOD2 face so it stays one green"
+        "Author a LOD2 head that keeps brow, nose, cheek, lip and jaw planes instead of collapsing the LOD0 face",
+        "Use a solid hair shell plus a few cards at LOD2 so the mass stays attached",
+        "Keep the ears at LOD2 as they are the identity feature",
+        "Keep ears at LOD2 as simple wedges; they are the signature feature",
+        "Build LOD2 hair as one closed shell following the LOD0 outline",
+        "Keep nose, lips and chin planes at LOD2 with painted mouth and eyes; remove the stray polygon at the eye",
+        "Keep the garment base colour and trim line identical across LODs",
+        "At LOD2 use a single hair shell that follows the LOD0 volume instead of sparse wide cards",
+        "Keep a few loops around eyes, nose and lips so facial planes survive",
+        "Keep the ear as a simple pointed wedge at LOD2 so the species reads at distance"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean; 68.4k / 19.3k / 3.0k tris, 5 / 5 / 5 draws; many strand cards spent where they read as noise.",
+      "score": 5,
+      "reason": "panel-1: QA clean, but 71k triangles at LOD0 mostly feed chaotic hair ribbons while the face stays soft and the ears tiny. LOD2 at 3.6k cannot hold the face, showing triangles are not allocated where they read. | panel-2: QA is clean, but 71k triangles at LOD0 still leave bare scalp, floating strand loops and a soft face, so the budget is spent on thin hair ribbons rather than visible form. LOD2 uses 3.6k triangles and still loses the ears and the face. | panel-3: QA clean. 71k tris at LOD0 is heavy for a bust, mostly in hair strands that still leave scalp gaps; LOD2 3.6k is fine but wasted on hair ribbons while the face starves.",
       "fixes": [
-        "fewer, wider hair cards at LOD0 and drop hidden scalp under the hair"
+        "Cut hair card count and redistribute triangles to eyes, lips and ears",
+        "Raise LOD2 face budget or hand-author its topology",
+        "Remove triangles from hidden tunic underside and plinth interior",
+        "Cut the count of outer stray hair cards and spend those triangles on ears, lids and mouth",
+        "Add a check for hair cards whose roots are not on the scalp and for scalp coverage at the crown",
+        "Add a LOD2 silhouette and colour-block comparison gate for heads",
+        "Trim strand count and add a cheap hair-cap shell; target ~40k at LOD0",
+        "Rebalance LOD2 triangles toward face and ear silhouette"
       ]
     }
   },
   "renders": {
-    "hero.png": "f54866f39395d2df846f87247c14a9f4dd8199f78f055c061837f490b74b4db5",
-    "sheet.png": "7fc60afb53c7d47325ccb5e6701f6c012146589ff240eea6b32a2e2b18bf9468"
+    "hero.png": "5e6e5b485af2b2e3e95fae557dabfd5e7572b70e8bcc07a182a490c7535b2a4b",
+    "sheet.png": "0f473c19b04ab76276f57ef18918cfbea39486311c0a08b9c14fd48cd9070de4",
+    "raking.png": "e105f60722c9591e2950f8d39412a3f289e0aa0f5859c02ebf0c7f97bdb6e2b6",
+    "raking_detail.png": "e81c540755b99a121762a629f9acdf2af1c90cf30d5fbaf67429f4a3cd08364e",
+    "lods.png": "ca6ea7c043d3408974f6f788b4152d1758cc6b21ea86a80e0f2a5ce2c4d1260f",
+    "silhouette.png": "223367c2792c873ff83b56a32d4858dc69f80fc6fccec8a696a762bb6df66486",
+    "value.png": "68b20a201f0563ef99cb4295cc8c12f0d21565ce3e4244b506a9dda56f0f80e6",
+    "detail.png": "35181dac17ea849a884948e898653843b1dc5cef842a5a223e2905413fd6b624"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.879
+      },
+      {
+        "view": "side",
+        "iou": 0.819
+      },
+      {
+        "view": "3/4",
+        "iou": 0.865
+      }
+    ],
+    "focal": {
+      "peakPart": "hair",
+      "peak": [
+        302,
+        295
+      ],
+      "focalShare": 0.063,
+      "focalArea": 0.44,
+      "top": [
+        {
+          "part": "hair",
+          "share": 0.889
+        },
+        {
+          "part": "head",
+          "share": 0.063
+        },
+        {
+          "part": "tunic",
+          "share": 0.048
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.653,
+      "spread": 0.547,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.193,
+      "bands": [
+        0.296,
+        0.491,
+        0.493,
+        0.533,
+        0.468
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.177,
+      "straightShare": 0.516,
+      "taper": 0.176,
+      "shape": "stable",
+      "declared": "friendly"
+    }
+  },
+  "panel": {
+    "reviews": [
+      {
+        "reviewer": "panel-1",
+        "overall": 3.8,
+        "scores": {
+          "silhouette": 4.5,
+          "proportions": 4.5,
+          "materials": 4,
+          "detail": 3.5,
+          "wear": 3,
+          "lod": 2.5,
+          "technical": 4.5
+        }
+      },
+      {
+        "reviewer": "panel-2",
+        "overall": 4.4,
+        "scores": {
+          "silhouette": 5.5,
+          "proportions": 5,
+          "materials": 4.5,
+          "detail": 4.5,
+          "wear": 4,
+          "lod": 2.5,
+          "technical": 5
+        }
+      },
+      {
+        "reviewer": "panel-3",
+        "overall": 4,
+        "scores": {
+          "silhouette": 4.6,
+          "proportions": 4,
+          "materials": 4,
+          "detail": 3.9,
+          "wear": 3.3,
+          "lod": 2.8,
+          "technical": 5.6
+        }
+      }
+    ]
   }
 }

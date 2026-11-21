@@ -7,11 +7,13 @@
 // high. UVs live on vertices and are interpolated across a triangle, so the band cannot simply
 // wrap: `onSkin` gives every triangle its own band cell (and its own projection plane) and splits
 // only the vertices whose triangles disagree — most stay shared. Each cell reads its own stretch
-// of the row along U, so no slice repeats cell after cell up a cheek (D513). The masks live in
+// of the row along U, so no slice repeats cell after cell up a cheek (D513). A triangle too tall
+// for a cell keeps true scale on its own plane, so density stays even at every LOD (D550,
+// ./texel-spread.ts measures it). The masks live in
 // ./skin-zones.ts; the soft ones (freckles, clear skin, stubble) are dithered per triangle, so a
 // zone's edge is a fading density of its texture, never a line across a cheek (D520, D523).
 
-import { type Mesh, merge, type StripId, stripRect, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, merge, type StripId, stripRect, type Vec3 } from '@developerz.ai/ts23d';
 import {
   SKIN_CLEAR,
   SKIN_FINE,
@@ -132,10 +134,74 @@ export function onSkin(m: Mesh, z: SkinZones = {}): Mesh {
   return parts.length === 1 && parts[0] ? parts[0] : merge(parts);
 }
 
+type V3 = readonly [number, number, number];
+const unit = (v: V3): V3 => {
+  const l = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1;
+  return [v[0] / l, v[1] / l, v[2] / l];
+};
+const dot = (a: V3, b: V3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a: V3, b: V3): V3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+/** Projection planes: the cube's 13 axes (faces, edges, corners), each with s level (along the
+ *  strip, so the fine strip's lines stay across the face) and t up it. Three axes left whole
+ *  bands of a cheek tilted 45° off its plane, the pores stretched 1.4× (D550). */
+const AXES: readonly V3[] = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+  [1, 1, 0],
+  [1, -1, 0],
+  [1, 0, 1],
+  [1, 0, -1],
+  [0, 1, 1],
+  [0, 1, -1],
+  [1, 1, 1],
+  [1, 1, -1],
+  [1, -1, 1],
+  [1, -1, -1],
+];
+const PLANES: readonly { d: V3; s: V3; t: V3 }[] = AXES.map((v) => {
+  const d = unit(v);
+  const s: V3 = d[0] === 0 && d[1] === 0 ? [1, 0, 0] : unit(cross([0, 0, 1], d));
+  return { d, s, t: cross(d, s) };
+});
+/** A directional strip's planes: the level ones and the top. Every level plane's t is world up,
+ *  so V runs on unbroken across them and a weave's or a fine line's direction holds from one
+ *  triangle to the next; a tilted plane's t leans, and neighbours picking different ones broke a
+ *  knit's rib into triangular patches across a shoulder (D562). */
+const LEVEL_PLANES = PLANES.filter((p) => p.d[2] === 0 || p.d[2] === 1);
+/** The strips with no direction of their own (pores, freckles, stubble dots): any plane and any
+ *  turn of it reads alike, so they take all 13 planes and the turns (D550). The fine and wet skin
+ *  (lines across, lines down) and every cloth strip are directional. */
+const ISOTROPIC: ReadonlySet<StripId> = new Set([
+  SKIN_STRIP,
+  SKIN_OILY,
+  SKIN_MATTE,
+  SKIN_CLEAR,
+  SKIN_FRECKLED,
+  SKIN_STUBBLE,
+]);
+/** In-plane turns a triangle too tall for a band cell may take, least turned first (so a
+ *  strip's lines stay as near across the face as the triangle allows): a half turn in 7.5° steps. */
+const TURNS = Array.from({ length: 24 }, (_, i) => {
+  const a = (i % 2 ? -1 : 1) * Math.ceil(i / 2) * (Math.PI / 24);
+  return [dmath.cos(a), dmath.sin(a)] as const;
+});
+
 /** `m` mapped at true scale onto a fine-grained strip whose row is painted for `row` metres of
- *  world (its `scaleMetres`): per-triangle band cells, as the header describes. */
+ *  world (its `scaleMetres`): per-triangle band cells, as the header describes. A triangle too
+ *  tall for a cell keeps true scale on its own plane, turned the least that fits across the row
+ *  (shrunk evenly both ways only when no turn fits): squeezing it across the row alone smeared
+ *  the pores into streaks on every large triangle (D550). A directional strip keeps its pattern's
+ *  direction: level planes only, never turned (D562). */
 export function onFineStrip(m: Mesh, strip: StripId, row: number): Mesh {
   const r = stripRect(strip);
+  const free = ISOTROPIC.has(strip);
+  const planes = free ? PLANES : LEVEL_PLANES;
+  const turns = free ? TURNS : TURNS.slice(0, 1);
   // World metres one band cell covers (true scale on the used part of the row).
   const BAND = row * (1 - 2 * INSET);
   const P = m.positions;
@@ -144,41 +210,70 @@ export function onFineStrip(m: Mesh, strip: StripId, row: number): Mesh {
   const from: number[] = [];
   const uv: number[] = [];
   const indices = new Uint32Array(T.length);
-  const at = (v: number, e: number): number => P[v * 3 + e] ?? 0;
+  const pos = (v: number): V3 => [P[v * 3] ?? 0, P[v * 3 + 1] ?? 0, P[v * 3 + 2] ?? 0];
   for (let t = 0; t < T.length; t += 3) {
-    const [a = 0, b = 0, c = 0] = [T[t], T[t + 1], T[t + 2]];
-    const u = [at(b, 0) - at(a, 0), at(b, 1) - at(a, 1), at(b, 2) - at(a, 2)] as const;
-    const w = [at(c, 0) - at(a, 0), at(c, 1) - at(a, 1), at(c, 2) - at(a, 2)] as const;
-    const n = [
-      Math.abs(u[1] * w[2] - u[2] * w[1]),
-      Math.abs(u[2] * w[0] - u[0] * w[2]),
-      Math.abs(u[0] * w[1] - u[1] * w[0]),
-    ] as const;
-    // Projection plane from the face normal's dominant axis: (s along the strip, t across it).
-    const axis = n[2] >= n[0] && n[2] >= n[1] ? 2 : n[0] >= n[1] ? 0 : 1;
-    const [si, ti] = axis === 2 ? [0, 1] : axis === 0 ? [1, 2] : [0, 2];
-    const ts = [at(a, ti), at(b, ti), at(c, ti)] as const;
-    const lo = Math.min(...ts);
-    const hi = Math.max(...ts);
+    const vs = [T[t] ?? 0, T[t + 1] ?? 0, T[t + 2] ?? 0] as const;
+    const [pa, pb, pc] = [pos(vs[0]), pos(vs[1]), pos(vs[2])];
+    const ps = [pa, pb, pc];
+    const n = unit(
+      cross(
+        [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]],
+        [pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]],
+      ),
+    );
+    // The projection plane facing the triangle most squarely: (s along the strip, t across it).
+    let pi = 0;
+    for (let i = 1; i < planes.length; i++)
+      if (Math.abs(dot(n, planes[i]?.d ?? n)) > Math.abs(dot(n, planes[pi]?.d ?? n))) pi = i;
+    const plane = planes[pi] ?? { s: n, t: n };
+    let ss = ps.map((q) => dot(q, plane.s));
+    let ts = ps.map((q) => dot(q, plane.t));
+    let lo = Math.min(...ts);
+    let hi = Math.max(...ts);
     const cell = Math.floor((lo + hi) / 2 / BAND);
     const fits = hi <= (cell + 1 + SLACK) * BAND && lo >= (cell - SLACK) * BAND;
+    let scale = 1;
+    if (!fits) {
+      // The triangle's own plane, the plane's s laid onto it, turned the least that fits the
+      // row's reach, or (none fits) to its narrowest extent.
+      const k0 = dot(plane.s, n);
+      const s0 = unit([plane.s[0] - n[0] * k0, plane.s[1] - n[1] * k0, plane.s[2] - n[2] * k0]);
+      const t0 = cross(n, s0);
+      const reach = (1 + 2 * SLACK) * BAND;
+      let best = Number.POSITIVE_INFINITY;
+      for (const [c, sn] of turns) {
+        if (best <= reach) break;
+        const sx: V3 = [c * s0[0] + sn * t0[0], c * s0[1] + sn * t0[1], c * s0[2] + sn * t0[2]];
+        const tx: V3 = [c * t0[0] - sn * s0[0], c * t0[1] - sn * s0[1], c * t0[2] - sn * s0[2]];
+        const tt = ps.map((q) => dot(q, tx));
+        const ext = Math.max(...tt) - Math.min(...tt);
+        if (ext < best - 1e-12) {
+          best = ext;
+          ss = ps.map((q) => dot(q, sx));
+          ts = tt;
+        }
+      }
+      lo = Math.min(...ts);
+      hi = Math.max(...ts);
+      scale = hi - lo > reach ? reach / (hi - lo) : 1;
+    }
     // Each band cell reads its own stretch of the row (a golden-ratio step along U): the same
     // slice mirrored cell after cell repeated every feature up a cheek in columns (D513).
     const step = (fits ? cell : t) * 0.6180339887;
     const shift = (step - Math.floor(step)) * r.metres;
-    for (const [i, v] of [a, b, c].entries()) {
+    for (const [i, v] of vs.entries()) {
       const tv = ts[i] ?? 0;
-      // In its cell, or squeezed to fill one. (Cells meet at a UV seam either way: each reads
+      // In its cell, or centred on the row. (Cells meet at a UV seam either way: each reads
       // its own stretch of the row, so mirroring them no longer joined their texels.)
-      const f = fits ? tv / BAND - cell : (tv - lo) / (hi - lo || 1);
-      const k = `${v}|${axis}|${fits ? cell : `t${t}`}`;
+      const f = fits ? tv / BAND - cell : 0.5 + ((tv - (lo + hi) / 2) * scale) / BAND;
+      const k = fits ? `${v}|${pi}|${cell}` : `${v}|t${t}`;
       let id = key.get(k);
       if (id === undefined) {
         id = from.length;
         key.set(k, id);
         from.push(v);
         uv.push(
-          r.u0 + ((at(v, si) + shift) / r.metres) * (r.u1 - r.u0),
+          r.u0 + (((ss[i] ?? 0) * scale + shift) / r.metres) * (r.u1 - r.u0),
           r.v0 + (INSET + f * (1 - 2 * INSET)) * (r.v1 - r.v0),
         );
       }

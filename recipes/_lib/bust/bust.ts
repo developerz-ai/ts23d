@@ -261,6 +261,28 @@ function mouthBox(k: ReturnType<typeof skullLandmarks>): DetailRegion {
   };
 }
 
+/** The far LOD's face mask (sdf-detail.ts): one box from the chin to over the brows and out past
+ *  the outer eye corners, meshed at half the head's cell, so the planes a game artist's hand-made
+ *  LOD keeps hold: the brow over the sockets, the nose, the lips. At the head's own 2–2.6 cm cell
+ *  they melted into an egg with the eyeballs bulging out of it (D551). LOD1's 1 cm cell keeps
+ *  them already (a band over the eyes there cost ~1 000 triangles for 1–2 mm of socket). */
+export function farFaceDetail(b: BustRecipe, lod: number): DetailRegion[] {
+  if (!b.skull || lod !== 2) return [];
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  const R = b.eye.r;
+  const wy = Math.abs(k.exocanthion[1]) + R * 0.6;
+  const x0 = b.eye.centre[0] - R * 0.8;
+  return [
+    {
+      bounds: [
+        [x0, -wy, k.pogonion[2] - 0.006],
+        [k.pronasale[0] + 0.006, wy, k.brow[2] + R * 0.6],
+      ],
+      factor: 2,
+    },
+  ];
+}
+
 /** A box round each ear (both sides), its inner wall kept clear of the eye box at `wy`. */
 function earBoxes(k: ReturnType<typeof skullLandmarks>, wy: number): DetailRegion[] {
   const pts = [k.tragion, k.earTop, k.earTip, k.earOut, k.earBack, k.earLobe];
@@ -392,13 +414,15 @@ export function buildBust(
   };
   const meshes: Record<string, Mesh> =
     lod === 2
-      ? { head: skinMesh(edits, cell, { rng, ...look, far: true }) }
+      ? { head: skinMesh(edits, cell, { rng, ...look, far: true, detail: farFaceDetail(b, lod) }) }
       : {
           head: skinMesh(edits, cell, {
             rng,
             ...look,
             bumps: lod === 0 ? 0.0002 : 0,
             ...(lod === 0 && b.skull ? { detail: faceDetail(b) } : {}),
+            // (LOD1's 1 cm vertices average the paint over their faces, as LOD2's do, D552.)
+            ...(lod === 1 ? { far: true } : {}),
             clip: (p) => -seam(p) - lap,
             within: [
               [l.back - 0.1, -0.3, l.mz - 0.5 * l.H],
@@ -408,6 +432,7 @@ export function buildBust(
           bust: skinMesh(edits, bustCell, {
             rng,
             ...look,
+            ...(lod === 1 ? { far: true } : {}),
             clip: (p) => seam(p) - lap,
             within: [
               [-0.4, -0.4, 0],
@@ -440,7 +465,8 @@ export function buildBust(
   eyes(ctx, b.eye, {
     cell: ctx.pick([0.002, 0.0036, 0.01]),
     finish: 'cornea',
-    proud: lod === 0 ? 0 : cell * 0.3,
+    // (Out of the coarse lids a little; LOD2's face box holds its sockets at half its cell, D551.)
+    proud: lod === 0 ? 0 : cell * 0.15,
     lidShadow: 0.55,
     // The orbit's seat resolves at LOD0 only (coarser cells close a 1 cm-radius hollow).
     ...(lod === 0 ? { socketIn: 'head' } : {}),

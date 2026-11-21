@@ -89,7 +89,7 @@ Measured on the built head against `ORC_PROPORTIONS` (the human bands, each orc 
 | flush (nose) / ear cartilage / lips / sockets / brow band / warts | `#86784a` / `#8a8650` / `#5a4e36` / `#4a5038` / `#3e4630` / `#5e6a40` |
 | eyes: sclera / iris / pupil (+ glow `#ff7a1a` × 2.5, cornea clearcoat) | `#6a3a12` / `#ffb428` / `#1a0c04` |
 | tusk ivory / worn tip / gum-line stain / spike bone / scars | `#c9ab6c` / `#ddc99a` / `#3e2810` / `#e4d8b4` / `#b49e80` |
-| plates on `steel_painted` (gunmetal) / lips / rivets / bare / rust | `#4a4842` / `#6a665e` / `#b0a898` / `#d8d4cc` / `#7a4422` |
+| plate tint on `aluminium` (bare dark steel; `steel_painted` read as grey plastic, D547) / rolled wires / rivets / rubbed edges / rust / soot | `#5c5955` / `#8a857c` / `#7a756c` / `#b5b0a6` / `#573019` / `#2b2927` |
 | strap tint on `leather` / thread / necklace cord / fur | `#e6d2b8` / `#c8b48a` / `#3a2618` / `#5c4632` → `#8c7556` |
 | hair root → tip / wraps | `#2a2018` → `#6e5842` / `#5b3a22` |
 
@@ -116,13 +116,21 @@ Cells: head 6.4 / 11.5 / 30 mm, bust 12 / 20 / 32 mm. LOD0 ≈ 129k triangles (t
 ≈ 50k with its eye, ear and mouth boxes, card beard and brows ≈ 17k, plates 15k, spikes, fur, the
 knot), LOD1 ≈ 37k, LOD2 ≈ 4.7k (budget 130k / 38.5k / 5k; 2026-11: down from 180k / 46k by
 coarser cells on the smooth skin, 26 instead of 36 steps round the plates, 6-segment beads and a
-quarter fewer beard cards). LOD2 builds each pauldron as closed solids (`farShell`: a cap of a
-sphere and the outer half of a sleeve), not plates a cell thick, and drops the skin's pore
+quarter fewer beard cards). LOD2 (D549, `far.ts`) is built for 30 px, not decimated: each
+pauldron a closed dome of revolution with its flared lip and one solid lame band (9 rings), each
+spike a cone in its collar, the beard one sculpted mass in the cards' colour (only the brows stay
+cards), the head at a 30 mm cell through stage 3 (brow shelf, nose, jaw; ≈ 2.0k of the 4.4k) and
+the ember eyes moved out past the orbit's rim so they stay lit. It drops the skin's pore
 speckle. `t3d build` ≈ 40 s.
 
 ## Wear
-Plates: hammer peening, dents, paint chipped to bare iron on the lips, rust under the rivets
-(`plates.ts`). Fur and strap: `weather` in `build.ts` (mud dried into the fur's low clumps and
+Plates (`armour.ts`, D547, D548): each pauldron is a crown plate lapped 7 mm over a skirt plate,
+eight domed rivets through the lap, the skirt's and the lames' lower edges rolled over a wire of
+brighter steel; LOD0 is hammer-peened (facets 1.2–2.2 mm deep, 2.6–4 cm across) and dented by
+five blows a pauldron (3–5 mm). `weather` then lays the wear where it happens, measured in the
+manifest: edges rubbed bright (`convex-edges`, 45 %), scratches over the open plate (6 %), rust
+under the rivets with 3 cm runs (12 %), soot in the hollows (`cavities`, 50 %). The right
+pauldron's raked spike is snapped off short. Fur and strap: `weather` in `build.ts` (mud dried into the fur's low clumps and
 the strap's low end, dust on what faces up), the strap blotched near-black with sweat and grease.
 Tusks: gum-line stain, a chipped tip and three nicks on the front edge (`tusks.ts`), the left one
 broken. Face: scars,
@@ -143,13 +151,13 @@ The closed lip line is a crease drawn a cell wide in the skin's crevice olive (n
 flat base, hanging locks, wiry strays) over a hair-painted chin, coarse brow cards sit on the
 shelf (both root on the finished head, not the stage-2 skin); pores are `poreField` stamps on the
 nose, cheeks and forehead (LOD0); the tusks are rigid parts, so the `talk` clip's jaw morph opens
-the lips round them without moving them; the plates' dents are smooth radial pushes (no hammer
-facets); the skin is the shared tiling pore strip (matte cheeks, a glossier brow, nose and chin: `../_lib/face/skin-strip.ts`) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the
+the lips round them without moving them; the plates' scratches and rubbed edges are vertex colour on rings about a centimetre apart, so
+they read as worn patches, not hairline scratches (a wear texture would need its own strip); the skin is the shared tiling pore strip (matte cheeks, a glossier brow, nose and chin: `../_lib/face/skin-strip.ts`) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the
 tail's locks are sculpted, not strand cards. Rig: `head` and `bust` carry the blink / talk / breathe morphs under the `face` node
 (`headClips('face')`).
 
-## Triangle budget (As of 2026-11-19)
-About 114k / 29k / 4.0k (two lames a pauldron, not three: they end where the arm stub does, 1.2 cm outside its axis) against the bust band of 60k / 12k / 1.5k (it was 129k / 37k / 4.7k, and 180k / 46k / 4.8k at the baseline). The head is meshed at a 7.6 mm cell (6.4 mm before). Not reduced further this round: the plate pauldrons (15k), the fur mantle (10k), the strap (7k) and the card beard (17k) were not re-measured at lower densities, so about 20k of LOD0 is still open to cutting.
+## Triangle budget (As of 2026-11-21)
+About 115k / 30k / 4.4k (As of 2026-11-19: 114k / 29k / 4.0k; the forged two-plate pauldrons with revolved rivets cost 18k where the single domes with sculpted rivets cost 16.5k, the far head 2.0k where it had 1.3k) (two lames a pauldron, not three: they end where the arm stub does, 1.2 cm outside its axis) against the bust band of 60k / 12k / 1.5k (it was 129k / 37k / 4.7k, and 180k / 46k / 4.8k at the baseline). The head is meshed at a 7.6 mm cell (6.4 mm before). Not reduced further this round: the plate pauldrons (15k), the fur mantle (10k), the strap (7k) and the card beard (17k) were not re-measured at lower densities, so about 20k of LOD0 is still open to cutting.
 
 Budget why: a bust twice the others' volume (0.30 m skull, trapezius to the ears) in full gear: plate pauldrons with bone spikes, fur mantle, strap, necklace, knot and a card beard, each a closed sculpt.
 
