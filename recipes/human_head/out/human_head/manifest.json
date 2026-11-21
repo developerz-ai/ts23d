@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    64994,
-    19492,
-    3456
+    63140,
+    18360,
+    3304
   ],
   "drawCalls": [
     5,
@@ -118,14 +118,6 @@
     "recipes/human_head/README.md (design dossier: proportions, palette, references)",
     "docs/research/head-analysis.md (human ratios measured on the Lee Perry-Smith scan, CC BY 3.0)"
   ],
-  "weather": {
-    "dust": {
-      "target": 0.3,
-      "actual": 0.3,
-      "eligible": "up-facing",
-      "area": 0.0581
-    }
-  },
   "qa": {
     "pass": true,
     "findings": []

@@ -33,9 +33,10 @@
     },
     "wear": {
       "score": 7,
-      "reason": "A black scorch patch on the wall, frayed banner hems and the knocked-down scaffold tell the story (hero.png); no dust fan round the toppled pile.",
+      "reason": "A black scorch patch on the wall, frayed banner hems and the knocked-down scaffold tell the story (hero.png); the mortar icicles are now soft runs that barely read; no dust fan round the toppled pile.",
       "fixes": [
-        "pale dust fan across the flags from the toppled pile"
+        "pale dust fan across the flags from the toppled pile",
+        "stronger mortar runs under the top course"
       ]
     },
     "lod": {
@@ -47,14 +48,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 17.2k / 4.6k / 662 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~1k.",
+      "reason": "QA PASS: 18.3k / 4.1k / 662 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 up ~1.2k (from 17.2k) for the stain grid, LOD1 down from 4.6k.",
       "fixes": [
         "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "6c9265cc12bc4d67dcb9f7f3e51b7d0444c68f0f48cffe6c3becf1ada7f75ae6",
-    "sheet.png": "b53a49a25b83fc72076c96ac1ffb380795fcf12c94bcf68f277fed3286766c10"
+    "hero.png": "a439fca99c198bfc0a631de0d709b40b561af86bad16a554d2456e5563b6168f",
+    "sheet.png": "aa8119fcdf320cb71ad3ba5eb195ec46c31aefdf559224e0427f8f95fac8ac90"
   }
 }

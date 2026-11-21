@@ -19,7 +19,7 @@ import {
   sweep,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { type FigurePoints, figure } from '../_lib/rts/figure.ts';
+import { type FigurePoints, figure, splayLeg, turnHead, unitPose } from '../_lib/rts/figure.ts';
 import {
   band,
   CAKED,
@@ -298,7 +298,10 @@ function face(add: Add, lod: Lod, head: Vec3, r: Vec3): void {
  *  bigger), a rolled bedroll under the pack and a shovel slung across it over the shoulder. */
 function workKit(add: Add, lod: Lod, pts: FigurePoints): void {
   const back = pts.back;
-  const pad = pebble(lod, [0.06, 0.11, 0.11], [0.098, 0.13, 0.39], LEATHER);
+  const pad = splayLeg(
+    pebble(lod, [0.06, 0.11, 0.11], [0.098, 0.13, 0.39], LEATHER),
+    pts.pose.splay,
+  );
   add('knee_pad_l', pad);
   add('knee_pad_r', mirrorY(pad));
   const along = (e: Vec3, w: Vec3, k: number): Vec3 => [
@@ -419,9 +422,13 @@ export const rts_worker = defineAsset({
       handleR: HANDLE_R,
       mud: 0.34,
       port: { grip: GRIP, axis: AXIS, support: SUPPORT },
+      // Each Delver stands and looks his own way (D597): stance and head turn from the seed.
+      pose: unitPose(ctx.rng.fork('pose')),
     });
-    headgear(add, lod, pts.head, pts.headR);
-    face(add, lod, pts.head, pts.headR);
+    // Cap, goggles and face turn with the head.
+    const onHead: Add = (name, m, opts) => add(name, turnHead(m, pts.pose.headYaw), opts);
+    headgear(onHead, lod, pts.head, pts.headR);
+    face(onHead, lod, pts.head, pts.headR);
     backpack(add, lod, pts.back);
     workKit(add, lod, pts);
     ctx.socket('hand_r_socket', {

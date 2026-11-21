@@ -5,8 +5,9 @@
 //    gate, the muster
 //    point and round the tank park; a gravel road from the gate out through the wall, a gravel
 //    hardstand, two track ruts from the hardstand back to the road, an oil stain under the tank;
-//  - `perimeter`: a low wall of dressed salt blocks with capstones along two edges, open where the
-//    road leaves, a sandbag post either side of that gap;
+//  - `perimeter`: a chest-high wall (1.2 m: plinth course, dressed salt blocks, capstones) along two
+//    edges, open where the road leaves, a sandbag post either side of that gap; brine grime and
+//    splash darken the plinth and the bottom bags (D592);
 //  - `stores`: fuel drums and crates stacked by the park (parts kit).
 // All static, all on the trim sheet: one draw with the scene's static body.
 
@@ -235,7 +236,12 @@ export function forecourt(ctx: BuildContext): void {
   );
 }
 
-/** A low wall from a to b (plan): dressed blocks 2.4 m long with a darker capstone course. */
+/** Perimeter courses (m): plinth, dressed block, capstone; the cap's top is the wall height. */
+const WALL_COURSES = { plinth: 0.32, block: 0.74, cap: 0.14 } as const;
+/** Brine grime: what splash and standing water leave on the plinth course. */
+const WALL_GRIME = hex('#4f4a40');
+
+/** A wall from a to b (plan): a plinth course, dressed blocks 2.4 m long, a darker capstone. */
 function wall(ctx: BuildContext, a: Vec2, b: Vec2): Mesh {
   const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
   const yaw = dmath.atan2(b[1] - a[1], b[0] - a[0]);
@@ -247,12 +253,27 @@ function wall(ctx: BuildContext, a: Vec2, b: Vec2): Mesh {
     const at: Vec3 = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 0];
     // Bevelled blocks at LOD0 only; LOD1 keeps the two courses plain, LOD2 one box.
     const edge = ctx.lod === 0 ? 0 : 2;
+    const { plinth, block: body, cap } = WALL_COURSES;
     const block =
       ctx.lod === 2
-        ? [box({ size: [piece, 0.5, 0.95], color: BLOCK, strip: 'concrete', omit: ['bottom'] })]
+        ? [
+            box({
+              size: [piece, 0.5, plinth + body + cap],
+              color: BLOCK,
+              strip: 'concrete',
+              omit: ['bottom'],
+            }),
+          ]
         : [
-            pebble(edge, [piece - 0.04, 0.46, 0.82], [0, 0, 0], BLOCK, 'concrete'),
-            pebble(edge, [piece - 0.01, 0.56, 0.14], [0, 0, 0.81], CAP, 'concrete'),
+            pebble(edge, [piece - 0.02, 0.52, plinth], [0, 0, 0], BLOCK, 'concrete'),
+            pebble(
+              edge,
+              [piece - 0.04, 0.46, body + 0.01],
+              [0, 0, plinth - 0.01],
+              BLOCK,
+              'concrete',
+            ),
+            pebble(edge, [piece - 0.01, 0.56, cap], [0, 0, plinth + body - 0.01], CAP, 'concrete'),
           ];
     out.push(place(merge(block), { at, yaw }));
   }
@@ -294,15 +315,19 @@ function sandbags(ctx: BuildContext, centre: Vec2, facing: number): Mesh {
 
 export function perimeter(ctx: BuildContext): void {
   const gap = ROAD.half + 0.9;
+  const blotch = unitNoise(valueNoise(ctx.rng.fork('wall_grime'), { scale: 1.6, octaves: 2 }));
+  const built = merge([
+    wall(ctx, [WALL.x, WALL.y], [WALL.x, -gap]),
+    wall(ctx, [WALL.x, gap], [WALL.x, Y1 - 0.6]),
+    wall(ctx, [1.2, WALL.y], [WALL.x - 0.5, WALL.y]),
+    sandbags(ctx, [WALL.x - 1.5, -gap - 0.9], 0),
+    sandbags(ctx, [WALL.x - 1.5, gap + 0.9], 0),
+  ]);
+  // Splash and brine wick up from the flat: full at the foot, gone by the plinth's top, patchy.
+  const h = WALL_COURSES.plinth;
   ctx.part(
     'perimeter',
-    merge([
-      wall(ctx, [WALL.x, WALL.y], [WALL.x, -gap]),
-      wall(ctx, [WALL.x, gap], [WALL.x, Y1 - 0.6]),
-      wall(ctx, [1.2, WALL.y], [WALL.x - 0.5, WALL.y]),
-      sandbags(ctx, [WALL.x - 1.5, -gap - 0.9], 0),
-      sandbags(ctx, [WALL.x - 1.5, gap + 0.9], 0),
-    ]),
+    tint(built, WALL_GRIME, (p) => (1 - smooth(0, h, p[2])) * (0.7 + 0.3 * blotch(p))),
   );
 }
 

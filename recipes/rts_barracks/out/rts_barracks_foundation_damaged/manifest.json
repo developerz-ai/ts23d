@@ -20,7 +20,7 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    15516,
+    15108,
     4606,
     782
   ],
@@ -117,10 +117,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1755,
-      "actual": 0.1755,
+      "target": 0.1756,
+      "actual": 0.1756,
       "eligible": "convex-edges",
-      "area": 370.9948,
+      "area": 370.7863,
       "by": {
         "hall_masonry": {
           "target": 0.1,
@@ -135,7 +135,7 @@
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 87.6088
+          "area": 87.4003
         },
         "hall_rubble": {
           "target": 0.32,
@@ -150,10 +150,10 @@
       }
     },
     "moss": {
-      "target": 0.4327,
-      "actual": 0.4327,
+      "target": 0.4326,
+      "actual": 0.4326,
       "eligible": "ground-near & !down-facing ; ground-near & side-facing",
-      "area": 107.732,
+      "area": 107.5673,
       "by": {
         "hall_masonry": {
           "target": 0.45,
@@ -168,7 +168,7 @@
         "hall_render": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 60.3653
+          "area": 60.2006
         }
       }
     },
@@ -199,7 +199,7 @@
       "target": 0.4822,
       "actual": 0.4822,
       "eligible": "up-facing",
-      "area": 255.6423,
+      "area": 255.5137,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -214,7 +214,7 @@
         "hall_render": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 31.2997
+          "area": 31.1711
         },
         "hall_rubble": {
           "target": 0.45,

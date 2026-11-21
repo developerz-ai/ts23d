@@ -1,12 +1,15 @@
 // Goblin outfit, tailored in layers over the skull stage's anatomy (../_lib/bust/cloth-*.ts), each
 // layer its own closed solid on its own material strip (`outfitLayers`): a rumpled linen shirt
 // (`LINEN`) whose sleeves come out of the vest's armholes, creased in zigzags where it bunches
-// in the vest's opening, grimy down the placket and at the neck; a sleeveless leather vest
-// (`leather`) 9 mm thick, its rolled edges stitched and rubbed pale, a shoulder seam, sweat-dark
-// under the arms, a newer patch sewn on the chest and one on the back, closed by a horn toggle
-// on a thong; a wool hood worn down as a thick roll on the back of the neck, dusty on top; a
-// red scarf folded flat in two wraps round the neck seam (hiding the head/bust split), knotted
-// at the front left, its two ragged tails faded and muddy at the ends.
+// in the vest's opening, gathered in short folds under the scarf, draped from the armpits, grimy
+// down the placket, at the neck and in its folds; a sleeveless leather vest (`leather`) 9 mm
+// thick, its rolled edges stitched and rubbed pale, a shoulder seam with its running stitch,
+// sweat-dark round the armholes and in its creases, a newer patch sewn on the chest and one on
+// the back (each a raised, rolled edge with a stitch row round it), closed by a horn toggle on a
+// thong; a wool hood worn down as a thick roll on the back of the neck, dusty on top; a red scarf
+// folded flat in two wraps round the neck seam (hiding the head/bust split), knotted at the
+// front left, its two ragged tails faded and muddy at the ends. Grime has a cause, never noise
+// (../_lib/bust/cloth-grime.ts, D580); every layer declares where its paint may sit (`wear`).
 // `outfitEdits` is every layer in one list: the whole dressed bust as one field (hair collision,
 // the cloth check).
 
@@ -17,16 +20,19 @@ import {
   hex,
   type IntendedCrease,
   type SculptEdit,
+  sculptField,
   valueNoise,
 } from '@developerz.ai/ts23d';
 import { type Fold, foldField } from '../_lib/bust/cloth-folds.ts';
-import { cloth, edgeBand, memo, trim } from '../_lib/bust/cloth-garment.ts';
+import { type Cloth, cloth, edgeBand, memo, trim } from '../_lib/bust/cloth-garment.ts';
+import { grime, grimeZone } from '../_lib/bust/cloth-grime.ts';
 import { neckline, neckSection } from '../_lib/bust/cloth-neck.ts';
-import { drag, sag, zigzag } from '../_lib/bust/cloth-paths.ts';
-import { CLOTH_ALBEDO, LINEN, WOOL } from '../_lib/bust/cloth-strips.ts';
+import { drag, hang, radiate, sag, zigzag } from '../_lib/bust/cloth-paths.ts';
+import { castOnto, seamGroove, seamLine, stitches, stitchLayer } from '../_lib/bust/cloth-seam.ts';
+import { CLOTH_ALBEDO, HIDE, LINEN, WOOL } from '../_lib/bust/cloth-strips.ts';
 import { edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
 import { lock, mix } from '../_lib/bust/hair.ts';
-import { chain, cone2, crease, type Surface, spline, type V } from '../_lib/bust/kit.ts';
+import { chain, cone2, type Surface, spline, type V } from '../_lib/bust/kit.ts';
 import type { GarmentLayer } from '../_lib/bust/layers.ts';
 import { baseZ, bustCut, neckSeam } from '../_lib/bust/torso.ts';
 import { C, H, LT as L, TORSO } from './spec.ts';
@@ -49,10 +55,11 @@ export const BACK = { x: -0.072, lean: 0.25, wrap: 1.2, halfY: 0.08 };
 /** How far a layer runs on under the one above it, metres (no gap opens at a rolled edge). */
 const LAP = 0.014;
 
-/** The strips' own albedo (src/material/library.ts): a layer's vertex colour is the tint that
- *  lands its real colour on the strip. */
+/** The strips' own albedo (../_lib/bust/cloth-strips.ts): a layer's vertex colour is the tint
+ *  that lands its real colour on the strip. */
 const CANVAS = CLOTH_ALBEDO;
-const LEATHER = hex('#7c5438');
+/** `HIDE`'s ground. */
+const LEATHER = hex('#f0ebe4');
 const on = (strip: V, want: V): V => [
   Math.min(1, want[0] / strip[0]),
   Math.min(1, want[1] / strip[1]),
@@ -82,9 +89,14 @@ type Tints = ReturnType<typeof tints>;
 /** One garment layer: its own sculpt on its own strip. */
 export type Layer = GarmentLayer;
 
-/** Stain and wear masks: seeded world-space noise (the same spots at every LOD). */
-const BLOTCH = valueNoise(createRng(0x60b1), { scale: 0.035, octaves: 3 });
+/** Fine jitter of a worn edge's inner line (scuffs breaking inward from the hem, never a stain on
+ *  its own: the same spots at every LOD). */
 const SPECK = valueNoise(createRng(0x60b2), { scale: 0.012, octaves: 2 });
+/** The nearest of several wear zones (≤ 0 inside any). */
+const worn =
+  (...zones: Field[]): Field =>
+  (p) =>
+    Math.min(...zones.map((z) => z(p)));
 
 /** A paint edit where `mask` < 0, fading over `blend` metres. */
 const paint = (mask: Field, color: V, blend: number): SculptEdit => ({
@@ -122,6 +134,26 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
   const shirtAll = behindJaw(neckline(neck, 0.002, 0.003, CAP));
   // The shirt exists where it can show: in the vest's opening and armholes, and a lap under it.
   const shirt: Field = (p) => Math.max(shirtAll(p), -vestRegion(p) - LAP);
+  const shirtFold = foldField([...shirtFolds(skin), ...sleeveFolds(skin)]);
+  // Linen greys in its creases and where the arm rubs it (the vest's armhole edge, the armpit).
+  const shirtCauses = {
+    folds: shirtFold,
+    edges: [{ region: armhole, width: 0.012 }],
+    spots: [{ at: PIT, r: 0.03 }],
+  };
+  const vestFold = foldField(vestFolds(skin));
+  const vestCauses = { folds: vestFold, edges: [{ region: armhole, width: 0.018 }] };
+  // The vest's hide as it lies: what its panel and the patches sewn on it follow.
+  const hide: Cloth = {
+    body,
+    thick: VEST,
+    region: vestRegion,
+    floor,
+    feather: gather,
+    // Stiff leather: it hangs straight off the shoulder blades, not into the small of the back.
+    drape: { ...BACK, top: SEAM.at[2], within: SOCLE },
+    ...(fine ? { folds: vestFold } : {}),
+  };
   const shirtLayer: Layer = {
     name: 'shirt',
     part: 'clothes',
@@ -137,72 +169,71 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
           floor,
           // Gathered under the scarf: an abrupt shirt edge here splits the head from the bust.
           feather: gather,
-          ...(fine ? { folds: foldField([...shirtFolds(skin), ...sleeveFolds(skin)]) } : {}),
+          ...(fine ? { folds: shirtFold } : {}),
         },
         { bounds: BOX, color: K.shirt, blend: 0 },
       ),
       // Grime: the linen darkened down the placket where it is handled, round the neck where it
-      // rubs the skin, and in blotches (old stains) everywhere.
+      // rubs the skin, and in its creases and under the arms.
       trim(vestRegion, -0.03, -0.004, { bounds: BOX, color: K.shirtGrime, blend: 0.012 }),
       paint((p) => -gather.region(p) - 0.03 + 0.01 * SPECK(p), K.shirtGrime, 0.02),
-      paint((p) => 0.012 - 0.03 * BLOTCH(p), mix(K.shirt, K.shirtGrime, 0.7), 0.012),
+      ...(fine
+        ? [grime(shirtCauses, mix(K.shirt, K.shirtGrime, 0.6), { bounds: BOX, fade: 0.008 })]
+        : []),
     ],
+    wear: worn(
+      (p) => edgeBand(vestRegion, -0.03, -0.004)(p) - 0.006,
+      (p) => -gather.region(p) - 0.05,
+      grimeZone(shirtCauses, 0.008),
+    ),
   };
+  // Patches: newer, paler leather sewn over a tear on the left chest and the right shoulder blade,
+  // a finger's breadth of hide 3 mm proud of the vest, its cut edge turned under into a rolled rim
+  // and sewn down 4.5 mm in (the groove; the stitches are their own layer). LOD0 meshes them on
+  // a cell of their own: at the vest's 8 mm one the rim and groove melted into a bump, a flat
+  // decal that read as a hole (D581).
+  const patchEdits: SculptEdit[] = PATCHES.map((patch) =>
+    cloth(
+      {
+        // (The vest's own lie, drape and creases: on the back it hangs clear of the body.)
+        ...hide,
+        thick: VEST + PATCH,
+        region: patch,
+        depth: PATCH + 0.006,
+        hem: { width: 0.006, lift: 0.0016, roll: 0.0028 },
+        ...(lod === 0 ? { stitch: { at: 0.0045, depth: 0.0007, width: 0.0016 } } : {}),
+      },
+      { bounds: BOX, color: K.patch, blend: 0, mirror: false },
+    ),
+  );
   const vestLayer: Layer = {
     name: 'vest',
     part: 'clothes',
-    strip: 'leather',
+    strip: HIDE,
     color: K.vest,
-    cell: [0.0074, 0.0137, 0.03],
+    cell: [0.0084, 0.0137, 0.03],
     edits: [
       cloth(
         {
-          body,
-          thick: VEST,
-          region: vestRegion,
-          floor,
-          feather: gather,
-          // Stiff leather: it hangs straight off the shoulder blades, not into the small of the back.
-          drape: { ...BACK, top: SEAM.at[2], within: SOCLE },
+          ...hide,
           hem: { width: 0.014, lift: 0.003, roll: 0.008 },
           ...(fine ? { stitch: { at: 0.011, depth: 0.0008, width: 0.0035 } } : {}),
-          ...(fine ? { folds: foldField(vestFolds(skin)) } : {}),
         },
         { bounds: BOX, color: K.vest, blend: 0 },
       ),
-      // Patches: newer leather sewn over a tear on the left chest and the right shoulder blade.
-      ...PATCHES.flatMap((patch) => [
-        cloth(
-          {
-            body,
-            thick: VEST + 0.0028,
-            region: patch,
-            floor,
-            hem: { width: 0.005, lift: 0.0006, roll: 0.0015 },
-          },
-          { bounds: BOX, color: K.patch, blend: 0.0015, mirror: false },
-        ),
-        // Its waxed thread, a line 3–5 mm in from the edge.
-        ...(fine ? [paint((p) => Math.abs(-patch(p) - 0.004) - 0.0012, K.thread, 0.0015)] : []),
-      ]),
-      // The shoulder seam: a groove from the neck to the armhole, its thread pale.
-      ...(fine ? shoulderSeam(skin, K) : []),
-      // Sweat and handling: dark under the arms and down the back's middle, blotched.
-      paint((p) => -armhole(p) - 0.018 + 0.012 * BLOTCH(p), mix(K.vest, K.vestSweat, 0.6), 0.02),
-      paint(
-        (p) => Math.max(p[0] + 0.02, Math.abs(p[1]) - 0.035) + 0.02 * BLOTCH(p),
-        mix(K.vest, K.vestSweat, 0.45),
-        0.03,
-      ),
-      paint(
-        (p) => 0.016 - 0.03 * BLOTCH([p[0] + 0.3, p[1], p[2]]),
-        mix(K.vest, K.vestSweat, 0.5),
-        0.014,
-      ),
+      // (LOD1: the patches as part of the vest, colour blocks its cell can hold.)
+      ...(lod === 1 ? patchEdits : []),
+      // The shoulder seam: a groove from the neck to the armhole (its stitches: their own layer).
+      ...(fine ? [seamGroove(shoulderLine(skin), 0.0022, K.vestSweat)] : []),
+      // Sweat round the armholes and in the creases where the hide bends.
+      ...(fine
+        ? [grime(vestCauses, mix(K.vest, K.vestSweat, 0.55), { bounds: BOX, fade: 0.016 })]
+        : []),
       // Edges rubbed pale: the rolled hem, and scuffs breaking inward from it.
       trim(vestRegion, -0.001, 0.004, { bounds: BOX, color: K.vestWorn, blend: 0.003 }),
-      paint((p) => edgeBand(vestRegion, 0, 0.02)(p) + 0.012 + 0.03 * SPECK(p), K.vestWorn, 0.006),
+      paint((p) => edgeBand(vestRegion, 0, 0.012)(p) + 0.006 + 0.02 * SPECK(p), K.vestWorn, 0.006),
     ],
+    wear: worn((p) => edgeBand(vestRegion, -0.035, 0.055)(p), grimeZone(vestCauses, 0.016)),
   };
   const hoodLayer: Layer = {
     name: 'hood',
@@ -226,6 +257,7 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
       // Road dust settled on the roll's top, thinner in the folds.
       paint((p) => 0.02 - SEAM.field(p) + 0.012 * SPECK(p), K.hoodDust, 0.014),
     ],
+    wear: (p) => 0.02 - SEAM.field(p) - 0.012 - 0.007,
   };
   const scarfLayer: Layer = {
     name: 'scarf',
@@ -236,6 +268,47 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     edits: scarfEdits(skin, fine, K),
   };
   const layers = [shirtLayer, vestLayer, hoodLayer, scarfLayer];
+  // LOD0: the running stitches, threads a millimetre thick (LOD1's cell would lose them), seated
+  // on the vest as made (its feathered neck, the patches' rims).
+  const made = sculptField(
+    [...vestLayer.edits.filter((e) => !('op' in e && e.op === 'paint')), ...patchEdits],
+    { color: K.vest, mirror: 'y' },
+  ).field;
+  if (lod === 0)
+    layers.push(
+      {
+        name: 'patches',
+        part: 'clothes',
+        strip: HIDE,
+        color: K.patch,
+        cell: [0.0032, 0.0032, 0.0032],
+        edits: patchEdits,
+      },
+      stitchLayer(
+        [
+          ...stitches(shoulderLine(skin), {
+            pitch: 0.0065,
+            length: 0.0038,
+            r: 0.0009,
+            color: K.thread,
+            side: 0.0035,
+            on: made,
+          }),
+          ...PATCH_RIMS.flatMap((rim, i) =>
+            stitches(rim(made), {
+              keep: (p) => (PATCHES[i]?.(p) ?? 1) < 0,
+              pitch: 0.007,
+              length: 0.0038,
+              r: 0.0009,
+              color: K.thread,
+              mirror: false,
+              on: made,
+            }),
+          ),
+        ],
+        { strip: LINEN, color: K.thread, part: 'clothes' },
+      ),
+    );
   if (fine) return layers;
   // Far LOD: one sculpt of every layer (one watertight surface: separate shells 3 mm apart would
   // cross at a 2.6 cm cell), the colour blocks kept flat (stains a cell wide read as camouflage).
@@ -321,6 +394,9 @@ export const vestRegion: Field = (p) => {
   return Math.max(-Math.max(-opening, -front), armhole(p));
 };
 
+/** A patch's hide over the vest, metres. */
+const PATCH = 0.003;
+
 /** A patch: a rounded rectangle `half` (y, z) about `at`, turned `deg` about X, on the side of
  *  the body `at` lies on (≤ 0 inside). */
 function patchRegion(at: V, half: readonly [number, number], deg: number): Field {
@@ -335,25 +411,71 @@ function patchRegion(at: V, half: readonly [number, number], deg: number): Field
     return Math.max(dmath.hypot(u, v) - 0.004, -(p[0] - at[0]) * side - 0.03);
   };
 }
-const PATCHES: readonly Field[] = [
-  patchRegion([0.03, 0.062, L.mz - 0.66 * H], [0.012, 0.016], 12),
-  patchRegion([-0.05, -0.05, L.mz - 0.62 * H], [0.018, 0.014], -20),
+const PATCH_AT: readonly [V, readonly [number, number], number][] = [
+  // (The front panel is a strap between the opening and the armhole: the patch fits inside it.)
+  [[0.03, 0.068, L.mz - 0.72 * H], [0.006, 0.015], 8],
+  [[-0.05, -0.05, L.mz - 0.62 * H], [0.018, 0.014], -20],
 ];
+/** (Kept 12 mm inside the vest's edges: hanging over its opening, a patch hovered over the shirt.) */
+const PATCHES: readonly Field[] = PATCH_AT.map(([at, half, deg]) => {
+  const patch = patchRegion(at, half, deg);
+  return (p) => Math.max(patch(p), vestRegion(p) + 0.012);
+});
 
-/** The shoulder seam (left, mirrored): a groove over the strap from the neck to the armhole and
- *  its pale thread. */
-function shoulderSeam(skin: Surface, K: Tints): SculptEdit[] {
+/** A patch's stitch row: round its rounded rectangle 4.5 mm in from the edge, laid onto `made`
+ *  (the vest with its patches) straight in from outside the body on the patch's side. */
+function patchRim(at: V, half: readonly [number, number], deg: number): (made: Field) => V[] {
+  const c = dmath.cos((deg * Math.PI) / 180);
+  const sn = dmath.sin((deg * Math.PI) / 180);
+  const side = Math.sign(at[0]) || 1;
+  // (The region's edge lies 4 mm out from `half`: the row is half a millimetre inside it.)
+  const [hy, hz] = [half[0] - 0.0005, half[1] - 0.0005];
+  const corners: [number, number][] = [
+    [hy, hz],
+    [-hy, hz],
+    [-hy, -hz],
+    [hy, -hz],
+  ];
+  return (made) => {
+    const pts: V[] = [];
+    for (let i = 0; i <= 4 * 6; i++) {
+      const k = Math.floor(i / 6) % 4;
+      const t = (i % 6) / 6;
+      const a = corners[k] ?? [0, 0];
+      const b = corners[(k + 1) % 4] ?? a;
+      const u = a[0] + (b[0] - a[0]) * t;
+      const v = a[1] + (b[1] - a[1]) * t;
+      const q = castOnto(
+        made,
+        [side * 0.2, at[1] + u * c - v * sn, at[2] + u * sn + v * c],
+        [-side, 0, 0],
+        0.2,
+      );
+      if (q) pts.push(q);
+    }
+    return pts;
+  };
+}
+const PATCH_RIMS = PATCH_AT.map(([at, half, deg]) => patchRim(at, half, deg));
+
+/** The armpit (left; the right mirrors it): where the shirt drapes and greys. */
+const PIT: V = [L.back + 0.4 * H, TORSO.shoulders * 0.9, L.mz - 0.78 * H];
+
+/** The shoulder seam's line (left, mirrored): over the strap from the neck to the armhole, on
+ *  the vest's face. */
+function shoulderLine(skin: Surface): V[] {
   const x = L.back + 0.43 * H;
   const z = SEAM.at[2] + 0.02;
-  const line = spline(
+  return seamLine(
+    skin,
     [
       [x, 0.034, z],
       [x, 0.05, z],
       [x, 0.066, z - 0.004],
     ],
-    6,
-  ).map((p) => skin.off(p, VEST + 0.0008));
-  return [crease(line, 0.0024, { blend: 0.0015, color: K.vestSweat })];
+    VEST,
+    8,
+  );
 }
 
 /** The outfit's intended creases (QA `connections`), from the geometry that tailors it: the
@@ -366,36 +488,54 @@ export function outfitCreases(skin: Surface): IntendedCrease[] {
   ];
   const ring = scarfRing(skin.field);
   const shirt = behindJaw(neckline(neckSection(skin.field, SEAM, 0.07), 0.002, 0.003, CAP));
-  return PARTS.flatMap((part) => [
-    ...edgeCreases(
-      `shirt_neck_${part}`,
-      part,
-      skin.field,
-      shirt,
+  // The patches' rolled rims, on the vest as it lies (on the back it hangs clear of the skin).
+  const vest = outfitLayers(skin, 1).find((l) => l.name === 'vest')?.edits[0];
+  const hide = vest && 'field' in vest && vest.field ? vest.field : skin.field;
+  const rims = PATCHES.flatMap((patch, i) =>
+    edgeCreases(
+      `patch_${i}`,
+      'clothes',
+      hide,
+      patch,
       box,
-      0.025,
-      'the shirt’s neckline',
+      0.02,
+      'a patch’s rolled rim sewn onto the vest',
+      false,
     ),
-    ...edgeCreases(
-      `vest_hem_${part}`,
-      part,
-      skin.field,
-      vestRegion,
-      box,
-      0.025,
-      'the vest’s rolled edge',
-    ),
-    ...edgeCreases(
-      `hood_roll_${part}`,
-      part,
-      skin.field,
-      hoodRegion,
-      box,
-      0.025,
-      'the hood’s roll',
-    ),
-    ...ringCreases(`scarf_root_${part}`, part, ring, 0.03, 'the scarf wrapping the neck’s root'),
-  ]);
+  );
+  return [
+    ...rims,
+    ...PARTS.flatMap((part) => [
+      ...edgeCreases(
+        `shirt_neck_${part}`,
+        part,
+        skin.field,
+        shirt,
+        box,
+        0.025,
+        'the shirt’s neckline',
+      ),
+      ...edgeCreases(
+        `vest_hem_${part}`,
+        part,
+        skin.field,
+        vestRegion,
+        box,
+        0.025,
+        'the vest’s rolled edge',
+      ),
+      ...edgeCreases(
+        `hood_roll_${part}`,
+        part,
+        skin.field,
+        hoodRegion,
+        box,
+        0.025,
+        'the hood’s roll',
+      ),
+      ...ringCreases(`scarf_root_${part}`, part, ring, 0.03, 'the scarf wrapping the neck’s root'),
+    ]),
+  ];
 }
 
 /** The parts a garment edge can crease: the garments' own part and the skin it lies on. */
@@ -417,10 +557,31 @@ const ZIG: readonly [V, V] = [
   [L.gx - 0.12 * H, 0.008, L.mz - 0.95 * H],
 ];
 
-/** Shirt folds: zigzags where the slack shirt bunches in the vest's opening. */
+/** Shirt folds: zigzags where the slack shirt bunches in the vest's opening, short compression
+ *  folds where the scarf gathers it at the neck, and the linen draping from each armpit. */
 function shirtFolds(s: Surface): Fold[] {
   const look = { amp: 0.002, width: 0.016, lift: SHIRT };
-  return zigzag(s, ZIG[0], ZIG[1], [0, 1, 0], 5, 0.012, look);
+  const ring = scarfRing(s.field);
+  return [
+    ...zigzag(s, ZIG[0], ZIG[1], [0, 1, 0], 5, 0.012, look),
+    ...radiate(s, ring, SEAM.at, 3, 0.035, {
+      amp: 0.0018,
+      width: 0.007,
+      lift: SHIRT,
+      drop: 1.6,
+      from: 0.01,
+      to: 0.12,
+    }),
+    ...hang(
+      s,
+      [
+        [PIT[0] + 0.02, PIT[1] - 0.01, PIT[2]],
+        [PIT[0] - 0.01, PIT[1] - 0.005, PIT[2] - 0.005],
+      ],
+      [0.06, 0.05],
+      { amp: 0.0028, width: 0.012, lift: SHIRT, fan: 0.15, widen: 1.4 },
+    ),
+  ];
 }
 
 /** Sleeve folds: the linen pulled from the shoulder point down and round the arm. */
@@ -546,7 +707,7 @@ export function scarfTails(skin: Surface): V[][] {
       [
         knot,
         skin.off([knot[0] - 0.01, knot[1] + dy, knot[2] - len * 0.5], 0.011),
-        skin.off([knot[0] - 0.012, knot[1] + dy * 1.4, knot[2] - len], 0.009),
+        skin.off([knot[0] - 0.012, knot[1] + dy * 1.4, knot[2] - len], 0.0065),
       ],
       9,
     ),

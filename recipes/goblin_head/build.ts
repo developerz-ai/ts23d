@@ -52,7 +52,13 @@ export const GOBLIN_BUST: BustRecipe = {
   finish: 'skin',
   // The parts split at the neck seam, bent up over the shoulders: the shoulder cloth above the
   // tilted seam (D61) belongs to `bust`, so `head` stays a neck-wide piece seated on it.
-  split: (p) => SEAM(p) - 2 * Math.max(0, Math.abs(p[1]) - 0.055),
+  // (Bent only below the ear lobes: carried on up, it gave the ears' outer halves to `bust`,
+  // whose box ends at the chin, and sawed them off, D574.)
+  split: (p) =>
+    SEAM(p) -
+    2 *
+      Math.max(0, Math.abs(p[1]) - 0.055) *
+      Math.min(1, Math.max(0, (LT.mz + 0.02 - p[2]) / 0.01)),
   body: () => bodyEdits(),
   features: (stage, skin, lod, rng) => featureEdits(stage, skin, lod, rng),
   // The teeth: their own part, finer than the head's cell (features.ts `goblinTeeth`).

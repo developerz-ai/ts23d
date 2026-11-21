@@ -14,6 +14,7 @@ import {
   type Mesh,
   merge,
   place,
+  type Rng,
   ringXY,
   type StripId,
   sweep,
@@ -51,7 +52,27 @@ export interface FigureOptions {
    * lighter than themselves). LOD0/1.
    */
   readonly mud?: number;
+  /**
+   * Stance and head of this one figure (D597): `splay` sets the feet apart (each ankle `splay` ×
+   * 0.9 m outboard of its hip; default 0.07, an easy A-stance, never parallel pegs) and `headYaw`
+   * turns the head about the neck (+ = toward +Y). Callers draw them per instance from their rng.
+   */
+  readonly pose?: Pose;
 }
+
+export interface Pose {
+  readonly splay: number;
+  readonly headYaw: number;
+}
+
+/** The figure's default pose: feet a little apart, looking ahead. */
+export const DEFAULT_POSE: Pose = { splay: 0.07, headYaw: 0 };
+
+/** A pose for one instance of a unit from its own rng: feet 5–11 % apart, head ±0.3 rad. */
+export const unitPose = (rng: Rng): Pose => ({
+  splay: rng.range(0.05, 0.11),
+  headYaw: rng.range(-0.3, 0.3),
+});
 
 export interface FigurePoints {
   /** Centre of the right fist's grip (the handle runs along `gripAxis` through it). */
@@ -71,9 +92,45 @@ export interface FigurePoints {
   /** Head centre and radii. */
   readonly head: Vec3;
   readonly headR: Vec3;
+  /** The pose this figure was built in (gear on the legs and head follows it). */
+  readonly pose: Pose;
 }
 
 const HIP_Y = 0.13;
+/** Where the legs hinge for the stance: the hip joint height. */
+const HIP_Z = 0.9;
+/** The neck pivot the head turns about. */
+const NECK: Vec3 = [0.005, 0, 1.6];
+
+/**
+ * A left-leg mesh (+Y) set out in an A-stance: every point below the hip moves outboard by
+ * `splay` per metre under the hip (a shear, so the soles stay flat on the ground and the thigh
+ * still meets the pelvis). Mirror it with `mirrorY` for the right leg. Gear worn on the leg
+ * (greaves, knee pads) takes the same call.
+ */
+export function splayLeg(m: Mesh, splay: number): Mesh {
+  if (splay === 0) return m;
+  const positions = new Float32Array(m.positions);
+  const normals = new Float32Array(m.normals);
+  for (let i = 0; i < positions.length; i += 3) {
+    const z = positions[i + 2] ?? 0;
+    if (z >= HIP_Z) continue;
+    positions[i + 1] = (positions[i + 1] ?? 0) + splay * (HIP_Z - z);
+    // Shear y += k(h − z): normals take the inverse transpose, n_z += k n_y.
+    const nx = normals[i] ?? 0;
+    const ny = normals[i + 1] ?? 0;
+    const nz = (normals[i + 2] ?? 0) + splay * ny;
+    const l = dmath.hypot(nx, ny, nz) || 1;
+    normals[i] = nx / l;
+    normals[i + 1] = ny / l;
+    normals[i + 2] = nz / l;
+  }
+  return { ...m, positions, normals };
+}
+
+/** `m` turned `yaw` about the neck (head and everything worn on it). */
+export const turnHead = (m: Mesh, yaw: number): Mesh =>
+  yaw === 0 ? m : place(place(m, { at: [-NECK[0], -NECK[1], -NECK[2]] }), { yaw, at: NECK });
 const SHOULDER: Vec3 = [-0.01, 0.27, 1.4];
 const ELBOW: Vec3 = [-0.02, 0.31, 1.12];
 export const HEAD: Vec3 = [0.01, 0, 1.69];
@@ -83,6 +140,12 @@ export const HEAD_R: Vec3 = [0.115 * HEAD_K, 0.105 * HEAD_K, 0.13 * HEAD_K];
 /** Gloves 15% over life size, like the fist (style.ts). */
 const HAND_K = 1.15;
 const UP: Vec3 = [0, 0, 1];
+/**
+ * Tessellation of the small rounded forms (nose, jaw, toe caps, gloves): at LOD0 they take
+ * LOD1's rings. A 5 cm form is under 3 px from the RTS camera and ~30 px in a hero close-up, where
+ * 10 segments already read round; 480 triangles a nose cost the scene 2k a figure (D590).
+ */
+const SMALL = (lod: Lod): Lod => (lod === 0 ? 1 : lod);
 
 /** Torso loft: waist → chest → shoulders, chunky and slightly forward-leaning. */
 function torsoMesh(lod: Lod, color: Vec3): Mesh {
@@ -115,7 +178,7 @@ function leg(lod: Lod, o: FigureOptions): { boot: Mesh; shin: Mesh; thigh: Mesh 
       ...(lod === 0
         ? [
             box({ size: [0.28, 0.16, 0.035], at: [0.03, y, 0], color: RUBBER }),
-            ellipsoid(lod, [0.13, y, 0.06], [0.06, 0.07, 0.06], o.boots),
+            ellipsoid(SMALL(lod), [0.13, y, 0.06], [0.06, 0.07, 0.06], o.boots),
             tube(lod, [0, y, 0.12], [0, y, 0.2], 0.085, 0.088, o.boots),
           ]
         : []),
@@ -205,7 +268,12 @@ const mitten = (lod: Lod, at: Vec3, color: Vec3): Mesh => {
   const k = HAND_K;
   return lod === 2
     ? pebble(lod, [0.09 * k, 0.07 * k, 0.12 * k], [at[0], at[1], at[2] - 0.1 * k], color)
-    : ellipsoid(lod, [at[0], at[1], at[2] - 0.05 * k], [0.05 * k, 0.042 * k, 0.075 * k], color);
+    : ellipsoid(
+        SMALL(lod),
+        [at[0], at[1], at[2] - 0.05 * k],
+        [0.05 * k, 0.042 * k, 0.075 * k],
+        color,
+      );
 };
 
 /** A glove cupped under a shaft: the mitten from the wrist reaching to `palm`. */
@@ -214,7 +282,7 @@ const glove = (lod: Lod, wrist: Vec3, palm: Vec3, color: Vec3): Mesh => {
   const c: Vec3 = [(wrist[0] + palm[0]) / 2, (wrist[1] + palm[1]) / 2, (wrist[2] + palm[2]) / 2];
   return lod === 2
     ? pebble(lod, [0.09 * k, 0.09 * k, 0.09 * k], [c[0], c[1], c[2] - 0.045 * k], color)
-    : ellipsoid(lod, c, [0.055 * k, 0.05 * k, 0.05 * k], color);
+    : ellipsoid(SMALL(lod), c, [0.055 * k, 0.05 * k, 0.05 * k], color);
 };
 
 /** A flared glove cuff over the last 30% of a forearm (LOD0). */
@@ -239,10 +307,13 @@ const rulesOf = (o: FigureOptions): Rule[] => [
 
 export function figure(kit: Kit, lod: Lod, o: FigureOptions): FigurePoints {
   const rules = rulesOf(o);
+  const pose = o.pose ?? DEFAULT_POSE;
   const body = {
     part: (name: string, m: Mesh): void => kit.add(name, restrip(m, rules)),
   };
-  const l = leg(lod, o);
+  const raw = leg(lod, o);
+  const sp = (m: Mesh): Mesh => splayLeg(m, pose.splay);
+  const l = { boot: sp(raw.boot), shin: sp(raw.shin), thigh: sp(raw.thigh) };
   body.part('boot_l', l.boot);
   body.part('boot_r', mirrorY(l.boot));
   body.part('shin_l', l.shin);
@@ -250,7 +321,7 @@ export function figure(kit: Kit, lod: Lod, o: FigureOptions): FigurePoints {
   body.part('thigh_l', l.thigh);
   body.part('thigh_r', mirrorY(l.thigh));
   if (o.mud && lod < 2) {
-    const m = mudLeg(lod, o.mud);
+    const m = sp(mudLeg(lod, o.mud));
     kit.add('mud_l', m);
     kit.add('mud_r', mirrorY(m));
   }
@@ -260,23 +331,26 @@ export function figure(kit: Kit, lod: Lod, o: FigureOptions): FigurePoints {
   // Head with the face's big planes at LOD0: a nose wedge and a squared jaw catch the key light.
   body.part(
     'head',
-    lod === 0
-      ? merge([
-          ellipsoid(lod, HEAD, HEAD_R, SKIN),
-          ellipsoid(
-            lod,
-            [HEAD[0] + 0.1 * HEAD_K, 0, HEAD[2] - 0.025 * HEAD_K],
-            [0.025 * HEAD_K, 0.018 * HEAD_K, 0.03 * HEAD_K],
-            SKIN,
-          ),
-          ellipsoid(
-            lod,
-            [HEAD[0] + 0.03 * HEAD_K, 0, HEAD[2] - 0.07 * HEAD_K],
-            [0.075 * HEAD_K, 0.08 * HEAD_K, 0.045 * HEAD_K],
-            SKIN,
-          ),
-        ])
-      : ellipsoid(lod, HEAD, HEAD_R, SKIN),
+    turnHead(
+      lod === 0
+        ? merge([
+            ellipsoid(lod, HEAD, HEAD_R, SKIN),
+            ellipsoid(
+              SMALL(lod),
+              [HEAD[0] + 0.1 * HEAD_K, 0, HEAD[2] - 0.025 * HEAD_K],
+              [0.025 * HEAD_K, 0.018 * HEAD_K, 0.03 * HEAD_K],
+              SKIN,
+            ),
+            ellipsoid(
+              SMALL(lod),
+              [HEAD[0] + 0.03 * HEAD_K, 0, HEAD[2] - 0.07 * HEAD_K],
+              [0.075 * HEAD_K, 0.08 * HEAD_K, 0.045 * HEAD_K],
+              SKIN,
+            ),
+          ])
+        : ellipsoid(lod, HEAD, HEAD_R, SKIN),
+      pose.headYaw,
+    ),
   );
 
   // Arms: upper arms hang slightly out; the left forearm hangs, the right hangs or holds.
@@ -304,8 +378,10 @@ export function figure(kit: Kit, lod: Lod, o: FigureOptions): FigurePoints {
     );
     body.part('hand_l', mitten(lod, wristL, o.hands));
   }
-  const pt = (grip: Vec3, axis: Vec3, elbow: Vec3, wrist: Vec3): FigurePoints =>
-    points(grip, axis, elbow, wrist, left.elbowL, left.wristL);
+  const pt = (grip: Vec3, axis: Vec3, elbow: Vec3, wrist: Vec3): FigurePoints => ({
+    ...points(grip, axis, elbow, wrist, left.elbowL, left.wristL),
+    pose,
+  });
   const elbowR: Vec3 = [ELBOW[0], -ELBOW[1], ELBOW[2]];
   if (o.right === 'hang') {
     const wristR: Vec3 = [0.02, -0.32, 0.86];
@@ -387,7 +463,7 @@ const points = (
   wristR: Vec3,
   elbowL: Vec3,
   wristL: Vec3,
-): FigurePoints => ({
+): Omit<FigurePoints, 'pose'> => ({
   grip,
   gripAxis,
   elbowR,

@@ -13,7 +13,12 @@ import { C, H, L, SK, TORSO } from '../_lib/bust/human/spec.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
 import { torsoEdits } from '../_lib/bust/torso.ts';
 import { browLayers, withBrowComb } from '../_lib/face/brows.ts';
-import { bustHairFields, type CardHairStyle, skullHairline } from '../_lib/face/hair-cards.ts';
+import {
+  bustHairFields,
+  type CardHairStyle,
+  hugStyle,
+  skullHairline,
+} from '../_lib/face/hair-cards.ts';
 
 /** The torso (neck, trapezius) the hair and beard must stop short of. */
 const neck: Field = sculptField(torsoEdits(L, TORSO), { color: C.skin, mirror: 'y' }).field;
@@ -117,10 +122,28 @@ export function moustache(): V[] {
   );
 }
 
-/** The base layer under card hair: the hair and beard masses alone (the LOD2 sculpt). */
-export const hairBaseEdits = (scalp: Field, _lod: number): SculptEdit[] => hairEdits(scalp, 2);
+/** The base layer under card hair: the hair and beard masses alone. LOD1 and LOD2 grow them
+ *  into the hair shell (D585): as thick as LOD0's locks stand off the skull (their median is
+ *  6–9 mm on top and at the sides, 11–17 mm at the back; the beard 8–11 mm), so the few cards
+ *  left there lie on a mass in the hair's colour (the scalp paint) instead of standing off a
+ *  bald skull. */
+export const hairBaseEdits = (scalp: Field, lod: number): SculptEdit[] =>
+  lod === 0 ? hairEdits(scalp, 2) : shellEdits(scalp);
 
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+
+/** 0 over the front half of the skull, 1 at the occiput. */
+const backOf = (p: Vec3): number =>
+  clamp01(((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0])) * 2 - 1);
+
+function shellEdits(scalp: Field): SculptEdit[] {
+  const thick = (p: Vec3): number => 0.011 + 0.006 * backOf(p);
+  return [
+    { ...hairMass(scalp, thick, capline, box, C.hairRoot, 0.03), blend: 0.006 },
+    hairMass(scalp, 0.009, beardline, box, C.hairRoot, 0.015),
+  ];
+}
+
 /** Distance to the moustache line (both sides) minus its half-width: negative on the lip. */
 const MOUSTACHE = moustache();
 const moustacheline: Field = (p) =>
@@ -169,8 +192,39 @@ const length = (p: Vec3): number => {
   return 0.05 + 0.06 * up;
 };
 
-/** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the human bust `b`. */
+/** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the human bust `b` at
+ *  `lod`. LOD1 (D586): the locks lie on the shell (`hugStyle`: flat, three segments to bend round
+ *  the skull), half again as many, no stray wisps (twice as wide at that LOD they read as
+ *  spikes). LOD2 (D585): the shell carries the hair; a few swept locks on it break its outline
+ *  (no beard or brow cards: the shell and the paint hold them). */
 export function humanCardHair(b: BustRecipe, lod: number): CardHairStyle {
+  const style = nearHair(b, lod);
+  if (lod === 0) return style;
+  if (lod === 1)
+    return hugStyle(style, {
+      keep: ['hair_base', 'hair_mid', 'hair_top', 'beard', 'moustache', 'brows'],
+      density: 1.5,
+      segments: 6,
+    });
+  const far = { segments: 4, length: 0.7 };
+  const hair = hugStyle(style, {
+    ...far,
+    keep: ['hair_mid', 'hair_top'],
+    density: 0.4,
+    width: 0.9,
+  });
+  // The beard in a few wide cards over its shell: the paint alone fades to skin over the coarse
+  // triangles and the jaw lightened by half (D587).
+  const beard = hugStyle(style, {
+    ...far,
+    keep: ['beard', 'moustache'],
+    density: 0.5,
+    width: 2.6,
+  });
+  return { ...hair, layers: [...hair.layers, ...beard.layers] };
+}
+
+function nearHair(b: BustRecipe, lod: number): CardHairStyle {
   // Roots on the finished head (cap, beard mass and all), falling round it.
   const { skin } = bustHairFields(b, lod);
   const warm: Vec3 = [1.08, 1.0, 0.86];

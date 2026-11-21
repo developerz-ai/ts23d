@@ -8,6 +8,7 @@ import { type IntendedCrease, sculptField } from '@developerz.ai/ts23d';
 import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
 import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
+import { graftLine } from '../_lib/bust/ear-graft.ts';
 import { spline, surface, type V } from '../_lib/bust/kit.ts';
 import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { GOBLIN_BUST } from './build.ts';
@@ -25,7 +26,7 @@ import {
 } from './clothes.ts';
 import { browLines, grinLine, WARTS } from './features.ts';
 import { WISPS, wispLine } from './hair.ts';
-import { H, LT as L, SK, SPEC, TORSO } from './spec.ts';
+import { GRAFT, H, LT as L, SK, SPEC, TORSO } from './spec.ts';
 import { bodyEdits } from './torso.ts';
 
 function creases(): IntendedCrease[] {
@@ -43,6 +44,14 @@ function creases(): IntendedCrease[] {
     // Every garment edge the cloth tailoring (clothes.ts) stands off the layer beneath.
     ...outfitCreases(skin),
     ...skullCreases(SK, H),
+    ...creaseCurve(
+      'ear_blade',
+      'head',
+      graftLine(SK, GRAFT),
+      0.028,
+      'the ear’s leaf: its rolled helix, antihelix, concha and notches',
+      true,
+    ),
     ...torsoCreases(L, TORSO),
     ...creaseCurve('grin', 'head', grinLine(), 0.02, 'the grin’s slit and its pointed teeth', true),
     ...browLines().flatMap((l, i) =>

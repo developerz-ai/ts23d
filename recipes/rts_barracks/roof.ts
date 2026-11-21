@@ -46,6 +46,7 @@ import {
   TOWER,
   WALL_T,
 } from './plan.ts';
+import { bareCourse, wearOdds, windPatches } from './slate-wear.ts';
 
 export const PITCH = (26 * Math.PI) / 180;
 export const OVERHANG = 0.6;
@@ -133,19 +134,13 @@ interface SlateOptions {
   readonly loss?: number;
   /** Where slates within 0.8 m of a hole's edge go: burnt black, no team paint left (LOD0). */
   readonly charred?: Mesh[];
+  /** Collects (u, v) of every slate lost or aged to the weather (tests). */
+  readonly fates?: [number, number][];
 }
 
 /** Share of slates the wind took (dark sarking shows) and of old weathered ones (LOD0). */
 const LOST = 0.035;
 const AGED = 0.05;
-/** Old slates, a value under the red so they read as weathered, not as pale patches: grey-brown
- *  slate showing through, lichened green-grey, rain-blackened. Bare colours, so they stay
- *  themselves in every livery (wear slot). */
-const AGED_SLATE: readonly Vec3[] = [
-  [0.27, 0.24, 0.21],
-  [0.24, 0.26, 0.19],
-  [0.13, 0.12, 0.11],
-];
 
 /** A slate burnt through by the fire round a shell hole. */
 export const CHARRED_SLATE: Vec3 = [0.04, 0.037, 0.034];
@@ -165,6 +160,18 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
     holes.some(([a, b]) => (u1 > a - 0.8 && u0 < a) || (u1 > b && u0 < b + 0.8));
   const L = SLATE.length;
   const n = Math.ceil(pl.vl / SLATE.exposed);
+  // A sound slate shows its face, butt edge and head (the head is what it rests on the course
+  // above by); its sides sit 2 cm from its neighbours, seen only along a verge. Loose ones show all.
+  const hidden = (a: number, b: number, loose: boolean): ('bottom' | 'front' | 'back')[] =>
+    loose
+      ? ['bottom']
+      : [
+          'bottom',
+          ...(a > 0.01 ? (['back'] as const) : []),
+          ...(b < pl.ul - 0.01 ? (['front'] as const) : []),
+        ];
+  // Wind damage in patches along the exposed edges, not an even sprinkle (D593).
+  const patches = windPatches(rng.fork('wind'), pl.ul, pl.vl);
   // Present u runs (between holes) for the per-course strips.
   const cuts = [0, ...holes.flat(), pl.ul];
   const runs: [number, number][] = [];
@@ -211,9 +218,17 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
       const char = o.charred !== undefined && (broken || (burnt(a, b) && rng.next() < 0.8));
       // Weather is per slate, never per triangle: a slate lost to the wind shows the dark
       // sarking; an old one, salt-bleached or lichened, is a whole slate slipped on its nail.
-      const fate = rng.next();
-      if (!char && !broken && k > 0 && fate < LOST) continue;
-      const aged = !char && !broken && fate < LOST + AGED;
+      const fate = rng.next() / wearOdds(patches, mid, v1 - SLATE.exposed / 2, pl.vl);
+      const sound = !char && !broken;
+      if (sound && k > 0 && fate < LOST) {
+        // Gone: dark sarking and its batten show where it hung.
+        for (const m of bareCourse(b - a, SLATE.exposed))
+          out.push(onPlane(pl, m, mid, v1 - SLATE.exposed / 2, DECK));
+        o.fates?.push([mid, v1 - SLATE.exposed / 2]);
+        continue;
+      }
+      const aged = sound && fate < LOST + AGED;
+      if (aged) o.fates?.push([mid, v1 - SLATE.exposed / 2]);
       const kk = slateTone(rng, v1, pl.vl, k === 0) * (broken ? 0.82 : 1);
       const tone: Vec3 = char
         ? [
@@ -222,7 +237,7 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
             CHARRED_SLATE[2] * (0.7 + kk * 0.4),
           ]
         : aged
-          ? rng.pick(AGED_SLATE)
+          ? teamShade(kk * rng.range(0.55, 0.7))
           : teamShade(kk);
       // Broken edge slates: shorter, skewed on their nail, sliding toward the hole; an aged one
       // has slipped a few centimetres.
@@ -233,7 +248,7 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
           at: [0, 0, -SLATE.t / 2],
           color: tone,
           strip: 'slate',
-          omit: ['bottom'],
+          omit: hidden(a, b, broken || aged),
         }),
       );
       const skewed = broken
@@ -264,6 +279,8 @@ export function roofSlopes(
   rng: Rng,
   /** Collects the burnt slates round a hole (not team-painted any more). */
   charred?: Mesh[],
+  /** Collects (u, v) of the weathered slates (tests). */
+  fates?: [number, number][],
 ): Mesh | null {
   const ul = (HALF_X + OVERHANG) * 2;
   const pl = plane([-HALF_X - OVERHANG, 0, RIDGE], s, PITCH, ul, SLOPE_W);
@@ -289,7 +306,13 @@ export function roofSlopes(
       );
     } else out.push(deck(pl, a, b, 0, SLOPE_W, 0.45));
   }
-  out.push(...slates(lod, pl, rng, { holes, ...(charred ? { charred } : {}) }));
+  out.push(
+    ...slates(lod, pl, rng, {
+      holes,
+      ...(charred ? { charred } : {}),
+      ...(fates ? { fates } : {}),
+    }),
+  );
   if (lod === 0 && holes.length)
     // Two or three slates hang off the hole's top edge on their last nail.
     for (const [a] of holes)
@@ -589,13 +612,14 @@ export function tower(
 ): { drum: Mesh; cap: Mesh | null; beacon: Mesh | null } {
   const at: Vec3 = [TOWER.x, s * TOWER.y, 0];
   // LOD2: an octagon; at crowd distance the drum and its team cone are a few pixels across.
-  const segs = SEG(lod, 28, 14, 8);
+  const segs = SEG(lod, 22, 14, 8);
   const r = TOWER.r;
   // Coursed masonry in the profile itself: every 0.5 m course is chamfered back 2.5 cm at its
-  // bed joint (LOD0/1), so the drum reads as laid blocks under raking light, not a pipe.
+  // bed joint (LOD0), so the drum reads as laid blocks under raking light, not a pipe. LOD1 is
+  // seen from too far for a 2.5 cm chamfer: a plain drum (1.4k → 0.4k triangles a tower).
   const courses: Vec2[] = [];
   const top = cap ? height - 0.4 : height;
-  if (lod < 2)
+  if (lod === 0)
     for (let z = 1.5; z < top - 0.2; z += 0.5)
       courses.push([r, z - 0.03], [r - 0.025, z], [r, z + 0.02]);
   const head: Vec2[] = cap

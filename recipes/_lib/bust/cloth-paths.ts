@@ -1,9 +1,10 @@
 // Fold lines from how cloth hangs, walked ON the body so they follow its curvature: `hang` (pipe
 // folds falling under gravity from a gathered edge — shoulders, a belt, a pin), `drag` (tension
 // folds pulled straight from a pinch toward its anchors — a brooch, a buckle, the armpit), `zigzag`
-// (alternating diagonals across a bend — a sleeve's elbow, a waist cinch) and `sag` (nested U folds
-// hanging between two anchors — a cowl, a cloak slung across the back). Each returns `Fold`s for
-// `foldField`, lifted `lift` metres off the surface (the cloth's thickness).
+// (alternating diagonals across a bend — a sleeve's elbow, a waist cinch), `sag` (nested U folds
+// hanging between two anchors — a cowl, a cloak slung across the back) and `radiate` (short
+// compression folds round a gathered collar). Each returns `Fold`s for `foldField`, lifted `lift`
+// metres off the surface (the cloth's thickness).
 
 import { dmath } from '@developerz.ai/ts23d';
 import type { Fold } from './cloth-folds.ts';
@@ -160,6 +161,39 @@ export function sag(
       width: look.width,
       amp: valley ? -look.amp * (look.valley ?? 0.7) : look.amp,
       fade: [0.3, 0.3],
+    };
+  });
+}
+
+/** Compression folds round a gathered edge (a collar pulled in round the neck): `count` short
+ *  folds radiating from points on `ring` away from the vertical axis through `axis`, sloping
+ *  `drop` metres down per metre out, ridges and valleys in turn, strong at the edge and fading
+ *  out over `length` metres. `from`..`to` (fractions of the ring) picks the stretch they run on. */
+export function radiate(
+  s: Surface,
+  ring: readonly V[],
+  axis: V,
+  count: number,
+  length: number,
+  look: FoldLook & { readonly drop?: number; readonly from?: number; readonly to?: number },
+): Fold[] {
+  const a = look.from ?? 0;
+  const b = look.to ?? 1;
+  const drop = look.drop ?? 0.5;
+  return Array.from({ length: count }, (_, i) => {
+    const t = a + ((b - a) * (i + 0.5)) / count;
+    const start = ring[Math.min(ring.length - 1, Math.floor(t * ring.length))] ?? axis;
+    const out = (p: V): V => {
+      const h = norm([p[0] - axis[0], p[1] - axis[1], 0]);
+      return [h[0], h[1], -drop];
+    };
+    const path = walk(s, start, out, length, 5, look.lift);
+    const valley = i % 2 === 1;
+    return {
+      path,
+      width: look.width * (valley ? 0.8 : 1),
+      amp: valley ? -look.amp * (look.valley ?? 0.7) : look.amp,
+      fade: [0.05, 0.75],
     };
   });
 }

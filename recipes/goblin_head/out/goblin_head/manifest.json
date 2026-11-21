@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    55862,
-    14358,
-    3228
+    57106,
+    13956,
+    3022
   ],
   "drawCalls": [
     5,
@@ -123,7 +123,7 @@
       "target": 0.04,
       "actual": 0.04,
       "eligible": "convex-edges",
-      "area": 0.1374
+      "area": 0.1432
     },
     "dust": {
       "target": 0.25,

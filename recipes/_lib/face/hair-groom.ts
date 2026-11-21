@@ -5,7 +5,8 @@
 // Geometry Nodes) returns the cards; groomCards maps them into the `hair_clumps` strip and
 // validates them (roots on the scalp, nothing through the head, triangle cap). Layers named in
 // `keep` (beard, moustache, hairline wisps) stay today's cards in the same `hair` part (one draw).
-// LOD0 only; LOD1/2 and a cache miss build exactly as `cardHair` (the CPU tier).
+// LOD0 only; LOD1/2 and a cache miss build exactly as `cardHair` (the CPU tier), LOD2 from the
+// style as the recipe built it for that LOD.
 
 import {
   applyGroomOps,
@@ -141,7 +142,9 @@ export function groomHair(
   part = 'hair',
 ): 'groom' | 'cards' {
   if (ctx.lod > 0) {
-    cardHair(ctx, style, part);
+    // The style is the recipe's own for this LOD (its style function takes the LOD): the far
+    // LOD's cards are emitted as given, not thinned again by `farStyle` (D585).
+    cardHair(ctx, style, part, { far: (s) => s });
     return 'cards';
   }
   const { request, inputs } = groomJob(style, g, ctx);

@@ -1,12 +1,22 @@
 // The shared Saltmarch figure: the default poses keep their upright grip, and the `shoulder` pose
 // gives a grip axis whose handle the fist closes round at every LOD and that rests on the right
 // shoulder rather than floating over it or running through the head. Failure first: a handle
-// laid along the wrong axis must fail the same joint check.
+// laid along the wrong axis must fail the same joint check. The body stays inside its LOD0 budget
+// (D590: a 5 cm nose at 480 triangles put 4.9k into a body the RTS camera sees at 40 px).
 
 import { describe, expect, it } from 'bun:test';
-import { cylinder, defineAsset, dmath, type Lod, place, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  compile,
+  createRng,
+  cylinder,
+  defineAsset,
+  dmath,
+  type Lod,
+  place,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { assertJointsFit } from '@developerz.ai/ts23d/testing';
-import { figure } from './figure.ts';
+import { DEFAULT_POSE, figure, unitPose } from './figure.ts';
 import { Kit } from './finish.ts';
 import { BOOT, CLOTH, LEATHER } from './style.ts';
 
@@ -82,5 +92,82 @@ describe('figure right-arm poses', () => {
     expect(z - HANDLE_R - top).toBeLessThan(0.01);
     // Beside the head, never through it.
     expect(Math.abs(p.grip[1]) - HANDLE_R).toBeGreaterThan(p.headR[1]);
+  });
+});
+
+/** Body triangles at LOD0 with mud on: what every Warden and Delver pays before its gear. */
+const BODY_LOD0 = 3500;
+
+const bodyTriangles = (right: 'hang' | 'hold' | 'shoulder'): number =>
+  compile(
+    defineAsset({
+      name: `figure_body_${right}`,
+      kind: 'character',
+      budget: { triangles: [20000, 6000, 1000] },
+      build(ctx) {
+        const kit = new Kit();
+        figure(kit, ctx.lod, { ...opts(right), mud: 0.3 });
+        kit.commit(ctx, []);
+      },
+    }),
+    { lod: 0 },
+  ).parts.reduce((n, p) => n + (p.mesh ? p.mesh.indices.length / 3 : 0), 0);
+
+describe('figure budget', () => {
+  it('fails a budget under what the body costs (the check can fail)', () => {
+    expect(bodyTriangles('hang')).toBeGreaterThan(BODY_LOD0 / 2);
+  });
+
+  for (const right of ['hang', 'hold', 'shoulder'] as const)
+    it(`${right}: the LOD0 body stays under ${BODY_LOD0} triangles`, () => {
+      expect(bodyTriangles(right)).toBeLessThanOrEqual(BODY_LOD0);
+    });
+});
+
+/** Ankle spread ÷ hip spread of a figure (boot centre vs thigh top, left leg, LOD0). */
+function stanceRatio(splay: number): number {
+  const c = compile(
+    defineAsset({
+      name: `figure_stance_${Math.round(splay * 100)}`,
+      kind: 'character',
+      budget: { triangles: [20000, 6000, 1000] },
+      build(ctx) {
+        const kit = new Kit();
+        figure(kit, ctx.lod, { ...opts('hang'), pose: { splay, headYaw: 0 } });
+        kit.commit(ctx, []);
+      },
+    }),
+    { lod: 0 },
+  );
+  const meanY = (name: string, pick: (z: number) => boolean): number => {
+    const p = c.parts.find((x) => x.name === name)?.mesh?.positions ?? new Float32Array();
+    let [sum, n] = [0, 0];
+    for (let i = 0; i < p.length; i += 3)
+      if (pick(p[i + 2] ?? 0)) {
+        sum += p[i + 1] ?? 0;
+        n++;
+      }
+    return sum / Math.max(1, n);
+  };
+  return meanY('boot_l', (z) => z < 0.05) / meanY('thigh_l', (z) => z > 0.85);
+}
+
+describe('figure stance (D597)', () => {
+  it('fails parallel pegs: feet straight under the hips', () => {
+    expect(stanceRatio(0)).toBeLessThan(1.3);
+  });
+
+  it('stands in an easy A-stance by default', () => {
+    expect(stanceRatio(DEFAULT_POSE.splay)).toBeGreaterThanOrEqual(1.3);
+  });
+
+  it('every instance draws its own stance and head turn from its seed', () => {
+    const poses = [1, 2, 3, 4].map((s) => unitPose(createRng(s)));
+    for (const p of poses) {
+      expect(stanceRatio(p.splay)).toBeGreaterThanOrEqual(1.3);
+      expect(Math.abs(p.headYaw)).toBeLessThanOrEqual(0.3);
+    }
+    const yaws = new Set(poses.map((p) => p.headYaw.toFixed(2)));
+    expect(yaws.size).toBe(poses.length);
   });
 });

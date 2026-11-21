@@ -25,6 +25,10 @@ export interface Cloth {
   /** Stitch groove `at` metres in from the edge, `depth` deep, `width` half-wide. */
   readonly stitch?: { readonly at: number; readonly depth: number; readonly width: number };
   readonly folds?: FoldField;
+  /** A slab only this many metres deep under its outer face (a patch sewn on a garment): without
+   *  it a garment is solid to the body's far side inside its region, which a patch's small region
+   *  turned into a plug through the body, meshed whole (D581). */
+  readonly depth?: number;
   /** An edge the cloth thins out toward instead of ending in a hem (a mantle gathered under a
    *  collar): ≤ 0 inside, thickness eased to 0 over `width` metres in from its edge. */
   readonly feather?: { readonly region: Field; readonly width: number };
@@ -129,12 +133,16 @@ export function clothField(c: Cloth): Field {
   const roll = c.hem?.roll ?? 0;
   const floor = c.floor ?? -Infinity;
   const fe = c.feather?.region;
+  const depth = c.depth;
   return (p) => {
     // Clearly outside the garment's region (the head, the face): the region alone is a valid
     // lower bound on the field (smax ≥ max), so the costly body is never asked there.
     const cut = Math.max(c.region(p), floor - p[2], fe ? fe(p) : -Infinity);
     if (cut > OUTSIDE) return cut;
-    return Math.max(smax((under(p) - t(p)) * k, c.region(p), roll), cut);
+    const u = under(p);
+    const tp = t(p);
+    const outer = Math.max(smax((u - tp) * k, c.region(p), roll), cut);
+    return depth === undefined ? outer : Math.max(outer, (tp - depth - u) * k);
   };
 }
 

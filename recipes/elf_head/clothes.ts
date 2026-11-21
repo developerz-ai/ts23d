@@ -8,8 +8,11 @@
 // base, road dust on the shoulders; over it a short shoulder cape of darker felt whose hem is cut
 // in leaf points; and the gold braid (`brass`), raised and meshed fine so it never stair-steps:
 // down the wrap's edge with a row of gold beads and down the cloak's front edges.
-// `outfitEdits` is every layer in one list: the whole dressed bust as one field (hair collision,
-// the cloth check).
+// Grime has a cause, never noise (../_lib/bust/cloth-grime.ts, D580): the folds' valleys, the
+// hem, the edges the hands draw closed. LOD0 sews it: a top stitch along the tall collar and a
+// running stitch inside the cape's leaf hem (D582); the tunic gathers in short folds under the
+// collar (D583). `outfitEdits` is every layer in one list: the whole dressed bust as one field
+// (hair collision, the cloth check).
 
 import {
   createRng,
@@ -18,16 +21,19 @@ import {
   hex,
   type IntendedCrease,
   type SculptEdit,
+  sculptField,
   valueNoise,
 } from '@developerz.ai/ts23d';
 import { type Fold, foldField } from '../_lib/bust/cloth-folds.ts';
 import { type Cloth, cloth, clothField, edgeBand, memo } from '../_lib/bust/cloth-garment.ts';
+import { grime, grimeZone } from '../_lib/bust/cloth-grime.ts';
 import { collarBand, type NeckSection, neckline, neckSection } from '../_lib/bust/cloth-neck.ts';
-import { drag, hang, sag } from '../_lib/bust/cloth-paths.ts';
+import { drag, hang, radiate, sag } from '../_lib/bust/cloth-paths.ts';
+import { dropOnto, stitches, stitchLayer } from '../_lib/bust/cloth-seam.ts';
 import { CLOTH_ALBEDO, SILK, WOOL as WOOL_STRIP } from '../_lib/bust/cloth-strips.ts';
 import { edgeCreases } from '../_lib/bust/creases.ts';
 import { mix } from '../_lib/bust/hair.ts';
-import type { Surface, V } from '../_lib/bust/kit.ts';
+import { type Surface, surface, type V } from '../_lib/bust/kit.ts';
 import type { GarmentLayer } from '../_lib/bust/layers.ts';
 import { baseZ, bustCut, neckSeam } from '../_lib/bust/torso.ts';
 import { C, H, L, TORSO } from './spec.ts';
@@ -70,6 +76,7 @@ const WOOL = {
   cape: hex('#1f3f3a'),
   frayed: hex('#8aa39a'),
   mud: hex('#4a4a3a'),
+  thread: hex('#c9c39a'),
 };
 /** Layer colours as tints on their strips; `far` (LOD2: every layer in one sculpt on `canvas`)
  *  tints the silk's and the braid's colours for that strip instead. */
@@ -78,9 +85,11 @@ function tints(far: boolean) {
     tunic: on(CANVAS, C.tunic),
     tunicDark: on(CANVAS, C.tunicDark),
     cloak: on(CANVAS, WOOL.cloak),
-    cape: on(CANVAS, WOOL.cape),
+    // (LOD2: the cape in the cloak's colour: its leaf lobes a cell wide read as camouflage.)
+    cape: on(CANVAS, far ? WOOL.cloak : WOOL.cape),
     frayed: on(CANVAS, WOOL.frayed),
     mud: on(CANVAS, mix(WOOL.cloak, WOOL.mud, 0.7)),
+    thread: on(CANVAS, WOOL.thread),
     braid: far ? on(CANVAS, C.trim) : on(BRASS, hex('#e8c878')),
     bead: far ? on(CANVAS, C.trim) : on(BRASS, hex('#f5e5ae')),
   };
@@ -89,9 +98,14 @@ function tints(far: boolean) {
 /** One garment layer: its own sculpt on its own strip (`tunic` is the silk's part). */
 export type Layer = GarmentLayer;
 
-/** Wear masks: seeded world-space noise (the same spots at every LOD). */
-const BLOTCH = valueNoise(createRng(0xe1f1), { scale: 0.04, octaves: 3 });
+/** Fine jitter of an edge's wear line and the frayed hem (never a stain on its own: the same spots
+ *  at every LOD). */
 const SPECK = valueNoise(createRng(0xe1f2), { scale: 0.009, octaves: 2 });
+/** The nearest of several wear zones (≤ 0 inside any). */
+const worn =
+  (...zones: Field[]): Field =>
+  (p) =>
+    Math.min(...zones.map((z) => z(p)));
 
 /** A paint edit where `mask` < 0, fading over `blend` metres. */
 const paint = (mask: Field, color: V, blend: number): SculptEdit => ({
@@ -147,7 +161,12 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     region: collar,
     hem: { width: 0.008, lift: 0.002, roll: 0.006 },
   };
-  const cloakFold = fine ? { folds: foldField(cloakFolds(skin)) } : {};
+  const cloakFoldSet = foldField(cloakFolds(skin));
+  const cloakFold = fine ? { folds: cloakFoldSet } : {};
+  const tunicFold = foldField(tunicFolds(skin));
+  // Silk darkens in its creases; the wool in the valleys of its pipe folds.
+  const tunicCauses = { folds: tunicFold };
+  const cloakCauses = { folds: cloakFoldSet };
   const cloak = cloakOf(neck);
   const cloakCloth: Cloth = {
     body,
@@ -181,7 +200,7 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
           thick: TUNIC,
           region: tunic,
           floor,
-          ...(fine ? { folds: foldField(tunicFolds(skin)) } : {}),
+          ...(fine ? { folds: tunicFold } : {}),
         },
         { bounds: BOX, color: K.tunic, blend: 0 },
       ),
@@ -189,10 +208,13 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
       cloth(collarCloth, { bounds: BOX, color: K.tunic, blend: 0.01 }),
       // Wrap panel: the tunic's left front crossing over the chest to the right side.
       cloth(wrapCloth, { bounds: BOX, color: K.tunic, blend: 0.004, mirror: false }),
-      // Silk darkens where it is handled: inside the collar and along the wrap's fold.
+      // Silk darkens where it is handled: inside the collar, and in its creases.
       paint((p) => collar(p) + 0.004 + 0.004 * SPECK(p), K.tunicDark, 0.006),
-      paint((p) => 0.02 - 0.04 * BLOTCH(p), mix(K.tunic, K.tunicDark, 0.5), 0.02),
+      ...(fine
+        ? [grime(tunicCauses, mix(K.tunic, K.tunicDark, 0.5), { bounds: BOX, fade: 0.012 })]
+        : []),
     ],
+    wear: worn((p) => collar(p) - 0.003, grimeZone(tunicCauses, 0.012)),
   };
   const cloakLayer: Layer = {
     name: 'cloak',
@@ -203,8 +225,12 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     edits: [
       cloth(cloakCloth, { bounds: BOX, color: K.cloak, blend: 0 }),
       cloth(capeCloth, { bounds: BOX, color: K.cape, blend: 0.002 }),
+      // Grime in the valleys of the pipe folds.
+      ...(fine
+        ? [grime(cloakCauses, mix(K.cloak, K.mud, 0.45), { bounds: BOX, fade: 0.012 })]
+        : []),
       // The hem: trodden and frayed, pale broken threads above a band of old mud.
-      paint((p) => p[2] - HEM - 0.03 + 0.014 * BLOTCH(p), K.mud, 0.02),
+      paint((p) => p[2] - HEM - 0.03 + 0.008 * SPECK(p), K.mud, 0.02),
       paint((p) => p[2] - HEM - 0.012 + 0.008 * SPECK(p), K.frayed, 0.006),
       // The front edges rubbed pale by the hands that draw the cloak closed.
       paint(
@@ -213,6 +239,11 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
         0.006,
       ),
     ],
+    wear: worn(
+      (p) => p[2] - HEM - 0.048,
+      (p) => edgeBand(cloakRegion, -0.01, 0.04)(p),
+      grimeZone(cloakCauses, 0.012),
+    ),
   };
   // The braid: the same cloth as what it edges, a hair thicker, on a band along the edge, and
   // only its top 5.5 mm (LOD1: 9 mm, over a cell) (a strip, not a wall through the body).
@@ -260,6 +291,7 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     ],
   };
   const layers = [tunicLayer, cloakLayer, braidLayer];
+  if (lod === 0) layers.push(sewn(skin, tunicLayer, cloakLayer, K.thread));
   if (fine) return layers;
   // Far LOD: one sculpt of every layer (one watertight surface: separate shells 2 mm apart would
   // cross at a 2.6 cm cell), the colour blocks kept flat.
@@ -273,8 +305,63 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
       edits: [tunicLayer, cloakLayer]
         .flatMap((l) => l.edits)
         .filter((e) => !('op' in e && e.op === 'paint')),
+      // Coloured by whichever garment is on top at each vertex: the sculpt's own pick between
+      // shells a few millimetres apart flipped vertex by vertex into camouflage (D580).
+      sources: [tunicLayer, cloakLayer],
     },
   ];
+}
+
+/** LOD0's sewing, threads a millimetre thick (LOD1's cell would lose them): a top stitch 5 mm
+ *  under the tall collar's rolled top where the cloak's opening shows it, and a running stitch
+ *  7 mm inside the cape's leaf-cut hem, each seated on the garment as made. */
+function sewn(skin: Surface, tunic: Layer, cloakLayer: Layer, thread: V): Layer {
+  const solid = (l: Layer) =>
+    sculptField(
+      l.edits.filter((e) => !('op' in e && e.op === 'paint')),
+      { color: l.color, mirror: 'y' },
+    ).field;
+  const silk = surface(solid(tunic));
+  const wool = solid(cloakLayer);
+  const felt = surface(wool);
+  const neck = neckOf(skin.field);
+  const c = neck.c;
+  const collar = collarOf(neck);
+  const top = neck.ring
+    .filter((p) => p[0] - c[0] > 0.55 * dmath.hypot(p[0] - c[0], p[1]))
+    .map((p): V => {
+      const d = dmath.hypot(p[0] - c[0], p[1]) || 1;
+      return [p[0] + ((p[0] - c[0]) / d) * 0.012, p[1] + (p[1] / d) * 0.012, p[2] + 0.017];
+    })
+    .sort((a, b) => a[1] - b[1])
+    .map((p) => silk.on(p))
+    .filter((p) => collar(p) < -0.002);
+  // The cape's hem, 7 mm in, from the left front edge round the back to the right.
+  const cape = capeRegion(neck);
+  const hem: V[] = [];
+  for (let i = 0; i <= 96; i++) {
+    const a = -Math.PI + (i / 96) * 2 * Math.PI;
+    const lobe = 1 - dmath.pow(Math.abs(dmath.cos(a * 5.5)), 0.7);
+    const r = 0.145 + 0.045 * lobe - 0.007 / 0.7;
+    const p = dropOnto(
+      wool,
+      c[0] + r * dmath.cos(a),
+      r * dmath.sin(a),
+      SEAM.at[2] + 0.08,
+      SEAM.at[2] - 0.16,
+    );
+    if (p && cape(p) < -0.003) hem.push(p);
+  }
+  const look = { pitch: 0.0065, length: 0.0038, r: 0.0009, color: thread, mirror: false };
+  return stitchLayer(
+    [
+      ...stitches(top, { ...look, pitch: 0.005, length: 0.003, r: 0.0007 }),
+      // (Where the cape faces up: down its back it hangs steep, and a stitch dropped onto it
+      // from above lands beside the cloth, not on it.)
+      ...stitches(hem, { ...look, keep: (p) => cape(p) < -0.003 && felt.normal(p)[2] > 0.4 }),
+    ],
+    { strip: SILK, color: thread, part: 'clothes' },
+  );
 }
 
 /** The cloak's own outer surface (it hangs clear of the lower back): what the cape's hem and the
@@ -403,7 +490,16 @@ function tunicFolds(s: Surface): Fold[] {
     [0.09, 0.05, L.mz - 0.6 * H],
     [0.095, 0.04, L.mz - 0.78 * H],
   ];
-  return drag(s, pit, to, look);
+  // Short folds where the silk gathers in under the tall collar, either side of the throat.
+  const gather = radiate(s, neckOf(s.field).ring, neckOf(s.field).c, 3, 0.035, {
+    amp: 0.002,
+    width: 0.008,
+    lift: TUNIC,
+    drop: 1.4,
+    from: 0.04,
+    to: 0.16,
+  });
+  return [...drag(s, pit, to, look), ...gather];
 }
 
 /** Cloak folds: pipe folds hanging down the back and over each arm from the shoulders, a U fold

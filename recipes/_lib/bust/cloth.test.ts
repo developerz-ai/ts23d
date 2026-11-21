@@ -3,7 +3,7 @@ import { dmath } from '@developerz.ai/ts23d';
 import { foldField } from './cloth-folds.ts';
 import { clothField, edgeBand, memo, smax, thickness } from './cloth-garment.ts';
 import { collarBand, neckline, neckSection, outsideNeck } from './cloth-neck.ts';
-import { drag, hang, sag, walk, zigzag } from './cloth-paths.ts';
+import { drag, hang, radiate, sag, walk, zigzag } from './cloth-paths.ts';
 import { surface, type V } from './kit.ts';
 
 const ball =
@@ -101,6 +101,17 @@ describe('cloth garment', () => {
     expect(hung([-0.098, 0, 0])).toBeLessThan(0);
     expect(hung([-0.105, 0, 0.05])).toBeGreaterThan(0);
   });
+  it('fails on a patch meshed as a plug through the body (D581): `depth` keeps it a slab', () => {
+    const plug = clothField({ body, thick: 0.012, region });
+    const patch = clothField({ body, thick: 0.012, region, depth: 0.007 });
+    // Without a depth, a small region's cloth is solid to the body's far side.
+    expect(plug([0, 0, 0.05])).toBeLessThan(0);
+    expect(patch([0, 0, 0.05])).toBeGreaterThan(0);
+    // The slab: from 5 mm to 12 mm off the body.
+    expect(patch([0, 0, 0.103])).toBeGreaterThan(0);
+    expect(patch([0, 0, 0.108])).toBeLessThan(0);
+    expect(patch([0, 0, 0.114])).toBeGreaterThan(0);
+  });
   it('smax never undercuts the max and a band is ≤ 0 only within its range', () => {
     expect(smax(0.01, -0.02, 0.004)).toBe(0.01);
     const band = edgeBand(region, 0.002, 0.01);
@@ -185,5 +196,39 @@ describe('cloth at the neck', () => {
     expect(c([0.04, 0, 0.01])).toBeLessThan(0);
     expect(c([0.04, 0, 0.02])).toBeGreaterThan(0);
     expect(c([0.09, 0, 0.01])).toBeGreaterThan(0);
+  });
+});
+
+describe('collar compression folds (D583)', () => {
+  // A neck's ring on a ball, 5 cm up: the folds run out from it and down, ridge and valley in turn.
+  const s = surface(ball(0.1));
+  const ring = Array.from({ length: 32 }, (_, i): V => {
+    const a = (i / 32) * Math.PI * 2;
+    return s.on([0.087 * dmath.cos(a), 0.087 * dmath.sin(a), 0.05]);
+  });
+  const folds = radiate(s, ring, [0, 0, 0.05], 4, 0.04, {
+    amp: 0.002,
+    width: 0.008,
+    lift: 0,
+    from: 0,
+    to: 0.25,
+  });
+  it('alternates ridges and valleys, starting on the ring', () => {
+    expect(folds.map((f) => Math.sign(f.amp))).toEqual([1, -1, 1, -1]);
+    for (const f of folds) {
+      const p = f.path[0] ?? [0, 0, 0];
+      expect(
+        Math.min(...ring.map((q) => dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]))),
+      ).toBeLessThan(0.001);
+    }
+  });
+  it('runs away from the neck and down, strongest at the collar', () => {
+    for (const f of folds) {
+      const a = f.path[0] ?? [0, 0, 0];
+      const b = f.path[f.path.length - 1] ?? a;
+      expect(b[2]).toBeLessThan(a[2]);
+      expect(dmath.hypot(b[0], b[1])).toBeGreaterThan(dmath.hypot(a[0], a[1]));
+      expect(f.fade?.[0] ?? 1).toBeLessThan(f.fade?.[1] ?? 0);
+    }
   });
 });

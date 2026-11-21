@@ -5,9 +5,10 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Carbine at port arms across the chest with the left glove now gripping the shroud instead of floating beside it (hero.png); FRONT reads the whole weapon, plus red crest, red pauldrons and radio pack with antenna; reads \"infantry\" from every view.",
+      "reason": "Carbine at port arms with the left glove on the shroud, red crest, red pauldrons and radio pack with antenna; the legs now stand in an A-stance (sheet FRONT feet apart, no longer parallel pegs) and the helmet crest is turned off-axis, so the figure reads less like a mannequin. The head turn itself is small: the visor still faces straight out in FRONT.",
       "fixes": [
-        "angle the antenna back a little so it separates from the crest in SIDE"
+        "angle the antenna back a little so it separates from the crest in SIDE",
+        "a slightly larger head/torso turn so instances differ at RTS zoom"
       ]
     },
     "proportions": {
@@ -49,14 +50,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 11.4k / 3.0k / 380 tris, 3 / 3 / 3 draws.",
+      "reason": "QA PASS: 9.7k / 3.0k / 380 tris, 3 / 3 / 3 draws; LOD0 down from 11.4k.",
       "fixes": [
         "spend LOD0 triangles on limb cross-sections instead of carbine barrel rings"
       ]
     }
   },
   "renders": {
-    "hero.png": "8bf1fa0186e56208060d6d37a72fc1a67ed69e7c9fd834d43443f0f323cf3340",
-    "sheet.png": "f3419b39bb28596371c2043c6e6cb3be240d3e9b7a48239bf42a6a1ac32cf9ac"
+    "hero.png": "abe816d47b643567ea47bc7be1df217a0c66595397222b2a1e1233e92591e7aa",
+    "sheet.png": "fe9b027c2b5a1ed5ff6828b11363508b26a9c537fdccbc325d7b66d6c2f97663"
   }
 }

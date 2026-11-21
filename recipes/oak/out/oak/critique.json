@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Leaf cards sample the foliage texture with alpha and bark reads; the ground disc in hero.png is now moss with darker damp patches and no stripes. The leaves are still one green.",
+      "reason": "Leaf cards sample the foliage texture with alpha and bark reads; the limbs now carry one consistent banded bark instead of pale grey streaks, and the ground disc is moss with darker damp patches. The leaves are still one green.",
       "fixes": [
         "two-tone leaf colour (sun / shade)",
         "a few fallen leaves and twigs on the moss"
@@ -35,11 +35,11 @@
     },
     "wear": {
       "score": 6,
-      "reason": "A fallen limb on the ground, though a grey limb stands upright against the trunk foot in hero.png; no dead limb, lichen or bark scars in the crown.",
+      "reason": "A fallen limb lies on the ground and now reads as bark; the grey stick that stood upright against the trunk foot was a twig sampling a grey neighbour row and no longer shows (hero.png). There is still no dead limb, lichen or bark scar in the crown.",
       "fixes": [
-        "lay the grey limb at the trunk foot flat on the ground",
-        "a dead limb in the crown",
-        "lichen patches on the north side of the limbs"
+        "a dead, bare grey limb in the crown",
+        "lichen patches on the north side of the limbs",
+        "one or two bark scars on the bole"
       ]
     },
     "lod": {
@@ -59,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "c8e6427e7cc0ab79a6255f4492f42ea560c43f264d4aa5b9af256bf47cfcaf57",
+    "hero.png": "142d07903573927b4ff297b7ed217cb479103d9955ea07bbe5a4878bdfcfd2a2",
     "sheet.png": "46a71d523c660bb4ef6bbbb41ef21379b574da8170fbdeae28ec20565c8a01b1"
   }
 }

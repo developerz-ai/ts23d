@@ -19,9 +19,9 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Rubber tyres, brass hubs, gunmetal barrel and amber lamps stay distinct and the mud is a smooth gradient. The team roof chips are now ragged, mixed-size bites through to the bone undercoat with no sawtooth on the rim (hero.png) and no stair-steps in sheet TOP / 3/4 REAR, so they read as chipped paint. Some interior patches in TOP are large and blotchy, and the big bone plates are still clean flat paint.",
+      "reason": "Bolts, track links and fittings now sit on a brushed steel strip and catch small specular highlights (hero.png glacis bolts, sheet FRONT tracks read as light steel), and the bone enamel has a slightly glossier film; rubber tyres, brass hubs and amber lamps stay distinct, team-roof chips stay ragged. The gun sleeve lost its dark band and now matches the barrel, so the gun is one flat grey, and the large bone plates are still clean flat paint.",
       "fixes": [
-        "keep roof chips nearer the rim and hatch edges; shrink the few large interior blotches in sheet TOP",
+        "give the gun sleeve/mantlet a darker or rougher finish than the barrel so the gun keeps value breakup",
         "a few edge-biased chips and subtle roughness variation on the large bone hull plates"
       ]
     },
@@ -50,14 +50,15 @@
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS: 37.5k / 9.4k / 590 tris, 23 / 9 / 7 draws. LOD1 merged to 9 draws, but LOD0 still costs 23 draws for an RTS unit.",
+      "reason": "QA PASS: 30.5k / 8.1k / 590 tris, 23 / 9 / 7 draws. LOD0 down from 37.5k with 20-sided wheels and coarser wear cells, but LOD0 still costs 23 draws for an RTS unit.",
       "fixes": [
-        "merge the static road-wheel pivots into one draw per side at LOD0 as well"
+        "merge the static road-wheel pivots into one draw per side at LOD0 as well",
+        "LOD0 toward ~20k for an RTS unit"
       ]
     }
   },
   "renders": {
-    "hero.png": "5bf6582f9ae3bffc6d9b90f7fb7c5ebe2ea478c31a77352f25dcc2deae85d415",
-    "sheet.png": "d69c4e295aa836f443616b455b0386577930ca87b93d8ea469bab6a58769e980"
+    "hero.png": "74a73eceb16fb4567dc94ce55f39f1e6922eb385976c51405df2aeec5a21d44c",
+    "sheet.png": "eac417a269783ad43de70e5c2ab1d102831350faadbd33f3cc42d00b204efc28"
   }
 }

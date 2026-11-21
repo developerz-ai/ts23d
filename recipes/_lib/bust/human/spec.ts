@@ -7,6 +7,7 @@ import { skullLandmarks, skullOf } from '../../face/skull.ts';
 import { type Character, HUMAN as HUMAN_FACE } from '../../face/spec.ts';
 import type { EarSpec } from '../ear.ts';
 import type { EyeSpec } from '../eye.ts';
+import type { Structure } from '../face-forms.ts';
 import { type HeadSpec, HUMAN, landmarks } from '../head.ts';
 import type { V } from '../kit.ts';
 import type { TorsoSpec } from '../torso.ts';
@@ -88,13 +89,28 @@ export const SK = skullLandmarks(skullOf(CHARACTER, SPEC));
 export const EYE: EyeSpec = {
   centre: SK.eye,
   r: SK.eyeR,
-  // Human iris 11.7 mm on a 24 mm ball.
+  // Human iris 11.7 mm on a 24 mm ball. The upper lid covers its top 1.9 mm, the lower lid
+  // touches its bottom (a 9.6 mm fissure, Farkas: 9–11 mm); at 25 % / 12 % the eyes read small
+  // and sleepy (D570). Lid margin 2.6 mm thick: what the face's finest cell (1.65 mm) holds.
   iris: 0.00585,
-  upper: 0.25,
-  lower: 0.12,
-  lid: 0.0022,
+  upper: 0.16,
+  lower: 0.02,
+  lid: 0.0026,
   tilt: 2,
   colours: { sclera: C.sclera, iris: C.iris, pupil: C.pupil, wet: C.wet, caruncle: C.caruncle },
+};
+
+/** The hero's bones over the soft base (../face-forms.ts): a man's brow shelf, an orbit with a
+ *  firm edge, the lateral rim 11 mm behind the cornea, cheekbones over a lean buccal plane. */
+export const STRUCTURE: Structure = {
+  brow: 0.01,
+  orbit: 0.4,
+  depth: 1,
+  rim: 0.036,
+  cheek: 0.008,
+  hollow: 0.004,
+  lash: hex('#2a1810'),
+  lid: hex('#c88e6a'),
 };
 
 export const EAR: EarSpec = {

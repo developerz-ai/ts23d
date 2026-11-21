@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Bronze-brown painted iron reads and the top shaft is a touch lighter; at hero distance the three-tone gradient is too faint to read.",
+      "reason": "Bronze-brown painted iron reads and the top shaft is a touch lighter; the struts lose a faint pale fringe and read a more even brown in hero.png, but at hero distance the three-tone gradient is still too faint to read.",
       "fixes": [
         "a clearer three-tone gradient (darker at the base, lighter at the top) as on the real tower"
       ]
@@ -54,7 +54,7 @@
     }
   },
   "renders": {
-    "hero.png": "3697ddbaddac3eb59600e09a3a2e0fc65295730150f081f9110cff8056399a03",
+    "hero.png": "6baf81f88c3cf23aeacbaa0ea652e790df9c00269c0652f0d19da4809a5ce14c",
     "sheet.png": "21f7fe13b2f35891ee74d15cfe268a45d6214e6ca183299e924f1f5c4bc202ff"
   }
 }

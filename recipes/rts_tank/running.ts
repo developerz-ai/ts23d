@@ -151,14 +151,18 @@ function link(lod: Lod, len: number): Mesh {
     size: [0.04, TRACK_W * 0.95, 0.025],
     at: [0, 0, LINK_T / 2 - 0.005],
     color: IRON,
+    omit: ['bottom'],
   });
   return merge([plate, grouser]);
 }
 
-/** A road wheel (about local Y): rubber tyre, dished slate disc, brass hub (LOD0 bolts). */
-function wheel(lod: Lod, r: number, width: number): Mesh {
+/** A road wheel (about local Y): rubber tyre, dished slate disc, brass hub (LOD0 bolts on the
+ *  outer face, toward `side`). */
+function wheel(lod: Lod, r: number, width: number, side: 1 | -1): Mesh {
   const w = width / 2;
-  const segments = SEG(lod, 28, 14, 6);
+  // 20 sides at LOD0: a 0.3 m wheel half hidden by the skirts holds its round at hero distance
+  // (28 cost 12.8k triangles across the twelve wheels; D596).
+  const segments = SEG(lod, 20, 10, 6);
   // The dished disc out to the rim seat (both faces), and the tyre as its own closed band round
   // it: nothing of the tyre lies over the dish, so the disc's paint and mud are what shows.
   const seat = r * 0.8;
@@ -202,10 +206,11 @@ function wheel(lod: Lod, r: number, width: number): Mesh {
         color: BRASS,
       }),
     );
+  // Hub bolts on the outer face only: the inner face looks at the hull.
   if (lod === 0)
     for (let k = 0; k < 6; k++) {
       const a = (k / 6) * Math.PI * 2;
-      for (const s of [-1, 1])
+      for (const s of [side])
         parts.push(
           cylinder({
             radius: 0.018,
@@ -306,7 +311,7 @@ export function runningGear(
             `wheel_${side}_${i}`,
             lod === 2
               ? finishWheel(farWheel(ROAD_R, -Math.PI / 2, s), ROAD_R, true)
-              : finishWheel(wheel(lod, ROAD_R, TRACK_W * 0.8), ROAD_R, false),
+              : finishWheel(wheel(lod, ROAD_R, TRACK_W * 0.8, s), ROAD_R, false),
             [x, y, ROAD_Z] as Vec3,
             0.9,
           ] as const,
@@ -315,7 +320,7 @@ export function runningGear(
         `idler_${side}`,
         lod === 2
           ? finishWheel(farWheel(IDLER.r, 0, s), IDLER.r, true)
-          : finishWheel(wheel(lod, IDLER.r, TRACK_W * 0.7), IDLER.r, false),
+          : finishWheel(wheel(lod, IDLER.r, TRACK_W * 0.7, s), IDLER.r, false),
         [IDLER.x, y, IDLER.z],
         1.04,
       ],
