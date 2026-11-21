@@ -67,6 +67,11 @@ export interface BustRecipe {
   readonly body?: (stage: number, skin?: Surface) => SculptEdit[];
   /** Extra skin edits after the anatomy (race features like tusks or warts). */
   readonly features?: (stage: number, skin: Surface, lod: number, rng: Rng) => SculptEdit[];
+  /** The far LOD's own face forms on the stage-2 `skin` (LOD2 sculpts no `features`): the orbit
+   *  and the bones as masses its face box's cell holds (face-forms.ts `structureEdits`, D614).
+   *  A bust that gives them also gets the far face's tone zones, inked mouth and brows and far
+   *  eyes (D614, D615); one without keeps the plain stage-2 far face. */
+  readonly far?: (skin: Surface) => SculptEdit[];
   /** Hair, beard: `scalp` is the head block's field. */
   readonly hair: (scalp: Field, lod: number) => SculptEdit[];
   /** Outfit sculpted onto the torso: `body` is the torso's field, `skin` the stage-2 surface. */
@@ -338,6 +343,22 @@ function anatomy(b: BustRecipe, stage: number, lod: number, s?: Surface): Sculpt
   ];
 }
 
+/** The far LOD's face (it is sculpted to stage 2: no features, no zones): the recipe's `far`
+ *  forms, then the skin's tone zones without the lash dabs, so the lips, the sockets' shade and
+ *  the flush are there for the vertices to average. Without them LOD2 was a skin-coloured mask
+ *  (D614); layers.ts `inked` draws the mouth and the brows crisp on the mesh (D615). */
+function farFace(b: BustRecipe, skin: Surface): SculptEdit[] {
+  if (!b.skull || !b.far) return [];
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  const { lashes: _lashes, brows: _brows, ...zones } = b.zones ?? { lips: b.spec.lips };
+  return [
+    ...b.far(skin),
+    ...(b.zones
+      ? zoneEdits(k, b.spec.H, { flush: b.spec.skin, socket: b.spec.skin, ...zones })
+      : []),
+  ];
+}
+
 /**
  * The scalp the hair grows from (slice 07's hair cards root on it): the skull stage's field when
  * the bust has one, else the primitive head block. Signed distance, metres, ≤ 0 inside.
@@ -365,6 +386,9 @@ export function bustEdits(
     edits: [
       ...anatomy(b, stage, lod, stage >= 3 ? skin : undefined),
       ...(stage >= 3 && b.features ? b.features(stage, skin, lod, rng) : []),
+      // (Only the far skin as built, stage 2: a stage-4 field at LOD2 is what the far hair is
+      // combed round, and has the recipe's own features already.)
+      ...(lod === 2 && stage < 3 ? farFace(b, skin) : []),
       ...b.hair(scalp, lod),
       ...b.outfit(body, skin, lod),
     ],
@@ -387,11 +411,18 @@ export const HERO_CELL = { head: 2.2, bust: 1.5 } as const;
  *  body an outfit hides (≤ 0 = hidden), cut out of the built skin: the torso's masses are cut by
  *  it already, but the skull stage brings a neck and shoulders of its own, meshed whole under the
  *  clothes (D584). `covered`: the garments' solids (≤ 0 inside); a `bust` part left wholly
- *  inside them by that cut (a tall collar over the whole seam) is not built at all. */
+ *  inside them by that cut (a tall collar over the whole seam) is not built at all. `farHead`:
+ *  a pass over LOD2's finished head mesh (layers.ts inks the mouth and brows into it, D615). */
 export function buildBust(
   ctx: BuildContext,
   b: BustRecipe,
-  o: { hero?: boolean; skin?: Surface; hidden?: Field; covered?: Field } = {},
+  o: {
+    hero?: boolean;
+    skin?: Surface;
+    hidden?: Field;
+    covered?: Field;
+    farHead?: (head: Mesh) => Mesh;
+  } = {},
 ): void {
   if (!b.skull) checkNeck(b.l, b.torso, b.neck);
   const lod = ctx.lod;
@@ -445,12 +476,14 @@ export function buildBust(
   const meshes: Record<string, Mesh> =
     lod === 2
       ? {
-          head: skinMesh(edits, cell, {
-            rng,
-            ...look,
-            far: true,
-            detail: farFaceDetail(b, lod),
-          }),
+          head: (o.farHead ?? ((m: Mesh): Mesh => m))(
+            skinMesh(edits, cell, {
+              rng,
+              ...look,
+              far: true,
+              detail: farFaceDetail(b, lod),
+            }),
+          ),
         }
       : {
           head: skinMesh(edits, cell, {
@@ -501,12 +534,16 @@ export function buildBust(
       face ? { parent: 'face', ...(b.finish ? { finish: b.finish } : {}) } : undefined,
     );
   }
+  // A bust with far forms gets a far eye too (D615): a ball at 0.6 of its radius, so four
+  // vertices stand on its bold iris, seated in the far orbit.
+  const farEye = lod === 2 && b.far !== undefined;
   eyes(ctx, b.eye, {
-    cell: ctx.pick([0.002, 0.0036, 0.01]),
+    cell: farEye ? b.eye.r * 0.6 : ctx.pick([0.002, 0.0036, 0.01]),
     finish: 'cornea',
     // (Out of the coarse lids a little; LOD2's face box holds its sockets at half its cell, D551.)
-    proud: lod === 0 ? 0 : cell * 0.15,
-    lidShadow: 0.55,
+    proud: lod === 0 || farEye ? 0 : cell * 0.15,
+    lidShadow: farEye ? 0.3 : 0.55,
+    far: farEye,
     // The orbit's seat resolves at LOD0 only (coarser cells close a 1 cm-radius hollow).
     ...(lod === 0 ? { socketIn: 'head' } : {}),
   });

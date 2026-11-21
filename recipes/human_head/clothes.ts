@@ -313,14 +313,14 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
   if (lod === 0) layers.push(...sewn(skin, linenLayer, mantleLayer, darn, collar));
   if (fine) return layers;
   // Far LOD: one sculpt of every layer (one watertight surface: separate shells 2 mm apart would
-  // cross at a 2.6 cm cell), the colour blocks kept flat.
+  // cross at a 3.1 cm cell), the colour blocks kept flat.
   return [
     {
       name: 'far',
       part: 'clothes',
       strip: WOOL,
       color: K.mantle,
-      cell: [0.026, 0.026, 0.026],
+      cell: [0.031, 0.031, 0.031],
       edits: [linenLayer, tunicLayer, mantleLayer]
         .flatMap((l) => l.edits)
         .filter((e) => !('op' in e && e.op === 'paint')),

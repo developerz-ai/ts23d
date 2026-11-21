@@ -135,9 +135,11 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
  *  `lidShadow` (0 … 1) darkens the ball's upper half the way the upper lid and its lashes shade
  *  it: a painter's must on a game eye, without which the white and the iris read as lit stickers
  *  (a dead stare); 0 (default) keeps the ball evenly lit. */
-export function eyeball(e: EyeSpec, cell: number, lidShadow = 0): Mesh {
+export function eyeball(e: EyeSpec, cell: number, lidShadow = 0, far = false): Mesh {
   const r = e.r;
-  const { a } = irisOf(e);
+  // A far ball's few vertices would miss an 11 mm iris and its pupil (a blind grey ball, D615):
+  // there the iris is drawn ×1.45 wide in its own colour, no limbus, no pupil.
+  const a = irisOf(e).a * (far ? 1.45 : 1);
   const c = e.colours;
   const limbus = c.limbus ?? [c.iris[0] * 0.35, c.iris[1] * 0.35, c.iris[2] * 0.35];
   const cosIris = dmath.cos(a);
@@ -147,8 +149,14 @@ export function eyeball(e: EyeSpec, cell: number, lidShadow = 0): Mesh {
   const cr = r * 0.78;
   const cx = r - cr + r * 0.06;
   return sdf({
-    field: (q) =>
-      Math.min(dmath.hypot(q[0], q[1], q[2]) - r, dmath.hypot(q[0] - cx, q[1], q[2]) - cr),
+    // (A far ball is its front two thirds: nobody sees the back inside the orbit.)
+    field: (q) => {
+      const ball = Math.min(
+        dmath.hypot(q[0], q[1], q[2]) - r,
+        dmath.hypot(q[0] - cx, q[1], q[2]) - cr,
+      );
+      return far ? Math.max(ball, -q[0] - r * 0.3) : ball;
+    },
     bounds: [
       [-r * 1.3, -r * 1.3, -r * 1.3],
       [r * 1.3, r * 1.3, r * 1.3],
@@ -159,6 +167,7 @@ export function eyeball(e: EyeSpec, cell: number, lidShadow = 0): Mesh {
   function eyeColour(q: V): V {
     const cos = q[0] / (dmath.hypot(q[0], q[1], q[2]) || 1);
     const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > dmath.cos(a * 0.85);
+    if (far) return cos > cosIris ? c.iris : c.sclera;
     if (slit || (e.pupil !== 'slit' && cos > cosPupil)) return c.pupil;
     if (cos > cosIris) {
       // Iris: darker toward its rim, lighter round the pupil, with radial fibres (stroma).
@@ -197,13 +206,15 @@ export interface EyesOptions {
   readonly socketIn?: string;
   /** The upper lid's shadow on the ball (`eyeball`), 0 … 1; default 0. */
   readonly lidShadow?: number;
+  /** A far LOD's ball: the iris as one bold disc its few vertices hold (`eyeball`). */
+  readonly far?: boolean;
 }
 
 /** Emits `eye_l` / `eye_r` (pivot at the ball centre, yawed to converge on the gaze point) and,
  *  with `socketIn`, a `socket` joint per eye along the gaze, ball → orbit (the joints gate
  *  compares the ball with the LOCAL orbit section, not the whole head's). */
 export function eyes(ctx: BuildContext, e: EyeSpec, o: EyesOptions): void {
-  const ball = eyeball(e, o.cell, o.lidShadow ?? 0);
+  const ball = eyeball(e, o.cell, o.lidShadow ?? 0, o.far === true);
   const [ex, ey, ez] = e.centre;
   const gaze = e.gaze ?? [ex + 1.5, 0, ez];
   for (const [side, s] of [

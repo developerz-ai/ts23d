@@ -110,7 +110,7 @@ describe('pointed ears (D573, D574)', () => {
   const cell = ELF_BUST.cells.head[2];
   const bare = far(ELF_BUST.hair);
   const bladed = far(builtHair);
-  it('elf: at LOD2 the bust alone has no ear its 2.2 cm cell can hold', () => {
+  it('elf: at LOD2 the bust alone has no ear its 2.4 cm cell can hold', () => {
     expect(bare).toBeLessThan(cell * 0.9);
   });
   it('elf: at LOD2 the built skin carries an ear blade no thinner than its cell to the tip', () => {

@@ -294,14 +294,14 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
   if (lod === 0) layers.push(sewn(skin, tunicLayer, cloakLayer, K.thread));
   if (fine) return layers;
   // Far LOD: one sculpt of every layer (one watertight surface: separate shells 2 mm apart would
-  // cross at a 2.6 cm cell), the colour blocks kept flat.
+  // cross at a 3.4 cm cell), the colour blocks kept flat.
   return [
     {
       name: 'far',
       part: 'clothes',
       strip: 'canvas',
       color: K.cloak,
-      cell: [0.026, 0.026, 0.026],
+      cell: [0.034, 0.034, 0.034],
       edits: [tunicLayer, cloakLayer]
         .flatMap((l) => l.edits)
         .filter((e) => !('op' in e && e.op === 'paint')),
