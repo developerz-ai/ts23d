@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-21
+
 Hair shows fine strands and a sheen instead of straw, skin pores hold an even scale on every triangle, far-LOD busts keep their faces, the orc wears real forged steel, and `ctx.use`, bone clips, sockets and `t3d shot --lods` export what you built.
 
 ### Fixed
@@ -631,7 +633,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.18.1...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/developerz-ai/ts23d/compare/v0.18.1...v0.19.0
 [0.18.1]: https://github.com/developerz-ai/ts23d/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/developerz-ai/ts23d/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/developerz-ai/ts23d/compare/v0.16.0...v0.17.0
