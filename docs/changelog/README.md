@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.18.1](0.18.1.md) | 2026-11-21 | Other recipes loaded in the same process no longer change or break an asset's materials on rows its compile did not record, or on finished and hero-baked parts: a test run, `t3d mcp` and the gallery workers no longer fail on materials other recipes share a row with. |
 | [0.18.0](0.18.0.md) | 2026-11-21 | Skin reads as skin: true-scale pores, grain, freckles and stubble, soft tone zones instead of bruise rings, and light that passes through thin ears; orc tusks rise from the lower jaw as they should. |
 | [0.17.0](0.17.0.md) | 2026-11-20 | Team-painted parts can carry wear that survives livery swaps, contact sheets shade per pixel like an engine, and beauty renders keep fur, hair and grime detail. A fourth pass over the weakest assets, re-judged independently: criteria below the pass mark of 8 fell from 296 to 272, and four assets now pass on all seven. |
 | [0.16.0](0.16.0.md) | 2026-11-20 | Meshes carry which project materials they were mapped with, so a mesh built outside an asset's build can no longer be painted as the wrong material. A third pass over every asset, re-judged independently: criteria below the pass mark of 8 fell from 352 to 296, and three assets now pass on all seven. |
