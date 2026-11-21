@@ -6,10 +6,12 @@
 // The weight per channel is R ÷ (mixture pdf · |n·n_exit| · pick probability): light enters at
 // one point and leaves a few millimetres away, red farthest — terminators go warm, and on a thin
 // part (an ear, a nostril's wing, a lid) the probe also finds the far face, so light from behind
-// shines through (D510; a first-hit-only probe never left a sheet by its back). Which way an exit
-// faces comes from its triangle's winding: on layered skin (scales over a body) the second
-// crossing is often another outward face, and calling it a far face by count lit it from inside
-// (D515: single-pixel colour grain).
+// shines through (D510; a first-hit-only probe never left a sheet by its back). The exits on one
+// probe share one profile's worth of light, in proportion to the profile at each: summing a full
+// profile per exit gave a sheet thinner than the diffusion length twice its albedo (D530). Which
+// way an exit faces comes from its triangle's winding: on layered skin (scales over a body) the
+// second crossing is often another outward face, and calling it a far face by count lit it from
+// inside (D515: single-pixel colour grain).
 
 import { dmath } from '../../core/index.ts';
 import type { V3 } from '../lighting.ts';
@@ -61,6 +63,8 @@ const hits: Hit[] = Array.from({ length: MAX_HITS }, newHit);
 const dists = new Float64Array(MAX_HITS);
 const cosE = new Float64Array(MAX_HITS);
 const pick = new Float64Array(MAX_HITS);
+const prof = new Float64Array(MAX_HITS * 3);
+const share = new Float64Array(3);
 
 /**
  * Cosine between `n` and the outward (winding) normal of triangle `tri`. Its sign says which way
@@ -153,18 +157,39 @@ export function probeExit(
   }
   depth = -low;
   let total = 0;
+  let sum0 = 0;
+  let sum1 = 0;
+  let sum2 = 0;
+  let top0 = 0;
+  let top1 = 0;
+  let top2 = 0;
   for (let i = 0; i < n; i++) {
     const into = (cosE[i] ?? 1) >= 0;
     const air = depth === (into ? 0 : 1);
     depth += into ? 1 : -1;
     // Pick an exit in proportion to the profile summed over the channels at its distance.
     const r0 = dists[i] ?? 0;
-    pick[i] = air
-      ? burley(r0, shape[0] ?? 1) + burley(r0, shape[1] ?? 1) + burley(r0, shape[2] ?? 1)
-      : 0;
+    const p0 = air ? burley(r0, shape[0] ?? 1) : 0;
+    const p1 = air ? burley(r0, shape[1] ?? 1) : 0;
+    const p2 = air ? burley(r0, shape[2] ?? 1) : 0;
+    prof[i * 3] = p0;
+    prof[i * 3 + 1] = p1;
+    prof[i * 3 + 2] = p2;
+    sum0 += p0;
+    sum1 += p1;
+    sum2 += p2;
+    top0 = Math.max(top0, p0);
+    top1 = Math.max(top1, p1);
+    top2 = Math.max(top2, p2);
+    pick[i] = air ? p0 + p1 + p2 : 0;
     total += pick[i] ?? 0;
   }
   if (!(total > 0)) return 0;
+  // One profile's worth of light per probe, the nearest exit's (what a single surface returns),
+  // split over the exits in proportion to the profile at each: exactly 1 with one exit.
+  share[0] = sum0 > 0 ? top0 / sum0 : 0;
+  share[1] = sum1 > 0 ? top1 / sum1 : 0;
+  share[2] = sum2 > 0 ? top2 / sum2 : 0;
   let j = 0;
   let acc = 0;
   for (let i = 0; i < n; i++) {
@@ -183,14 +208,13 @@ export function probeExit(
   const pj = (pick[j] ?? 0) / total;
   // Area-measure pdf at the exit: |cos| floored at 0.3 so a grazing face cannot blow up.
   const cosJ = Math.max(0.3, Math.abs(cosE[j] ?? 1));
-  const dist = dists[j] ?? 0;
   const pdf =
     ((radiusPdf(r, shape[0] ?? 1) + radiusPdf(r, shape[1] ?? 1) + radiusPdf(r, shape[2] ?? 1)) /
       (3 * 2 * Math.PI * Math.max(r, 1e-9))) *
     pj;
   for (let k = 0; k < 3; k++) {
     const a = s.albedo[k] ?? 0;
-    weight[k] = Math.min(4, (a * burley(dist, shape[k] ?? 1)) / (pdf * cosJ));
+    weight[k] = Math.min(4, (a * (prof[j * 3 + k] ?? 0) * (share[k] ?? 0)) / (pdf * cosJ));
   }
   return (cosE[j] ?? 1) >= 0 ? 1 : -1;
 }

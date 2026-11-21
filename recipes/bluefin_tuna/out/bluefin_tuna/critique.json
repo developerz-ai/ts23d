@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The lower flank and belly are mirror-silver and the back a glossy metallic blue, and the fin margins lighten toward yellow; the silver spots are blurry blocky squares and the pectoral fin is a flat dark plastic. Fin and finlet shading is otherwise unchanged, but a few single saturated orange pixels now sit at the finlet bases and trailing edges (hero.png, dorsal finlet row at 4x).",
+      "reason": "The lower flank and belly are mirror-silver and the back a glossy metallic blue, and the fin margins lighten toward yellow; the silver spots are blurry blocky squares and the pectoral fin is a flat dark plastic. Thin fins no longer over-glow: the finlets are a calmer olive-gold and the anal fin and tail edge transmit less light (hero.png), which reads more like real fin tissue, but a few single saturated orange pixels still sit at the finlet bases (hero.png, dorsal finlet row at 8x).",
       "fixes": [
         "sharper, rounder silver spots/bars on the flank (no blocky squares)",
         "slight translucency at the pectoral fin margin",
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "ad116b2edb967f0970a06a969da5bc827f6c24eb1f37e2f5bcf3274c4f3ca201",
+    "hero.png": "516a03e24aa82300d230956eb9bfb8b90340084de23b9e0982ae996fd5b0a0c1",
     "sheet.png": "04ed6d60faf50fce31922aa9b385d80da5527a9dd3ea42bed9dbb7d2aa3b2e0c"
   }
 }

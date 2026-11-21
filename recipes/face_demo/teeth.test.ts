@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Vec3 } from '@developerz.ai/ts23d';
+import { createRng, dmath, type Vec3 } from '@developerz.ai/ts23d';
 import { type FaceHead, faceHead } from '../_lib/face/head.ts';
 import { LEFT, MIDLINE } from '../_lib/face/landmarks.ts';
-import { tuskPath } from '../_lib/face/tusks.ts';
+import { tuskPath, wrapTusks } from '../_lib/face/tusks.ts';
 import { CHARACTERS } from './characters.ts';
 
 const orc = CHARACTERS.orc.character;
-const head = faceHead(orc, createRng(1).fork('face'));
+const length = orc.tusks ?? 0;
+/** The face as buildFaceBust renders it: the lower lip wrapped round the tusks' bases. */
+const raw = faceHead(orc, createRng(1).fork('face'));
+const head = wrapTusks(raw, length);
+/** The tusks' root radius (tusks.ts `tuskRadius` for the orc's knob). */
+const R = 0.0058 * raw.scale * Math.max(1, length / 0.12);
 
 /** The skin's front (largest x) near (y, z): the warped base's vertices in a 5 mm window. */
 function frontX(h: FaceHead, y: number, z: number): number {
@@ -59,6 +64,43 @@ describe('face_orc tusks (lower canines)', () => {
     expect(tuskFindings(head, fang).length).toBeGreaterThan(0);
   });
   it('roots behind the lower lip, leaves at its top, rises in front of the upper lip to the nose wing', () => {
-    expect(tuskFindings(head, tuskPath(head, 0.16, 24))).toEqual([]);
+    expect(length).toBe(0.16);
+    expect(tuskFindings(head, tuskPath(head, length, 24))).toEqual([]);
+  });
+
+  it('the lower lip sleeves the tusk base and lets go of the exposed shaft (the unwrapped face fails)', () => {
+    const path = tuskPath(head, length, 24);
+    /** Nearest skin vertex of `h` to `q`, metres. */
+    const nearest = (h: FaceHead, q: Vec3): number => {
+      let d = Number.POSITIVE_INFINITY;
+      const p = h.mesh.p;
+      for (let v = 0; v < p.length; v += 3)
+        d = Math.min(
+          d,
+          dmath.hypot((p[v] ?? 0) - q[0], (p[v + 1] ?? 0) - q[1], (p[v + 2] ?? 0) - q[2]),
+        );
+      return d;
+    };
+    // The buried base (root → the gum, a third of the path): no skin within the tusk's flank.
+    const base = path.slice(1, 8);
+    const clear = (h: FaceHead): number => Math.min(...base.map((q) => nearest(h, q)));
+    expect(clear(raw)).toBeLessThan(R);
+    expect(clear(head)).toBeGreaterThan(1.2 * R);
+    // The exposed shaft (past where the lip lets go): the skin round it is the unwrapped face's.
+    const shaft = path.slice(10);
+    let moved = 0;
+    const p = raw.mesh.p;
+    const w = head.mesh.p;
+    for (let v = 0; v < p.length; v += 3) {
+      const q: Vec3 = [p[v] ?? 0, p[v + 1] ?? 0, p[v + 2] ?? 0];
+      const d = (k: readonly Vec3[]): number =>
+        Math.min(...k.map((c) => dmath.hypot(q[0] - c[0], q[1] - c[1], q[2] - c[2])));
+      if (d(shaft) > 2.6 * R || d(shaft) > d(path.slice(0, 10))) continue;
+      moved = Math.max(
+        moved,
+        dmath.hypot((w[v] ?? 0) - q[0], (w[v + 1] ?? 0) - q[1], (w[v + 2] ?? 0) - q[2]),
+      );
+    }
+    expect(moved).toBeLessThan(0.02 * R);
   });
 });

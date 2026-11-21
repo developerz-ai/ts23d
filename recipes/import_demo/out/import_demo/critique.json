@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The hair renders as a dark combed mass; the skin is no longer mannequin-smooth (pores, freckles and a faint rose on the cheek in hero.png), and skin, blue tunic, leather cape and brass studs separate, but tunic and cape share one roughness.",
+      "reason": "The hair renders as a dark combed mass; the skin carries pores, freckles and a faint rose on the cheek in hero.png, the ear and lids are slightly cooler and less glowing, and skin, blue tunic, leather cape and brass studs separate, but tunic and cape share one roughness.",
       "fixes": [
         "leather roughness lower than the tunic cloth",
         "a soft sheen on the leather cape edges where it is handled"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "618954da268604e9d75dd6da5ac9451ca2531482e4f77648eb8158f74b0d5894",
+    "hero.png": "c2e9ee38e1455236c8313de3d29cba1cf92fd79ea4674659e16b24a4b039671c",
     "sheet.png": "852cdad22e65b10d7c9e8292231a24069402de7e236ee67e04f544590b8e143d"
   }
 }

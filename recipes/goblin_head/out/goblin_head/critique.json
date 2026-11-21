@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The dark goggle rings round the eyes and the orange ear disc are gone: the green skin is now even with fine mottling and pores in hero.png, the scalp is matte with a broad sheen, and skin, leather vest, linen shirt and red scarf separate by hue; the vest patches are still flat grey squares on the cream panel in FRONT and SIDE.",
+      "reason": "The green skin is even with fine mottling and pores in hero.png, the ear rims and lids are a shade cooler and the ears carry no orange glow, the scalp is matte with a broad sheen, and skin, leather vest, linen shirt and red scarf separate by hue; the vest patches are still flat grey squares on the cream panel in FRONT and SIDE.",
       "fixes": [
         "give the vest patches a cloth texture and stitched border instead of flat grey",
         "a leather strip with darkened edges on the vest"
@@ -59,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "5fcd3d8a931408701928b658c5848e1e860a0d52510cf24dc48e9aeb7318a212",
+    "hero.png": "c2ca4eacd1b17f774f3eb5b6c612f98b3e5c390625877c5e79be2af07fc2486e",
     "sheet.png": "684aba026b5655497b6ee13323c5df832bd420321b8582a942fc3b9aab29cc73"
   }
 }

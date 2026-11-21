@@ -21,9 +21,8 @@ function endRelief(keep: number): number {
   return Math.max(...top) - Math.min(...top);
 }
 
-/** Luminance of the tusk's flank (not its caps) at height `z`, as the faces interpolate it: the
- *  mean of each ring of vertices, linear between the rings either side of `z`. */
-function lumAt(m: { positions: Float32Array; colors: Float32Array }, z: number): number {
+/** The tusk's flank rings (not its caps) as [height, mean luminance], root → tip. */
+function ringLums(m: { positions: Float32Array; colors: Float32Array }): [number, number][] {
   const rings = new Map<number, { sum: number; n: number }>();
   for (let v = 0; v < m.positions.length; v += 3) {
     const x = m.positions[v] ?? 0;
@@ -35,22 +34,45 @@ function lumAt(m: { positions: Float32Array; colors: Float32Array }, z: number):
     r.n++;
     rings.set(key, r);
   }
-  const zs = [...rings.keys()].sort((a, b) => a - b).map((k) => k / 1e5);
-  const at = (k: number): number => {
-    const r = rings.get(Math.round(k * 1e5));
-    return r ? r.sum / r.n : Number.NaN;
-  };
-  const hi = zs.findIndex((k) => k >= z);
-  const b = zs[hi] ?? Number.NaN;
-  const a = zs[hi - 1] ?? b;
-  return b === a ? at(b) : at(a) + ((at(b) - at(a)) * (z - a)) / (b - a);
+  return [...rings.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([k, r]): [number, number] => [k / 1e5, r.sum / r.n]);
+}
+
+/** Luminance of the tusk's flank (not its caps) at height `z`, as the faces interpolate it: the
+ *  mean of each ring of vertices, linear between the rings either side of `z`. */
+function lumAt(m: { positions: Float32Array; colors: Float32Array }, z: number): number {
+  const rings = ringLums(m);
+  const hi = rings.findIndex(([k]) => k >= z);
+  const [b, lb] = rings[hi] ?? [Number.NaN, Number.NaN];
+  const [a, la] = rings[hi - 1] ?? [b, lb];
+  return b === a ? lb : la + ((lb - la) * (z - a)) / (b - a);
 }
 
 describe('orc tusk ivory (D526)', () => {
-  const m = ivoryTusk(path, { radius: R, gum: 1 / 3, seg: 14 });
-  const gum = 0.08 / 3;
+  // Both orcs' tusks say where the lip lets go (`exit`, 3 mm short of the gum share here): only
+  // then does the tusk gain the fine rings the grime line grades over.
+  const EXIT = -0.003;
+  const m = ivoryTusk(path, { radius: R, gum: 1 / 3, exit: EXIT, seg: 14 });
+  const gum = 0.08 / 3 + EXIT;
   const lum = (c: Vec3): number => (c[0] + c[1] + c[2]) / 3;
   const ivory = lum([0.66, 0.55, 0.3]);
+
+  it("fails without its own rings across the grime (the path's 5.7 mm rings cannot grade it)", () => {
+    // Real rings (vertices), not interpolation, across the 2 mm line and 6 mm fade, and the
+    // fade's own rings carry colours part-way between the stain and the ivory.
+    const lo = lum([0.2, 0.12, 0.05]);
+    const across = ringLums(m).filter(([z]) => z > gum && z < gum + 0.008);
+    expect(across.length).toBeGreaterThanOrEqual(5);
+    const between = ringLums(m).filter(
+      ([z, l]) =>
+        z > gum + 0.003 && z < gum + 0.007 && l > lo + 0.1 * (ivory - lo) && l < 0.9 * ivory,
+    );
+    expect(between.length).toBeGreaterThanOrEqual(3);
+    // A tusk without `exit` (a goblin's fang) keeps the path's own rings (D529).
+    const plain = ivoryTusk(path, { radius: R, gum: 1 / 3, seg: 14 });
+    expect(ringLums(plain).filter(([z]) => z > gum && z < gum + 0.008).length).toBeLessThan(3);
+  });
 
   it('fails if the gum stain is a wide band: 1.2 cm past the gum the tusk is ivory again', () => {
     expect(lumAt(m, gum + 0.012)).toBeGreaterThan(0.75 * ivory);

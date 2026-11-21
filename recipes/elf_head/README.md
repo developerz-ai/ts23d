@@ -62,7 +62,7 @@ with the chest. The skin under them is cut away (`hiddenBody`).
 ## Palette (sRGB)
 | Role | Hex |
 |---|---|
-| skin / warm / cool / crevice / lips | `#e8c4a4` / `#f2d0ae` / `#b8a0a4` / `#7a4a44` / `#c47a76` |
+| skin / warm / cool / crevice / lips | `#e8c4a4` / `#f2d0ae` / `#c4a296` / `#7a4a44` / `#c47a76` |
 | eyes: sclera / iris | `#f0ece6` / `#3a8a6a` |
 | hair root → tip | `#8a5620` → `#f6d27e` (golden, D525) |
 | tunic / cloak / cape / braid (`brass`) / clasp (`chrome`) | `#2f5a3a` / `#3f7a6a` / `#1f3f3a` / `#e8c878` / `#d8dce0` |

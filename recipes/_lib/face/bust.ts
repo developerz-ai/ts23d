@@ -191,7 +191,7 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
     inf: head.map(MIDLINE.labraleInf),
     corner: head.map(LEFT.cheilion),
   });
-  const beard = wearOf(head, c, b.hair)?.stubble?.region;
+  const beard = wearOf(head, c, b.hair)?.stubble;
   // Freckles gathered over the bridge and cheekbones, clear skin off the nose and cheeks (D520).
   const complexion = complexionZones(
     {
@@ -221,8 +221,9 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
         // as the strips' own detail (D511, D514).
         fine: eyeZone({ eye: head.map(LEFT.eye), r: 0.0128 * head.sizeAt(LEFT.eye) }),
         // (Soft near: full 6 mm inside the beard line, none 6 mm outside, dithered; the hard
-        // line drew a top edge across the cheek, D523. The far LOD's 2 cm triangles keep it.)
-        ...(beard ? { stubble: ctx.lod < 2 ? feather(beard, s) : hard(beard) } : {}),
+        // line drew a top edge across the cheek, D523. The far LOD's 2 cm triangles keep it.
+        // The dots' density is the stubble's amount: 0 draws none, D531.)
+        ...(beard ? { stubble: stubbleMask(beard, s, ctx.lod === 2) } : {}),
         ...(ctx.lod < 2 ? complexion : {}),
       });
     if (name === 'collar') mesh = onFineStrip(mesh, WOOL, 1);
@@ -283,15 +284,14 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
   });
 }
 
-/** A beard region (≤ 0 inside) as a soft stubble mask: 1 from 6 mm inside its line to 0 at
- *  6 mm outside it. */
-const feather =
-  (beard: (p: Vec3) => number, s: number) =>
-  (p: Vec3): number =>
-    Math.min(1, Math.max(0, (0.006 * s - beard(p)) / (0.012 * s)));
-
-/** A beard region as a hard mask (1 inside its line). */
-const hard =
-  (beard: (p: Vec3) => number) =>
-  (p: Vec3): number =>
-    beard(p) < 0 ? 1 : 0;
+/** A beard (region ≤ 0 inside, amount) as the stubble strip's mask: `amount` from 6 mm inside its
+ *  line to 0 at 6 mm outside it, or a hard line at `far` (1 inside its line × `amount`). */
+const stubbleMask =
+  (beard: { region: (p: Vec3) => number; amount: number }, s: number, far: boolean) =>
+  (p: Vec3): number => {
+    const d = beard.region(p);
+    return (
+      beard.amount *
+      (far ? (d < 0 ? 1 : 0) : Math.min(1, Math.max(0, (0.006 * s - d) / (0.012 * s))))
+    );
+  };

@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Skin, hair, red wool, blue tunic, linen and brass collar separate; the grey band along the top of the beard is mostly gone, with stubble dots now fading the beard into the cheek in hero.png, and the skin carries pores and freckles on nose and cheeks; a pale grey-beige wash still sits over the moustache zone between nose and lip, and mantle and tunic share one matte roughness.",
+      "reason": "Skin, hair, red wool, blue tunic, linen and brass collar separate; stubble dots fade the beard into the cheek in hero.png, the skin carries pores and freckles on nose and cheeks, and the lids are a touch cooler with no change in read; a pale grey-beige wash still sits over the moustache zone between nose and lip, and mantle and tunic share one matte roughness.",
       "fixes": [
         "drop the pale wash over the moustache zone so the upper lip reads as skin plus hair",
         "wool strip with fibre noise on the mantle and a linen strip on the tunic"
@@ -60,7 +60,7 @@
     }
   },
   "renders": {
-    "hero.png": "01a01beff4a838e37a37e1ef2c23ec3f94489990361cd770a202ae122cba9aba",
+    "hero.png": "ea4befd114dd108c536e24a2af3681d46b80a44078e3fca546d2658b7fa88e04",
     "sheet.png": "92adbf09d7cfcac4c64817030da7cd19bfb15fa3203f7c6f64c25f83b9935f01"
   }
 }

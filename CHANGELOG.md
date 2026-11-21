@@ -12,6 +12,8 @@ Skin reads as skin: true-scale pores, grain, freckles and stubble, soft tone zon
 - Orc tusks are lower canines: they rise from the lower lip in front of the upper lip, yellowed with a stained gum line, and the beard parts round them. Teeth have per-race styles (crooked, sharp, human) with a dark mouth; goblins show small sharp teeth and lower fangs.
 
 ### Fixed
+- Path tracer: thin skin (ear rims, lids) no longer comes back up to twice its albedo; the exits a subsurface probe finds share one profile's worth of light.
+- `wear.stubble.amount` also sets the density of cut-hair dots; 0 draws none.
 - `t3d critique` and the blind panel brief paint the far-LOD images a sheet that holds the far LOD's materials, so an asset whose far LOD maps a material LOD0 does not no longer fails.
 - A test of textured parts no longer depends on which recipes ran before it in the same process.
 - Orc mouths: tusks are ivory with a narrow grime line graded into a darker yellowed root (no two-tone band), face_orc's lower lip takes the skin's green, and orc_head shows uneven yellowed lower teeth between its tusks.

@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The green skin carries darker mottling and pores in FRONT and hero.png, the thin ear rims now glow warm orange, the scalp is matte with a broad sheen, and skin, ribbed shirt and brown collar separate; small sharp highlights remain on the brow ridge and nose tip, and the nose tip and upper lip are a salmon pink that reads sore.",
+      "reason": "The green skin carries darker mottling and pores in FRONT and hero.png, the ear bowl is now a muted warm ochre instead of a bright orange rim, which reads as thin skin rather than paint, the scalp is matte with a broad sheen, and skin, ribbed shirt and brown collar separate; small sharp highlights remain on the brow ridge and nose tip, and the nose tip and upper lip are a salmon pink that reads sore.",
       "fixes": [
         "skin roughness variation so the brow ridge does not catch pinpoint highlights",
         "tone the nose tip and lip pink down toward a darker olive-red"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "4b4e14511ad5fe61afde78985867d35a2238f1b0c3382bb4e696c2ddd38fc149",
+    "hero.png": "d53efddc46177cef92aa9ed28e1b424d7dd9ec9c1fff27bc7fe76bd03ba60523",
     "sheet.png": "2aa10f99475e142c418d856b69601883707aae74e433e966c0a47fa2605f05d6"
   }
 }

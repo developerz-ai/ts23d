@@ -21,11 +21,11 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The skin grain is gone: freckles now sit on the nose bridge and upper cheeks and fade out on forehead and jaw, so the face reads as fair, smooth skin with a light freckle dusting in hero.png and FRONT; the ear tips carry only a faint warm tint, a few orange specks fringe the nostril and lip edges, the hair is golden but still reads as dry straw with no visible sheen, and the tunic is still blotchy green with grey smears.",
+      "reason": "Freckles sit on the nose bridge and upper cheeks and fade out on forehead and jaw, so the face reads as fair, smooth skin with a light freckle dusting in hero.png and FRONT; the lids are a touch cooler and the ear tip is now a plain pale cream with almost no warm transmission, a few orange specks fringe the nostril and lip edges, the hair is golden but still reads as dry straw with no visible sheen, and the tunic is still blotchy green with grey smears.",
       "fixes": [
         "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches",
         "hair strip with darker roots and a clear anisotropic sheen band so the strands read as hair, not straw",
-        "stronger red-orange transmission on the thin ear tips so they glow against the key light",
+        "a thin red-orange subsurface tint on the ear tips (albedo or transmission colour) so they read as backlit skin",
         "keep freckle dots off the nostril and lip silhouette edges"
       ]
     },
@@ -63,7 +63,7 @@
     }
   },
   "renders": {
-    "hero.png": "d7487298a5bcda3d77e693250da997f16f677529a7d31e0354a051287c7258ae",
+    "hero.png": "f54866f39395d2df846f87247c14a9f4dd8199f78f055c061837f490b74b4db5",
     "sheet.png": "7fc60afb53c7d47325ccb5e6701f6c012146589ff240eea6b32a2e2b18bf9468"
   }
 }

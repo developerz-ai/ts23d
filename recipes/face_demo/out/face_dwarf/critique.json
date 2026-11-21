@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The collar is a real olive band with a clean hem edge, the skin now carries pores and broken rose mottling so the cheek warmth no longer sits as two round patches in FRONT, and stubble dots fade the beard edge into the cheek in hero.png; the tunic is still a flat ribbed red with an airbrushed pale wash over the shoulders.",
+      "reason": "The collar is a real olive band with a clean hem edge, the skin carries pores and broken rose mottling, and the cut-hair dots under the beard edge are now denser so the jaw stubble reads as a filled, darker shadow into the beard in hero.png rather than a sparse spray; the ear rim glows less and the lids are a little cooler; the tunic is still a flat ribbed red with an airbrushed pale wash over the shoulders.",
       "fixes": [
         "a wool strip with fibre noise on the tunic instead of the flat rib",
         "lower the airbrushed shoulder fade so the red reads as dyed wool"
@@ -28,7 +28,7 @@
     },
     "detail": {
       "score": 6,
-      "reason": "Moustache, beard, hair locks and now pores and stubble dots at the beard edge hold in hero.png; the face still has no age wrinkles (crow's feet, forehead lines) at the portrait distance and the tunic has no seams, folds or hem.",
+      "reason": "Moustache, beard, hair locks, pores and a denser stubble edge under the beard hold in hero.png; the face still has no age wrinkles (crow's feet, forehead lines) at the portrait distance and the tunic has no seams, folds or hem.",
       "fixes": [
         "LOD0 wrinkle displacement (forehead lines, crow's feet) driven by age",
         "seams and a few folds on the tunic"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "c3542001a4165274946a239d449b8116d75264ae87e71de0f31699c104577061",
-    "sheet.png": "65d0dcfeade9396f63f75f95342466b650fa01e0afcee8d4149d45eea2a47e0a"
+    "hero.png": "93929a4320071e796839fe49555cebcb9472531bf7817b1c6eac9812bb0d6a57",
+    "sheet.png": "0d93af9fd272fed41429f437d1f1b273a10d6c255122408732320ab84816c024"
   }
 }

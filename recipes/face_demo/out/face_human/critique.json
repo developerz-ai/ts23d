@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Collar is a real band with a clean hem; the stubble upper edge now feathers into the cheek with no tan under-wash in hero.png, and pores and a few freckles sit on the nose and cheek centres; the stubble dots are one uniform size and spray down the neck past the jaw like grit, and the shirt is a flat rib.",
+      "reason": "Collar is a real band with a clean hem; the stubble is now sparser and lighter (fewer cut-hair dots) so the jaw reads as short growth over skin rather than grit in hero.png, and pores and a few freckles sit on the nose and cheek centres; the lids are slightly cooler and the ear glows less; the stubble dots are still one uniform size and still run down the neck well past the jaw line, and the shirt is a flat rib.",
       "fixes": [
         "vary stubble dot size and fade it out under the jaw line instead of down the neck",
         "a linen strip with slub noise on the shirt"
@@ -35,7 +35,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "The chin scar now shows as a pale line through the stubble in FRONT and hero.png, the stubble reads as two days of growth, and collar grime and sun-faded shoulders show on the tunic.",
+      "reason": "The chin scar shows as a pale line through the stubble in FRONT and hero.png, the sparser stubble now reads as a day or two of growth, and collar grime and sun-faded shoulders show on the tunic.",
       "fixes": [
         "dirt at the shirt hem",
         "a little sun redness on nose and ear tops"
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "9e43003c61dcea3638920cdc6031a756b8f152c9b5d5ed791f36f1d21e1d390e",
-    "sheet.png": "3400da6a9b63ac761630670393bbf5b14e0a2540e3edc0cf9ac918c0ee9e808c"
+    "hero.png": "99406778a4b6098d2ca90961685058bdbf4525ca524d3f1631bf79e4b3acad3e",
+    "sheet.png": "975b2f41cfbed5d5e58dbaff8bb151f30e9b1284451e9dbe8a2032fe0783f83e"
   }
 }
