@@ -25,12 +25,17 @@ export const rock = defineAsset({
   },
 });
 `;
-const file = join(dir, 'rock', 'rock.ts');
+/** The rock recipe in a folder of its own, so no test sees another's cache (any order runs). */
+async function rockFile(test: string): Promise<string> {
+  const file = join(dir, test, 'rock', 'rock.ts');
+  await Bun.write(file, RECIPE);
+  return file;
+}
 const quiet = { json: true } as const;
 
 describe('t3d neural', () => {
   it('no adapter for the task: run leaves it missing; --require-neural → T3D_NEURAL_MISSING', async () => {
-    await Bun.write(file, RECIPE);
+    const file = await rockFile('none');
     const none = resolveConfig({});
     const r = await neuralRun(file, none, false);
     expect([r.filled.length, r.missing.length]).toEqual([0, 1]);
@@ -43,7 +48,7 @@ describe('t3d neural', () => {
   });
 
   it('build offline before a run: fallback; --require-neural: the compile throws', async () => {
-    await Bun.write(file, RECIPE);
+    const file = await rockFile('offline');
     const [rock] = await loadAssets(file);
     if (!rock) throw new Error('no asset');
     await provideRecipeNeural(file, ['rock'], true);
@@ -54,7 +59,7 @@ describe('t3d neural', () => {
   });
 
   it('run fills recipes/<name>/neural/<key>/ once; a build then hits it offline', async () => {
-    await Bun.write(file, RECIPE);
+    const file = await rockFile('fills');
     const adapter = mockAdapter();
     const config = resolveConfig({ neural: { image: adapter } });
     const first = await neuralRun(file, config, true);
@@ -80,7 +85,7 @@ describe('t3d neural', () => {
   });
 
   it('a full cache hit prints the cached entry, not "asks for no neural outputs"', async () => {
-    await Bun.write(file, RECIPE);
+    const file = await rockFile('hit');
     const config = resolveConfig({ neural: { image: mockAdapter() } });
     await neuralRun(file, config, true);
     const lines: string[] = [];

@@ -56,6 +56,8 @@ const imageDef: MaterialDef = {
     maps: { albedo: { url: 'swatch.png', sha256: sha } },
   },
 };
+// Defined once for the file, not by one test: the tests run in any order (`bun test --randomize`).
+defineMaterial(imageDef);
 
 describe('defineMaterial: bad input', () => {
   it('rejects bad numbers, ids and colours with T3D_MATERIAL_INVALID', () => {
@@ -101,7 +103,7 @@ describe('defineMaterial: bad input', () => {
       paint: (s: { tone: Float32Array }) => s.tone.fill(Number.NaN),
     };
     expect(
-      code(() => paintTrimSheet({ seed: 1, size: SIZE, strips: { plain: nan } as never })),
+      code(() => paintTrimSheet({ seed: 1, size: SIZE, strips: { plain: nan } as never }, [])),
     ).toBe('T3D_MATERIAL_INVALID');
   });
 
@@ -110,13 +112,15 @@ describe('defineMaterial: bad input', () => {
     if (!tex) throw new Error('fixture');
     const other = { ...tex, maps: { albedo: { url: 'x.png', sha256: 'f'.repeat(64) } } };
     const strips = { plain: { kind: 'flat', scaleMetres: 1, roughness: 0.5, texture: other } };
-    expect(code(() => paintTrimSheet({ seed: 1, size: SIZE, strips } as never))).toBe(
+    // The built-ins only (`[]`): what other tests here defined must not decide the answer.
+    expect(code(() => paintTrimSheet({ seed: 1, size: SIZE, strips } as never, []))).toBe(
       'T3D_TEXTURE_MISSING',
     );
   });
 
   it('defines more materials than one sheet has custom rows (an asset holds 14 of them: D299)', () => {
-    defineMaterial(imageDef);
+    // Its 28 fillers would make every later whole-set paint here a conflict: forget them after.
+    const restore = materialSnapshot();
     // v3 layout: 14 custom rows (56 strip rows − 42 built-ins).
     expect(CUSTOM_STRIP_SLOTS).toBe(14);
     for (let k = 0; k < 2 * CUSTOM_STRIP_SLOTS; k++)
@@ -129,6 +133,7 @@ describe('defineMaterial: bad input', () => {
     expect(code(() => paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE }, ['test_ghost']))).toBe(
       'T3D_MATERIAL_UNKNOWN',
     );
+    restore();
   });
 });
 

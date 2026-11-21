@@ -6,6 +6,7 @@ export { checkSheetFor, materialsOf, sheetFor, sheetWith } from './asset-sheet.t
 export { CC0_MATERIALS, CC0_WOOD_PLANKS_GREY } from './cc0.ts';
 export { CREATURE_MATERIALS } from './creature.ts';
 export {
+  builtinMaterialsOnly,
   defineMaterial,
   type MaterialInfo,
   materialGeneration,

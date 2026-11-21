@@ -244,4 +244,14 @@ export interface Part extends PartPhysics {
   readonly connect?: Connect;
   /** Own texture set (ADR 016); absent = the shared trim sheet. */
   readonly textures?: TextureSet;
+  /**
+   * Set by the finish and the hero bake on the LOD0 parts they unwrap: `mesh.uvs` address that
+   * layer's own atlas (export/finish-glb.ts), not the trim sheet, so nothing reads them as strips.
+   */
+  readonly atlas?: 'finish' | 'hero';
+  /**
+   * Credits of the image strips an `atlas` part sampled before it was unwrapped: the hero bake
+   * paints their pixels into its albedo, so the export still credits them (D535).
+   */
+  readonly atlasCredits?: readonly string[];
 }

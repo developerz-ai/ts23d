@@ -113,7 +113,9 @@ export const coin = defineAsset({
   });
 
   it('--yes-spend runs it and reports the estimate; the cached rerun estimates 0', async () => {
-    const f = join(dir, 'coin', 'coin.ts');
+    // Its own copy: the refusal test above must find the cache empty, whichever runs first.
+    const f = join(dir, 'spent', 'coin', 'coin.ts');
+    await Bun.write(f, PAID);
     const { mock, config } = paid();
     const r = await neuralRun(f, config, false, { yesSpend: true });
     expect([r.estimatedCredits, r.filled.length, mock.calls()]).toEqual([60, 2, 2]);

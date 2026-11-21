@@ -2,15 +2,10 @@
 // set on every LOD, images stored once, tangents / vertex colour only where they mean something,
 // a skinned textured body, and Khronos-valid, byte-identical files.
 
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'bun:test';
 import { validateBytes } from 'gltf-validator';
 import { compile, defineAsset, type Lod, Ts23dError } from '../core/index.ts';
-import {
-  DEFAULT_SHEET,
-  materialSnapshot,
-  paintTrimSheet,
-  resetMaterials,
-} from '../material/index.ts';
+import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { exportGlb, exportLodGlb, toGlb } from './glb.ts';
 import { albedo, beast, checkerPng, hide, normal, plate } from './texture-fixtures.ts';
 
@@ -100,19 +95,8 @@ describe('textured parts: refused and warned', () => {
 });
 
 describe('textured parts: materials', () => {
-  // Recipes loaded earlier in the same test process leave their materials defined; two of them
-  // sharing a custom row made these fixtures' hand-built meshes ambiguous (T3D_MATERIAL_UNKNOWN).
-  // Each test here runs against the built-ins only, and the earlier definitions come back after (D527).
-  // (The shared fixture compiles inside the hook, after the reset: a describe body runs at
-  // registration, before any hook, so built there it saw the earlier recipes' materials.)
-  let restore: () => void = () => {};
-  let g: Gltf;
-  beforeAll(() => {
-    restore = materialSnapshot();
-    resetMaterials();
-    g = json(toGlb(compile(beast())));
-  });
-  afterAll(() => restore());
+  // Whatever materials other files' recipes left defined: an asset's export depends on it alone (D532).
+  const g: Gltf = json(toGlb(compile(beast())));
 
   it('gives the set its own material and leaves the trim-sheet part on material 0', () => {
     expect(g.materials.map((m) => m.name)).toEqual(['ts23d_trim', 'ts23d_tex_hide']);

@@ -10,6 +10,7 @@ import {
 import { checkSheetFor, materialsOf, sheetFor, sheetWith } from './asset-sheet.ts';
 import { defineMaterial, materialSnapshot, resetMaterials } from './define.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from './generator.ts';
+import { mappedOnto } from './mapped.ts';
 import {
   CUSTOM_STRIP_SLOTS,
   type CustomStripId,
@@ -223,7 +224,8 @@ describe('sheetFor', () => {
     expect(thrown(() => sheetFor(lods, RECIPE)).code).toBe('T3D_MATERIAL_CONFLICT');
   });
 
-  it('reads a mesh built outside build() from its UVs while one material holds the row', () => {
+  it('fails before D532: unrecorded hand-written UVs hold none of the materials the process happens to define', () => {
+    // A mesh built outside build() with hand-written UVs and no `mappedOnto`: nothing recorded.
     resetMaterials();
     const built = quad(granite());
     const outside = defineAsset({
@@ -234,11 +236,21 @@ describe('sheetFor', () => {
     });
     const c = compile(outside);
     expect(c.materials).toBeUndefined();
-    expect(materialsOf(c)).toEqual(['sheet_granite']);
+    const alone = bytesOf(outside);
+    // Before D532: granite alone on row 4 was guessed in, and a second recipe's material on the
+    // row made the same asset T3D_MATERIAL_UNKNOWN. What other modules define must not matter.
+    expect(materialsOf(c)).toEqual([]);
     scales();
-    const e = thrown(() => materialsOf(c));
-    expect(e.code).toBe('T3D_MATERIAL_UNKNOWN');
-    expect(e.fix).toContain('inside build()');
+    expect(materialsOf(c)).toEqual([]);
+    expect(bytesOf(outside)).toBe(alone);
+    // Saying what the UVs map onto records it, whatever else holds the row.
+    const said = defineAsset({
+      name: 'sheet_said',
+      kind: 'prop',
+      budget,
+      build: (ctx) => ctx.part('face', mappedOnto(built, 'sheet_granite' as StripId)),
+    });
+    expect(materialsOf(compile(said))).toEqual(['sheet_granite']);
   });
 });
 

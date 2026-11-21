@@ -4,6 +4,12 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Other recipes loaded in the same process no longer change or break an asset's materials on rows its compile did not record, or on finished and hero-baked parts: a test run, `t3d mcp` and the gallery workers no longer fail on materials other recipes share a row with.
+
+### Fixed
+- An asset's project materials come from the asset alone: a mesh with hand-written UVs on a custom row its compile did not record is no longer given whichever defined material holds that row (or refused with `T3D_MATERIAL_UNKNOWN` when two recipes loaded earlier both hold it), and the finished and hero-baked LOD0 parts (`atlas`) are no longer read as trim-sheet UVs. `builtinMaterialsOnly()` isolates a test that reads the whole defined set.
+- A hero-baked GLB keeps the credit of an image strip painted into its albedo (the part's UVs now address the hero atlas, so the credit is recorded before it is unwrapped).
+
 ## [0.18.0] - 2026-11-21
 
 Skin reads as skin: true-scale pores, grain, freckles and stubble, soft tone zones instead of bruise rings, and light that passes through thin ears; orc tusks rise from the lower jaw as they should.

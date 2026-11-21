@@ -1,7 +1,7 @@
 // D354: every primitive says which project material it mapped its UVs onto (`Mesh.mapped`), so
 // a mesh built at module level registers its material in the asset that USES it. The last test
-// is the guard: a file here or in /passes that maps onto a strip or builds a mesh by hand and
-// does not carry the record fails it.
+// is the guard: a file here or in /passes, /finish, /export or /cli that maps onto a strip or
+// builds a mesh by hand and does not carry the record fails it.
 
 import { afterAll, describe, expect, it } from 'bun:test';
 import { readdir } from 'node:fs/promises';
@@ -216,6 +216,11 @@ const NO_RECORD: Readonly<Record<string, string>> = {
   'passes/belt-run.ts': 'reads a mesh, builds none',
   'passes/hair-cards.ts':
     'takes strand-atlas rectangles, not a strip: strandCells() asks in build()',
+  'export/own-textures.ts': 'rewrites a written GLB for a part with its own texture set',
+  'export/physics-engines.ts': 'a collider mesh with zero UVs, never a part',
+  'export/texture-uvs.ts': 'reads a mesh, builds none',
+  'finish/atlas.ts': "atlas UVs address the layer's own texture: its parts carry `atlas` (D533)",
+  'finish/hero-detail.ts': 'spreads its input mesh, for tangent frames only, never a part',
 };
 
 describe('guard: no primitive or pass forgets the record (D354)', () => {
@@ -223,7 +228,9 @@ describe('guard: no primitive or pass forgets the record (D354)', () => {
     const src = join(import.meta.dir, '..');
     const offenders: string[] = [];
     const seen = new Set<string>();
-    for (const dir of ['core', 'primitives', 'passes'])
+    // The library paths that build or rebuild meshes after a compile too (D532/D533): the finish
+    // and hero layers, the GLB writer, the CLI.
+    for (const dir of ['core', 'primitives', 'passes', 'finish', 'export', 'cli'])
       for (const f of (await readdir(join(src, dir))).sort()) {
         if (!f.endsWith('.ts') || /(\.test|fixtures)\.ts$/.test(f)) continue;
         const text = await Bun.file(join(src, dir, f)).text();

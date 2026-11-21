@@ -28,6 +28,10 @@ it('hashes only the bound renders that are committed', async () => {
 });
 
 it('renders the pack; sheet.png is byte-identical to the committed contact sheet', () => {
+  // Fails before D532: two other recipes' materials on one row made the comparison sheet (every
+  // defined material) T3D_MATERIAL_CONFLICT; the pack never depended on them.
+  defineMaterial({ id: 'critique_rival_a', roughness: 0.4, row: 0 });
+  defineMaterial({ id: 'critique_rival_b', roughness: 0.6, row: 0 });
   const { images, lods, metrics } = critiqueImages(crate, { width: 96, height: 54 });
   for (const f of ['hero.png', 'sheet.png', 'raking.png', 'raking_detail.png', 'lods.png'])
     expect(images.has(f)).toBe(true);
@@ -38,7 +42,8 @@ it('renders the pack; sheet.png is byte-identical to the committed contact sheet
   const [lod0, , lod2] = lods;
   if (!lod0 || !lod2) throw new Error('three LODs expected');
   expect(sha256(images.get('sheet.png') ?? new Uint8Array())).toBe(
-    sha256(contactSheet(lod0, { far: lod2, sheet: previewSheet() })),
+    // The sheet `t3d shot` paints for the asset's own materials (build-one.ts), whatever else is defined.
+    sha256(contactSheet(lod0, { far: lod2, sheet: previewSheet([lod0, lod2]) })),
   );
   // The raking camera is not the hero camera: a different image.
   expect(RAKING.azDeg).not.toBe(-35);
