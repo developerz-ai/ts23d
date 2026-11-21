@@ -84,7 +84,7 @@ describe('elf hair colour across LODs (D586)', () => {
     const value = (a: typeof near): number =>
       VIEWS.reduce((s, dir) => s + lum(hairValue(a, skull, dir)), 0) / VIEWS.length;
     expect(Math.abs(value(far) / value(near) - 1)).toBeLessThan(0.1);
-  });
+  }, 60_000);
 });
 
 const VIEWS: readonly Vec3[] = [

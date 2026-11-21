@@ -6,9 +6,9 @@
 // (split under the collar), `tunic`, `clothes`, `clasp`, `hair`, `eye_l` / `eye_r`, `plinth`.
 // LOD2 keeps the long fair hair as a few wide cards and the garments in their colours.
 
-import { type BuildContext, hex, sculpt } from '@developerz.ai/ts23d';
+import { type BuildContext, type Field, hex, type SculptEdit, sculpt } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
-import { earGraft } from '../_lib/bust/ear-graft.ts';
+import { earGraft, farEar } from '../_lib/bust/ear-graft.ts';
 import { structureEdits } from '../_lib/bust/face-forms.ts';
 import { mix } from '../_lib/bust/hair.ts';
 import { buildDressedBust } from '../_lib/bust/layers.ts';
@@ -80,11 +80,24 @@ export const ELF_BUST: BustRecipe = {
   }),
 };
 
+/** The built skin's hair edits: the far LOD adds the ears as blades its 2.2 cm cell can hold
+ *  (features, and with them the cartilage graft, are not sculpted there: the pointed ear, the
+ *  elf's signature, was missing at LOD2). */
+export function builtHair(scalp: Field, lod: number): SculptEdit[] {
+  return [
+    ...hairBaseEdits(scalp, lod),
+    ...(lod === 2
+      ? farEar(SK, GRAFT, ELF_BUST.cells.head[2], { root: 0.8, tip: 0.5, color: C.skin })
+      : []),
+  ];
+}
+
 export function buildElf(ctx: BuildContext): void {
   buildDressedBust(ctx, ELF_BUST, {
     layers: outfitLayers,
     hidden: hiddenBody,
     body: bodyEdits,
+    built: { hair: builtHair },
     // A season on the road: dust settled on the wool's shoulders and the cape's top.
     wear: {
       layers: ['cloak', 'far'],

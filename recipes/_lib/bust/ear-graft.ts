@@ -8,7 +8,7 @@
 import type { SculptEdit } from '@developerz.ai/ts23d';
 import { dmath } from '@developerz.ai/ts23d';
 import { type EarSpec, sheet } from './ear.ts';
-import { add, cross, dot, type Frame, len, lerp, mul, norm, sub, type V } from './kit.ts';
+import { add, cone2, cross, dot, type Frame, len, lerp, mul, norm, sub, type V } from './kit.ts';
 
 /** The base ear's landmarks before the race's deformer, and its tip after it (a skull's, left). */
 export interface EarPoints {
@@ -124,4 +124,18 @@ export function earGraft(k0: EarPoints, g: EarGraft): SculptEdit[] {
 export function graftLine(k0: EarPoints, g: EarGraft): V[] {
   const { f, length } = graftFrame(k0, g);
   return leaf(g, length).mid.map(([u, v]) => add(add(f.o, mul(f.u, u)), mul(f.v, v)));
+}
+
+/** The far LOD's ear: one tapered blade from the graft's root to its tip, never thinner than the
+ *  coarse cell (`root` and `tip`: its radii, × the cell). Features are not sculpted at the far
+ *  LOD, and the base's stretched film is far below its cell: without this the ear is gone. */
+export function farEar(
+  k0: EarPoints,
+  g: EarGraft,
+  cell: number,
+  o: { readonly root: number; readonly tip: number; readonly color: V },
+): SculptEdit[] {
+  const { f, length } = graftFrame(k0, g);
+  const tip = add(f.o, mul(f.u, length));
+  return [cone2(f.o, tip, cell * o.root, cell * o.tip, { blend: cell * 0.4, color: o.color })];
 }

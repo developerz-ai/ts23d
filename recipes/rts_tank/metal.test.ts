@@ -4,7 +4,15 @@
 // to sit on fails the same rule.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, MATERIAL_LIBRARY, type MaterialDef, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  compile,
+  MATERIAL_LIBRARY,
+  type MaterialDef,
+  type Mesh,
+  stripAtV,
+  stripRect,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { STEEL_STRIP, STEEL_TINT } from './metal.ts';
 import { rts_tank } from './rts_tank.ts';
 
@@ -12,17 +20,30 @@ import { rts_tank } from './rts_tank.ts';
 const sheen = (m: MaterialDef): boolean =>
   m.kind === 'metal' && (m.metalness ?? 0) >= 1 && m.roughness <= 0.4;
 
-/** Share of a part's vertices whose colour is within `tol` of `c`. */
-function shareNear(colors: Float32Array, c: Vec3, tol = 0.02): number {
+const tinted = (m: Mesh, v: number, tol = 0.02): boolean =>
+  [0, 1, 2].every((c) => Math.abs((m.colors[v * 3 + c] ?? 0) - (STEEL_TINT as Vec3)[c as 0]) < tol);
+
+/** Share of a mesh's triangles in the steel tint AND on the steel strip's UV row. */
+function steelShare(m: Mesh): number {
+  const tris = m.indices.length / 3;
   let n = 0;
-  for (let i = 0; i < colors.length; i += 3)
-    if (
-      Math.abs((colors[i] ?? 0) - c[0]) < tol &&
-      Math.abs((colors[i + 1] ?? 0) - c[1]) < tol &&
-      Math.abs((colors[i + 2] ?? 0) - c[2]) < tol
-    )
-      n++;
-  return n / Math.max(1, colors.length / 3);
+  for (let t = 0; t < tris; t++) {
+    const [a = 0, b = 0, c = 0] = [m.indices[t * 3], m.indices[t * 3 + 1], m.indices[t * 3 + 2]];
+    const row = stripAtV(m.uvs[a * 2 + 1] ?? 0, m.uvs[b * 2 + 1] ?? 0, m.uvs[c * 2 + 1] ?? 0);
+    if (row === STEEL_STRIP && tinted(m, a) && tinted(m, b) && tinted(m, c)) n++;
+  }
+  return n / Math.max(1, tris);
+}
+
+/** The same mesh and colours with its steel UVs moved to the cast-iron row. */
+function onCastIron(m: Mesh): Mesh {
+  const [from, to] = [stripRect(STEEL_STRIP), stripRect('iron_cast')];
+  const uvs = new Float32Array(m.uvs);
+  for (let i = 1; i < uvs.length; i += 2) {
+    const v = uvs[i] ?? 0;
+    if (v >= from.v0 && v <= from.v1) uvs[i] = to.v0 + (v - from.v0);
+  }
+  return { ...m, uvs };
 }
 
 describe('bare steel', () => {
@@ -36,14 +57,19 @@ describe('bare steel', () => {
     expect(sheen(def)).toBe(true);
   });
 
-  it('LOD0: the turret bolts are on the steel, and the hull kit carries some', () => {
-    const c = compile(rts_tank, { lod: 0 });
-    const share = (name: string): number =>
-      shareNear(
-        c.parts.find((p) => p.name === name)?.mesh?.colors ?? new Float32Array(),
-        STEEL_TINT,
-      );
-    expect(share('turret_bolts')).toBeGreaterThan(0.5);
-    expect(share('hull_kit')).toBeGreaterThan(0.1);
+  const part = (name: string): Mesh => {
+    const m = compile(rts_tank, { lod: 0 }).parts.find((p) => p.name === name)?.mesh;
+    if (!m) throw new Error(`no ${name}`);
+    return m;
+  };
+
+  it('fails bolts and kit remapped to cast iron with the steel tint kept', () => {
+    expect(steelShare(onCastIron(part('turret_bolts')))).toBe(0);
+    expect(steelShare(onCastIron(part('hull_kit')))).toBe(0);
+  });
+
+  it('LOD0: the turret bolts and hull kit sit on the steel row in the steel tint', () => {
+    expect(steelShare(part('turret_bolts'))).toBeGreaterThan(0.5);
+    expect(steelShare(part('hull_kit'))).toBeGreaterThan(0.1);
   });
 });

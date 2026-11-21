@@ -138,6 +138,15 @@ interface SlateOptions {
   readonly fates?: [number, number][];
 }
 
+/** A slate of the course being laid; `lay` is told whether a firm neighbour stands each side. */
+interface Laid {
+  readonly a: number;
+  readonly b: number;
+  readonly firm: boolean;
+  readonly lay: (before: boolean, after: boolean) => void;
+}
+type Face = 'bottom' | 'front' | 'back';
+
 /** Share of slates the wind took (dark sarking shows) and of old weathered ones (LOD0). */
 const LOST = 0.035;
 const AGED = 0.05;
@@ -161,15 +170,12 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
   const L = SLATE.length;
   const n = Math.ceil(pl.vl / SLATE.exposed);
   // A sound slate shows its face, butt edge and head (the head is what it rests on the course
-  // above by); its sides sit 2 cm from its neighbours, seen only along a verge. Loose ones show all.
-  const hidden = (a: number, b: number, loose: boolean): ('bottom' | 'front' | 'back')[] =>
+  // above by). A side is dropped only against a firm neighbour 2 cm away: beside a lost, slipped
+  // or broken slate, a hole or a verge it stays, so a gap never shows an open edge.
+  const hidden = (loose: boolean, before: boolean, after: boolean): Face[] =>
     loose
       ? ['bottom']
-      : [
-          'bottom',
-          ...(a > 0.01 ? (['back'] as const) : []),
-          ...(b < pl.ul - 0.01 ? (['front'] as const) : []),
-        ];
+      : ['bottom', ...(before ? (['back'] as const) : []), ...(after ? (['front'] as const) : [])];
   // Wind damage in patches along the exposed edges, not an even sprinkle (D593).
   const patches = windPatches(rng.fork('wind'), pl.ul, pl.vl);
   // Present u runs (between holes) for the per-course strips.
@@ -207,6 +213,8 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
     }
     if (lod === 2) continue;
     const shift = k % 2 === 0 ? 0 : SLATE.width / 2;
+    // Laid after the whole course is decided: each slate's sides depend on its neighbours.
+    const course: Laid[] = [];
     for (let u0 = -shift; u0 < pl.ul; u0 += SLATE.width) {
       const a = Math.max(0, u0);
       const b = Math.min(pl.ul, u0 + SLATE.width);
@@ -242,31 +250,38 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
       // Broken edge slates: shorter, skewed on their nail, sliding toward the hole; an aged one
       // has slipped a few centimetres.
       const short = broken ? rng.range(0.55, 0.95) : aged ? rng.range(0.86, 0.94) : 1;
-      const slate = shadowEdges(
-        box({
-          size: [b - a - 0.02, len * short, SLATE.t],
-          at: [0, 0, -SLATE.t / 2],
-          color: tone,
-          strip: 'slate',
-          omit: hidden(a, b, broken || aged),
-        }),
-      );
-      const skewed = broken
-        ? place(slate, { yaw: rng.range(-0.25, 0.25) })
-        : aged
-          ? place(slate, { yaw: rng.range(-0.07, 0.07) })
-          : slate;
-      (char && o.charred ? o.charred : out).push(
-        onPlane(
-          pl,
-          skewed,
-          mid,
-          v1 - (len * short) / 2,
-          w,
-          k === n - 1 ? 0 : tl * (short < 1 ? 1.4 : 1),
-        ),
-      );
+      const yaw = broken ? rng.range(-0.25, 0.25) : aged ? rng.range(-0.07, 0.07) : 0;
+      const loose = broken || aged;
+      course.push({
+        a,
+        b,
+        firm: !loose,
+        lay: (before, after) => {
+          const slate = shadowEdges(
+            box({
+              size: [b - a - 0.02, len * short, SLATE.t],
+              at: [0, 0, -SLATE.t / 2],
+              color: tone,
+              strip: 'slate',
+              omit: hidden(loose, before, after),
+            }),
+          );
+          (char && o.charred ? o.charred : out).push(
+            onPlane(
+              pl,
+              loose ? place(slate, { yaw }) : slate,
+              mid,
+              v1 - (len * short) / 2,
+              w,
+              k === n - 1 ? 0 : tl * (short < 1 ? 1.4 : 1),
+            ),
+          );
+        },
+      });
     }
+    const firmAt = (edge: 'a' | 'b', u: number): boolean =>
+      course.some((x) => x.firm && Math.abs(x[edge] - u) < 1e-6);
+    for (const x of course) x.lay(firmAt('b', x.a), firmAt('a', x.b));
   }
   return out;
 }

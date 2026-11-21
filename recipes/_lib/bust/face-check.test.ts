@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { type Field, sculptField } from '@developerz.ai/ts23d';
-import { ELF_BUST } from '../../elf_head/build.ts';
+import { builtHair, ELF_BUST } from '../../elf_head/build.ts';
 import * as ELF from '../../elf_head/spec.ts';
 import { GOBLIN_BUST } from '../../goblin_head/build.ts';
 import * as GOBLIN from '../../goblin_head/spec.ts';
@@ -17,6 +17,7 @@ import {
   measureOrbit,
   thicknessAt,
 } from './face-check.ts';
+import { add, mul } from './kit.ts';
 import { neckSeam } from './torso.ts';
 
 const fields = new Map<string, Field>();
@@ -97,6 +98,24 @@ describe('pointed ears (D573, D574)', () => {
       expect(Math.max(...e.thick)).toBeLessThan(0.013);
     });
   }
+  // The far LOD sculpts no features (stage 2): the graft is not there, the ear needs a blade
+  // of its own (elf_head/build.ts `builtHair`).
+  const far = (hair: BustRecipe['hair']): number => {
+    const b: BustRecipe = { ...ELF_BUST, hair, outfit: () => [] };
+    const f = sculptField(bustEdits(b, 2, 2).edits, { color: b.spec.skin, mirror: 'y' }).field;
+    const { f: fr, length } = graftFrame(ELF.SK, ELF.GRAFT);
+    const at = (t: number): number => thicknessAt(f, add(fr.o, mul(fr.u, length * t)), fr.w);
+    return Math.min(at(0.5), at(0.8));
+  };
+  const cell = ELF_BUST.cells.head[2];
+  const bare = far(ELF_BUST.hair);
+  const bladed = far(builtHair);
+  it('elf: at LOD2 the bust alone has no ear its 2.2 cm cell can hold', () => {
+    expect(bare).toBeLessThan(cell * 0.9);
+  });
+  it('elf: at LOD2 the built skin carries an ear blade no thinner than its cell to the tip', () => {
+    expect(bladed).toBeGreaterThanOrEqual(cell * 0.9);
+  });
   it('elf: the old tip stood beside the crown (+0.37 H over the eye line), inside the hair', () => {
     const race: FaceSpec = {
       ...ELF.CHARACTER.race,
