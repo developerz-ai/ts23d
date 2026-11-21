@@ -3,11 +3,13 @@
 // height ×1.12); eyes ×1.45 the human ball, wider set (IPD ×1.25), heavy drooping lids; a long
 // hooked nose (projection ×2.8, hooked 3.5 % H); a wide grin (mouth half-width 0.17 H vs 0.10);
 // a small sharp chin (×0.7) and narrow jaw (×0.8); huge leaf ears built on human ear anatomy,
-// 2.1 × the human ear's length, held out sideways, notched. Bony torso, thin neck.
+// swept out and back, grafted as notched leaves of real cartilage. Bony torso, thin neck.
 
 import { hex } from '@developerz.ai/ts23d';
 import type { EarSpec } from '../_lib/bust/ear.ts';
+import { type EarGraft, tipPull } from '../_lib/bust/ear-graft.ts';
 import type { EyeSpec } from '../_lib/bust/eye.ts';
+import type { Structure } from '../_lib/bust/face-forms.ts';
 import { type HeadSpec, HUMAN, landmarks } from '../_lib/bust/head.ts';
 import type { V } from '../_lib/bust/kit.ts';
 import type { NeckRange, TorsoSpec } from '../_lib/bust/torso.ts';
@@ -102,17 +104,39 @@ export const L = landmarks(SPEC);
  *  up round a short neck, the head hangs forward of them). */
 export const LT = { ...L, mz: L.mz + 0.022 };
 
+const EAR_OUT = 48;
+
+/** The base's ear before any goblin reshaping (the ear deformer moves no landmark). */
+const EAR0 = skullLandmarks(
+  skullOf(
+    {
+      race: GOBLIN_RACE,
+      age: 0,
+      weight: 0,
+      asym: 0,
+      tone: { base: C.skin, flush: C.warm, lips: C.lips, cool: C.cool, cavity: C.cavity },
+      eyes: { iris: C.iris },
+    },
+    { H, glabella: [0, 0, 0] },
+  ),
+);
+
 /** The goblin's face on the CC0 base (race preset ../_lib/face/races.ts, pushed to the design):
  *  eyes ×1.45 (orbit, lids and ball), set
  *  ×1.28 wide (IPD 63 mm, human 0.265 H × 1.25), heavy lids; nose projection ×2.8 hooked 5 % H; mouth ×1.4 wide; chin receding,
- *  ×0.7; ears ×2.6 long, held out 60°; vault ×1.12; thin neck ×0.8. */
+ *  ×0.7; ears swung 48° out, their tips drawn 0.56 H out and back in the ear's own plane
+ *  (`tipPull`); vault ×1.12; thin neck ×0.8. */
 export const GOBLIN_FACE: FaceSpec = {
   ...GOBLIN_RACE,
   cranium: { width: 1.14, height: 1.12, depth: 1.08 },
   eyes: { spacing: 1.28, tilt: 0.006, open: 0.95, size: 1.45 },
   nose: { width: 1.1, projection: 2.8, length: 1.3, bridge: 0.02, hook: 0.05 },
   mouth: { width: 1.6, lips: -0.002, underbite: 0 },
-  ears: { length: 2.6, tip: [0.04, 0.5, 0.1], out: 60 },
+  // (Length ×1: a stretched base ear leaves the bust's fine ear box, and its rim turns ragged.)
+  // Swung 48° out and the tip drawn 0.56 H (the deformer's, ≈ 7 cm) along the ear's own plane, raked 82° from its axis:
+  // out AND back, a little over the ear's top. Pulled straight out of that plane the auricle was a hollow paper tent, edge-on
+  // in the side view (D574).
+  ears: { length: 1, tip: tipPull(EAR0, EAR_OUT, 82, 0.56), out: EAR_OUT },
   body: { neck: 0.8, traps: -0.02, shoulders: 0.9 },
 };
 
@@ -137,9 +161,36 @@ export const EYE: EyeSpec = {
   iris: SK.eyeR * 0.55,
   upper: 0.36,
   lower: 0.14,
-  lid: 0.0024,
+  lid: 0.003,
   tilt: -7,
   colours: { sclera: C.sclera, iris: C.iris, pupil: C.pupil, wet: C.wet, caruncle: C.caruncle },
+};
+
+/** The goblin's bones over the soft base (../_lib/bust/face-forms.ts): a heavy brow shelf over
+ *  deep orbits, knobbly cheekbones, sunken cheeks. */
+export const STRUCTURE: Structure = {
+  brow: 0.014,
+  orbit: 0.35,
+  depth: 1,
+  rim: 0.04,
+  cheek: 0.012,
+  hollow: 0.008,
+  lash: hex('#3a3a20'),
+  lid: hex('#74843e'),
+};
+
+/** The leaf blade over the base's stretched ear (../_lib/bust/ear-graft.ts): 44 mm wide near its base,
+ *  cartilage 5.5 mm thick under a rolled helix, two notches torn out of the rim (D574). */
+export const GRAFT: EarGraft = {
+  out: EAR_OUT,
+  width: 0.044,
+  belly: 0.2,
+  thick: 0.0055,
+  lead: 0.024,
+  notches: [
+    { t: 0.45, depth: 0.14 },
+    { t: 0.65, depth: 0.09 },
+  ],
 };
 
 export const EAR: EarSpec = {

@@ -12,22 +12,22 @@
     },
     "proportions": {
       "score": 8,
-      "reason": "16.3 x 19.0 x 11.1 m, gate 3.5 m (measure passes), windows widened with sill and head; towers stylised-tall but consistent with the faction brief.",
+      "reason": "16.2 x 19.0 x 11.1 m, gate 3.5 m (measure passes); windows now sit in 20 cm stone surrounds with the pane set back, so they read as openings in a thick wall; towers stylised-tall but consistent with the faction brief.",
       "fixes": [
         "tower door steps read shallow beside the 3.5 m gate: two 0.18 m risers rather than one block"
       ]
     },
     "materials": {
       "score": 8,
-      "reason": "Walls read as dressed stone with per-block value, darker joints and damp at the foot; slates are lapped courses with per-slate value, oak posts brown, windows amber. Roof wear is now whole slates: grey missing-slate gaps, darker aged slates and slightly slipped ones (hero.png), no more half-slate triangles. The grey gaps are a little too light and are spread evenly over every slope (sheet TOP), which reads as a sprinkle rather than weather.",
+      "reason": "Walls read as dressed stone with per-block value and darker joints; slates are lapped courses with per-slate value, oak posts brown. The pale grey missing-slate squares are gone: a lost slate now shows dark sarking and its batten (hero.png, one at the near eave), aged slates are darker team red, and window panes are a deeper amber behind timber casements instead of lamp-bright cards. The rain runs under the sills are tinted rust-brown rather than a damp grey-green, so they read a little like rust on stone.",
       "fixes": [
-        "darken the missing-slate gaps toward the dark underlay/batten value",
-        "cluster missing and aged slates near the eaves, verges and below the chimney instead of an even sprinkle"
+        "tint the sill runs toward a cool damp grey-green (water carries dirt and algae on limestone, not rust)",
+        "a faint lichen/soot variation on the north slope so the large roof planes are not one even red"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Framed mullioned windows, pilasters with timber framing, tower doors and slits, slate courses, porch lamp, gable roundel; still no string course, quoins or eaves brackets, so the wall faces between pilasters are plain coursing.",
+      "reason": "Windows are now recessed ~18 cm in stone surrounds with a timber casement and glazing-bar cross (hero.png side and front windows show reveal shadow), plus pilasters with timber framing, tower doors and slits, slate courses, porch lamp, gable roundel. Still no string course, quoins or eaves brackets, so the wall faces between pilasters are plain coursing.",
       "fixes": [
         "string course at sill height and quoins on the hall corners (walls.ts)",
         "eaves brackets or rafter tails under the overhang"
@@ -35,11 +35,11 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Dark streaks under each window sill, a damp plinth, a darker eaves drip course, frayed banner hems, and the roof now ages per whole slate (missing, slipped and darker slates). The roof wear is evenly distributed, and the porch, steps and plinth still have no moss or tread wear.",
+      "reason": "The grey icicle streaks are gone: each sill now drops a soft run on the stones that widens as it falls (hero.png, faint brownish smudges below the front and side windows). The roof wear is no longer an even sprinkle, but the clustering mostly lands on the porch roof and the front gable corner (sheet TOP) while the main slopes read almost new, so the hall now shows less weather than before; the plinth, steps and porch still have no moss or tread wear.",
       "fixes": [
-        "moss/dirt band on the plinth on the shaded side",
-        "worn tread on the gate steps",
-        "concentrate roof wear where water runs (eaves, verges, valleys by the towers)"
+        "make the sill runs a step darker so they read at hero distance (they are now barely visible)",
+        "a lost-slate patch along the main eaves and below the chimney that reads in hero.png",
+        "moss/dirt band on the plinth on the shaded side and worn tread on the gate steps"
       ]
     },
     "lod": {
@@ -51,14 +51,15 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 36.5k / 7.8k / 664 tris, 3 / 3 / 3 draws; one trim material + team slot, LOD2 well under 1k.",
+      "reason": "QA PASS: 34.1k / 6.4k / 664 tris, 4 / 4 / 3 draws; one trim material + team slot, LOD0/LOD1 down from 36.5k / 7.8k, LOD2 well under 1k. LOD0/LOD1 draws rose from 3 to 4 this round (likely the new window glow rule), and LOD0 is still over the 20k building band.",
       "fixes": [
-        "spend some of the LOD0 budget on quoins, a string course and eaves brackets instead of more blocks"
+        "find the extra draw (likely the window glow rule) and fold it back so LOD0/LOD1 are back to 3 draws",
+        "bring LOD0 toward 20k (e.g. slates as single-sided quads on a deck) and spend the savings on quoins and a string course"
       ]
     }
   },
   "renders": {
-    "hero.png": "8b641a7d8b06299319546d7a2f6e9c2b27c05f8dd102ad1522ffc9a2efb99a01",
-    "sheet.png": "e887b6fb27a53ebfaf80e89eee5a618bffaa92e8a957325d510e836437854ccd"
+    "hero.png": "b55668314b34b8edd687fe2c01b21f93176967733bc17f580445a39ff7bd9628",
+    "sheet.png": "cec500c51369f7e9cba6295eccf64eea13573de56b3fbcb2afb38a8bd0e1bd10"
   }
 }

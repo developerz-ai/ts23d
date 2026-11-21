@@ -20,13 +20,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    11380,
-    2970,
+    9706,
+    2980,
     380
   ],
   "trianglesCompiled": [
-    11390,
-    2970,
+    9716,
+    2980,
     380
   ],
   "drawCalls": [
@@ -121,10 +121,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.173,
-      "actual": 0.173,
+      "target": 0.1729,
+      "actual": 0.1729,
       "eligible": "convex-edges",
-      "area": 4.0183,
+      "area": 4.0391,
       "by": {
         "warden_team": {
           "target": 0.4,
@@ -139,7 +139,7 @@
         "warden": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 3.4307
+          "area": 3.4515
         }
       }
     },
@@ -147,7 +147,7 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 1.8103,
+      "area": 1.8193,
       "by": {
         "warden_team": {
           "target": 0.3,
@@ -157,12 +157,12 @@
         "warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9318
+          "area": 0.9391
         },
         "warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.7101
+          "area": 0.7118
         }
       }
     },
@@ -170,23 +170,23 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "touched",
-      "area": 0.5224
+      "area": 0.5273
     },
     "mud": {
       "target": 0.7,
       "actual": 0.7,
       "eligible": "ground-near",
-      "area": 1.9762,
+      "area": 1.9728,
       "by": {
         "warden": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.93
+          "area": 0.9256
         },
         "warden_kit": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 1.0462
+          "area": 1.0472
         }
       }
     }

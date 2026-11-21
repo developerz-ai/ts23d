@@ -19,10 +19,11 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Fewer hoops now, so the vertical staves read in hero.png; the roof is a weathered grey-brown with no camouflage blotches. The staves are one even brown with little per-stave value.",
+      "reason": "The spout is now a dark rust-brown iron tube with its bands (it was a smooth brown wood-like tube), and the X-braces read as silver-grey weathered timber instead of warm tan with pale fringes (hero.png); the roof is weathered grey-brown. The staves are still one even brown with little per-stave value, and the spout is coarse and matte with no metal sheen.",
       "fixes": [
         "per-stave value and width jitter",
-        "moss only on the shaded roof facets, soft-edged"
+        "moss only on the shaded roof facets, soft-edged",
+        "finer rust grain and a slight metallic sheen on the spout"
       ]
     },
     "detail": {
@@ -57,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "8f8a623b437ccc60028996614a3a969d14eb6fcb911c89a57c649da1a4edd6c2",
+    "hero.png": "9e66555930d7000d29ac6dae41614aedafd7f7f995741ad7a0de1abf5cc42f21",
     "sheet.png": "015a4aecd713363d95b433495dd3ef7655d7e5e530963f9a919b815bf484c68a"
   }
 }

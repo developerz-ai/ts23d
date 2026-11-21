@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import { createRng, dmath, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
-import { bays, EAVES, HALF_X, HALF_Y, ROWS, WALL_T, wallCells } from './plan.ts';
+import { type Bay, bays, EAVES, HALF_X, HALF_Y, ROWS, WALL_T, wallCells } from './plan.ts';
 import { CORNERS, quoinRows, walls } from './walls.ts';
 
 /** Triangle centroids of `m` whose unit normal is within ~8° of `dir`. */
@@ -88,18 +88,124 @@ describe('quoin stacks', () => {
   });
 });
 
-describe('sill drips', () => {
-  it('hang only under a window sill (none on the gate bay or a bay whose window is knocked out)', () => {
-    const list = wallCells('complete', 'damaged', createRng(3));
+describe('sill stains (D591)', () => {
+  const lum = (m: Mesh, i: number): number =>
+    0.2126 * (m.colors[i * 3] ?? 0) +
+    0.7152 * (m.colors[i * 3 + 1] ?? 0) +
+    0.0722 * (m.colors[i * 3 + 2] ?? 0);
+  const mean = (a: number[]): number => a.reduce((p, q) => p + q, 0) / Math.max(1, a.length);
+
+  it('darken the stones under each sill, not the stones beside them, and add no decal', () => {
+    const list = wallCells('complete', 'intact', createRng(3));
     const w = walls(0, list, createRng(1), true, true);
-    const m = w.stains;
-    expect(m).not.toBeNull();
-    expect(w.sills.length).toBeLessThan(list.length);
-    const pos = m?.positions ?? new Float32Array();
-    for (let i = 0; i < pos.length / 3; i++) {
-      const [x, y] = [pos[i * 3] ?? 0, pos[i * 3 + 1] ?? 0];
-      const under = w.sills.some((s) => dmath.hypot(x - s[0], y - s[1]) < 0.6);
-      expect({ i, under }).toEqual({ i, under: true });
+    expect(Object.keys(w)).not.toContain('stains');
+    const m = w.walls;
+    if (!m || w.sills.length === 0) throw new Error('no walls or sills');
+    const [under, beside] = [[] as number[], [] as number[]];
+    for (const b of list) {
+      const sill = w.sills.find((s) => {
+        const t = (s[0] - b.origin[0]) * b.dir[0] + (s[1] - b.origin[1]) * b.dir[1];
+        const o = (s[0] - b.origin[0]) * b.out[0] + (s[1] - b.origin[1]) * b.out[1];
+        return Math.abs(t - b.len / 2) < 0.05 && o > WALL_T / 2 && o < WALL_T / 2 + 0.4;
+      });
+      if (!sill) continue;
+      for (let i = 0; i < m.positions.length / 3; i++) {
+        const [x, y, z] = [
+          m.positions[i * 3] ?? 0,
+          m.positions[i * 3 + 1] ?? 0,
+          m.positions[i * 3 + 2] ?? 0,
+        ];
+        const t = (x - b.origin[0]) * b.dir[0] + (y - b.origin[1]) * b.dir[1];
+        const o = (x - b.origin[0]) * b.out[0] + (y - b.origin[1]) * b.out[1];
+        // The outward face, 0.35–0.9 m below the sill (rain runs from under the string course).
+        if (Math.abs(o - WALL_T / 2) > 0.04 || z > sill[2] - 0.35 || z < sill[2] - 0.9) continue;
+        if (Math.abs(t - b.len / 2) < 0.12) under.push(lum(m, i));
+        else if (Math.abs(t - b.len / 2) > 0.6 && t > 0 && t < b.len) beside.push(lum(m, i));
+      }
     }
+    expect(under.length).toBeGreaterThan(20);
+    expect(mean(under)).toBeLessThan(mean(beside) * 0.92);
   });
+});
+
+describe('window reveal (D594)', () => {
+  const coords = (b: Bay, m: Mesh, i: number): { t: number; o: number; z: number } => {
+    const [x, y] = [
+      (m.positions[i * 3] ?? 0) - b.origin[0],
+      (m.positions[i * 3 + 1] ?? 0) - b.origin[1],
+    ];
+    return {
+      t: x * b.dir[0] + y * b.dir[1],
+      o: x * b.out[0] + y * b.out[1],
+      z: m.positions[i * 3 + 2] ?? 0,
+    };
+  };
+
+  /** Per pane: depth behind its shallower jamb's front, read on the jambs' inner arris (no sill). */
+  function recesses(list: readonly Bay[], frames: Mesh, panes: Mesh): number[] {
+    const out: number[] = [];
+    for (const b of list) {
+      const pane = Array.from({ length: panes.positions.length / 3 }, (_, i) =>
+        coords(b, panes, i),
+      ).filter((p) => p.t > 0 && p.t < b.len && Math.abs(p.o - WALL_T / 2) < 0.06);
+      if (!pane.length) continue;
+      const [t0, t1] = [Math.min(...pane.map((p) => p.t)), Math.max(...pane.map((p) => p.t))];
+      const [z0, z1] = [Math.min(...pane.map((p) => p.z)), Math.max(...pane.map((p) => p.z))];
+      const glass = Math.max(...pane.map((p) => p.o));
+      const fronts = [t0, t1].map((edge) => {
+        let front = Number.NEGATIVE_INFINITY;
+        for (let i = 0; i < frames.positions.length / 3; i++) {
+          const p = coords(b, frames, i);
+          if (
+            Math.abs(p.t - edge) < 1e-3 &&
+            p.z >= z0 - 1e-3 &&
+            p.z <= z1 + 1e-3 &&
+            p.o > 0 &&
+            p.o < 0.8
+          )
+            front = Math.max(front, p.o);
+        }
+        return front;
+      });
+      out.push(Math.min(...fronts) - glass);
+    }
+    return out;
+  }
+
+  /** `frames` with one bay's surround pushed back flush with its pane. */
+  function flushOne(b: Bay, frames: Mesh, panes: Mesh): Mesh {
+    const glass = Math.max(
+      ...Array.from({ length: panes.positions.length / 3 }, (_, i) => coords(b, panes, i))
+        .filter((p) => p.t > 0 && p.t < b.len && Math.abs(p.o - WALL_T / 2) < 0.06)
+        .map((p) => p.o),
+    );
+    const positions = new Float32Array(frames.positions);
+    for (let i = 0; i < positions.length / 3; i++) {
+      const p = coords(b, frames, i);
+      if (p.t <= 0 || p.t >= b.len || p.o <= glass || p.o > 0.8) continue;
+      positions[i * 3] = (positions[i * 3] ?? 0) - b.out[0] * (p.o - glass);
+      positions[i * 3 + 1] = (positions[i * 3 + 1] ?? 0) - b.out[1] * (p.o - glass);
+    }
+    return { ...frames, positions };
+  }
+
+  it('fails a single window flush with its jambs, though its sill and the others stand proud', () => {
+    const list = wallCells('complete', 'intact', createRng(3));
+    const w = walls(0, list, createRng(1), true, true);
+    if (!w.frames || !w.windows) throw new Error('no windows');
+    const b = list.find((x) => !x.door && x.dir[0] !== 0);
+    if (!b) throw new Error('no side bay');
+    const flush = flushOne(b, w.frames, w.windows);
+    expect(Math.min(...recesses(list, flush, w.windows))).toBeLessThan(0.12);
+  });
+
+  for (const lod of [0, 1] as const)
+    it(`LOD${lod}: every light sits at least 12 cm behind both its jambs`, () => {
+      const list = wallCells('complete', 'intact', createRng(3));
+      const w = walls(lod, list, createRng(1), true, true);
+      if (!w.frames || !w.windows) throw new Error('no windows');
+      const r = recesses(list, w.frames, w.windows);
+      expect(r.length).toBe(w.sills.length);
+      expect(Math.min(...r)).toBeGreaterThanOrEqual(0.12);
+    });
 });

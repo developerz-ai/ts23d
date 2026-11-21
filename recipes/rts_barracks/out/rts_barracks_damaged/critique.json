@@ -19,23 +19,23 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Walls read as dressed stone; exposed rafters read as oak and the slates round the hole are charred black slate by slate. The intact slopes now age per whole slate (grey gaps, darker slates) instead of pale triangles, so the roof reads consistently with the charring; the grey gaps are a touch light and evenly scattered (sheet TOP).",
+      "reason": "Walls read as dressed stone; exposed rafters read as oak and the slates round the hole are charred black slate by slate. The pale grey gaps on the intact slopes are gone (sheet TOP): a lost slate now shows dark sarking and batten, so the only grey-black on the roof is the charring, and windows are deep amber behind casements. The intact slopes now read nearly unweathered beside the burnt hole.",
       "fixes": [
-        "darken the missing-slate gaps toward the underlay value",
-        "cluster the intact-slope wear near the eaves and the damage instead of an even sprinkle"
+        "a few lost and slipped slates radiating from the hole on the intact slopes so the blast reads beyond the char ring"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Broken slates sliding at the hole edge, exposed rafters, shell-hole blocks, fallen planks and a block pile; walls otherwise as the intact hall.",
+      "reason": "Broken slates sliding at the hole edge, exposed rafters, shell-hole blocks, fallen planks, a block pile, and the walls now carry recessed windows with stone surrounds and casements; the hole interior still shows stretched grey streaks in sheet TOP instead of floor or rafters.",
       "fixes": [
         "splintered rafter ends and torn sarking boards at the roof hole",
-        "cracks radiating from the shell holes"
+        "cracks radiating from the shell holes",
+        "a proper floor/debris surface under the roof hole instead of stretched grey streaks (sheet TOP)"
       ]
     },
     "wear": {
       "score": 8,
-      "reason": "The roof hole is ringed with charred black slates, the tower crown is shattered, streaks run under the sills, a banner hangs frayed and a mixed-size debris pile lies at the porch: the damage and its history read at hero distance.",
+      "reason": "The roof hole is ringed with charred black slates, the tower crown is shattered, a banner hangs frayed and a mixed-size debris pile lies at the porch; the icicle streaks under the sills are now soft runs that barely read in hero.png. The damage and its history still read at hero distance.",
       "fixes": [
         "soot fans above the side shell holes as well as the roof hole",
         "dust on the debris and porch steps"
@@ -50,14 +50,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 33.4k / 8.0k / 852 tris, 3 / 3 / 3 draws; one trim material + team slot, LOD2 well under 1k.",
+      "reason": "QA PASS: 31.7k / 6.9k / 852 tris, 4 / 4 / 3 draws; one trim material + team slot, LOD2 well under 1k. LOD0/LOD1 down from 33.4k / 8.0k.",
       "fixes": [
         "spend some of the LOD0 budget on the fixes above (chipped arrises, gravel, splintered ends) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "95cab5f68a5aeb491f9424ff799d7ef96c4b7426185914c8ebcf82921ed6066b",
-    "sheet.png": "6eae98dd10430c62da3890f608d0e68fcf612390e14b0fbd616085f004a6afcb"
+    "hero.png": "b5a28e993218de6e960d836d1f92ba6c77ac272fcd378d97d47b5740a1e92d3e",
+    "sheet.png": "64943bbd7468e290cc48313ac4892779a7a7e4b855f6b0b9bdcaa5b54ea16d35"
   }
 }

@@ -22,7 +22,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { tessellate } from '../_lib/finish/finish.ts';
-import { BONE, BONE_DARK, GLOW, IRON, pebble, SLATE, SOOT } from '../_lib/rts/style.ts';
+import { BONE, BONE_DARK, pebble, SLATE, SOOT } from '../_lib/rts/style.ts';
 import { projectStripUV } from '../_lib/terrain/strip-inset.ts';
 import {
   type Bay,
@@ -37,7 +37,7 @@ import {
   PLINTH_OUT,
   WALL_T,
 } from './plan.ts';
-import { streak } from './surface.ts';
+import { type RainStain, stainGrid, stainTone } from './rain.ts';
 
 type Face = 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right';
 
@@ -100,6 +100,7 @@ function dressed(
   color: Vec3,
   bev: number,
   omit: readonly Face[],
+  stains: readonly RainStain[] = [],
 ): Mesh {
   const keep = outward(b);
   const body = block(b, t0, t1, r, r + 1, color, 0, 'concrete', [...omit, keep]);
@@ -155,14 +156,43 @@ function dressed(
           rect.u0 + (((tOf[i] ?? 0) - t0) / rect.metres) * (rect.u1 - rect.u0),
           rect.v0 + (((zOf[i] ?? 0) - z0) / COURSE) * (rect.v1 - rect.v0),
         ],
-        color,
+        color: stainTone(color, stains, tOf[i] ?? 0, zOf[i] ?? 0),
       }),
     );
     const [w0 = 0, w1 = 0, w2 = 0, w3 = 0] = vs;
     if (flip) mb.quad(w0, w3, w2, w1);
     else mb.quad(w0, w1, w2, w3);
   };
-  quad([4, 5, 6, 7]);
+  // The outward face: one quad, or a fine grid where a stain runs over it (D591).
+  const g = stainGrid(stains, t0 + bev, t1 - bev, z0 + bev, z1 - bev);
+  if (g.ts.length === 2 && g.zs.length === 2) quad([4, 5, 6, 7]);
+  else {
+    const n: Vec3 = [o[0], o[1], 0];
+    const id = g.zs.map((z) =>
+      g.ts.map((t) =>
+        mb.vertex({
+          p: P(t, z, f),
+          n,
+          uv: [
+            rect.u0 + ((t - t0) / rect.metres) * (rect.u1 - rect.u0),
+            rect.v0 + ((z - z0) / COURSE) * (rect.v1 - rect.v0),
+          ],
+          color: stainTone(color, stains, t, z),
+        }),
+      ),
+    );
+    // Wound like the single quad: t along the bay, z up; flipped where that looks into the wall.
+    const ccw = b.dir[0] * o[1] - b.dir[1] * o[0] < 0;
+    for (let j = 0; j + 1 < g.zs.length; j++)
+      for (let i = 0; i + 1 < g.ts.length; i++) {
+        const a = id[j]?.[i] ?? 0;
+        const bb = id[j]?.[i + 1] ?? 0;
+        const c = id[j + 1]?.[i + 1] ?? 0;
+        const d = id[j + 1]?.[i] ?? 0;
+        if (ccw) mb.quad(a, bb, c, d);
+        else mb.quad(a, d, c, bb);
+      }
+  }
   quad([0, 1, 5, 4]);
   quad([1, 2, 6, 5]);
   quad([2, 3, 7, 6]);
@@ -185,7 +215,7 @@ function covered(b: Bay, r: number, t0: number, t1: number): boolean {
 }
 
 /** LOD0: every block in running bond (odd rows offset half a block). */
-function blocks(b: Bay, rng: Rng): Mesh[] {
+function blocks(b: Bay, rng: Rng, stains: readonly RainStain[] = []): Mesh[] {
   const w = b.len / COLS;
   const out: Mesh[] = [];
   const [start, end] = ends(b);
@@ -200,7 +230,7 @@ function blocks(b: Bay, rng: Rng): Mesh[] {
     if (at(b, r, t0 - 1e-3)) omit.push(start);
     if (at(b, r, t1 + 1e-3)) omit.push(end);
     const tone: Vec3 = [BONE[0] * k * (1 + warm), BONE[1] * k, BONE[2] * k * (1 - warm * 1.5)];
-    out.push(dressed(b, t0, t1, r, tone, 0.035, omit));
+    out.push(dressed(b, t0, t1, r, tone, 0.035, omit, stains));
   };
   b.cells.forEach((row, r) => {
     if (r % 2 === 0) {
@@ -326,12 +356,6 @@ export interface WallMeshes {
   readonly trim: Mesh | null;
   readonly frames: Mesh | null;
   readonly windows: Mesh | null;
-  /**
-   * Rain streaks fading down the face under each sill (LOD0). `weather()` leaves them alone (they
-   * are already its streaks); the burn zones scorch them with the wall they hang on, so a burnt
-   * wall never shows pale streaks over its soot.
-   */
-  readonly stains: Mesh | null;
   /** Window sill centres: where rain streaks start (weather fasteners). */
   readonly sills: readonly Vec3[];
 }
@@ -361,49 +385,102 @@ function allBut(b: Bay): Face[] {
   return (['top', 'bottom', 'front', 'back', 'left', 'right'] as const).filter((f) => f !== keep);
 }
 
+/** A window mid-bay where rows 4–6 stand (none in the gate bay). */
+const glazed = (b: Bay): boolean => !b.door && [4, 5, 6].every((r) => b.cells[r]?.every(Boolean));
+
 /** Window sill and head height. */
 const WIN = { w: 0.8, z0: PLINTH + 4 * COURSE + 0.05, h: 1.2 } as const;
 
-/** One framed window mid-bay: glow pane recessed behind stone jambs, head and sill. */
+/** Stone surround depth proud of the wall, and the glazing's depth: the light sits in a reveal. */
+export const REVEAL = { surround: 0.2, glass: 0.02 } as const;
+/** Lamplight seen through old glass: a deep amber, so the lit pane is warm, not a yellow card. */
+export const WINDOW_LIGHT: Vec3 = [0.62, 0.3, 0.06];
+/** Oiled timber casement frame and glazing bars. */
+const TIMBER: Vec3 = [0.3, 0.2, 0.12];
+
+/**
+ * One framed window mid-bay (D594): a dim amber light set back in a 18 cm reveal — the stone
+ * surround (jambs, head, a sill wider than the opening) stands 20 cm proud of the wall, the pane
+ * 2 cm — inside a timber casement with a cross of glazing bars (LOD0). LOD2: the lit face alone.
+ */
 function window(b: Bay, lod: Lod): { frame: Mesh; pane: Mesh; sill: Vec3 } {
   const t = b.len / 2;
   const face = WALL_T / 2;
-  // LOD2: the lit face alone (two triangles a window), the amber rhythm kept on the far mesh.
-  const pane = faceBox(
-    b,
-    onBay(b, t, lod === 2 ? face - 0.025 : face, WIN.z0),
-    WIN.w,
-    0.06,
-    WIN.h,
-    GLOW,
-    lod === 2 ? allBut(b) : [],
-  );
+  const { surround: S, glass: G } = REVEAL;
+  // Faces against the wall, a neighbour or the pane are never seen.
+  const back = opposite(outward(b));
+  const jamb: Face[] = [back, 'top', 'bottom'];
+  const pane =
+    lod === 2
+      ? faceBox(b, onBay(b, t, face - 0.025, WIN.z0), WIN.w, 0.06, WIN.h, WINDOW_LIGHT, allBut(b))
+      : faceBox(b, onBay(b, t, face + G / 2, WIN.z0), WIN.w, G, WIN.h, WINDOW_LIGHT, allBut(b));
   const parts: Mesh[] = [
-    // Sill: proud of the face, wider than the opening (where the rain drips off).
-    faceBox(b, onBay(b, t, face + 0.02, WIN.z0 - 0.12), WIN.w + 0.36, 0.2, 0.12, BONE_DARK),
-    // Head (lintel) and the two jambs, 10 cm proud: the pane reads recessed.
-    faceBox(b, onBay(b, t, face + 0.01, WIN.z0 + WIN.h), WIN.w + 0.28, 0.18, 0.2, BONE_DARK),
-    ...(lod === 1 ? [] : [-1, 1]).map((s) =>
+    // Sill: proud of the surround, wider than the opening (where the rain drips off).
+    faceBox(
+      b,
+      onBay(b, t, face + (S + 0.06) / 2, WIN.z0 - 0.12),
+      WIN.w + 0.36,
+      S + 0.06,
+      0.12,
+      BONE_DARK,
+      [back],
+    ),
+    // Head (lintel) and the two jambs, the reveal's sides.
+    faceBox(b, onBay(b, t, face + S / 2, WIN.z0 + WIN.h), WIN.w + 0.28, S, 0.2, BONE_DARK, [back]),
+    ...[-1, 1].map((s) =>
       faceBox(
         b,
-        onBay(b, t + s * (WIN.w / 2 + 0.07), face + 0.01, WIN.z0),
+        onBay(b, t + s * (WIN.w / 2 + 0.07), face + S / 2, WIN.z0),
         0.14,
-        0.18,
+        S,
         WIN.h,
         BONE_DARK,
+        jamb,
       ),
     ),
   ];
-  if (lod === 0)
-    // Iron mullion cross: four lights.
+  if (lod === 0) {
+    // Casement frame round the light, set back in the reveal, and the glazing-bar cross.
+    const d = 0.05;
+    const o = face + G + d / 2;
     parts.push(
-      faceBox(b, onBay(b, t, face + 0.02, WIN.z0), 0.05, 0.05, WIN.h, IRON),
-      faceBox(b, onBay(b, t, face + 0.02, WIN.z0 + WIN.h * 0.55), WIN.w, 0.05, 0.05, IRON),
+      faceBox(b, onBay(b, t, o, WIN.z0), WIN.w, d, 0.07, TIMBER, [back]),
+      faceBox(b, onBay(b, t, o, WIN.z0 + WIN.h - 0.07), WIN.w, d, 0.07, TIMBER, [back]),
+      ...[-1, 1].map((s) =>
+        faceBox(
+          b,
+          onBay(b, t + s * (WIN.w / 2 - 0.035), o, WIN.z0 + 0.07),
+          0.07,
+          d,
+          WIN.h - 0.14,
+          TIMBER,
+          jamb,
+        ),
+      ),
+      faceBox(
+        b,
+        onBay(b, t, face + G + 0.02, WIN.z0 + 0.07),
+        0.045,
+        0.04,
+        WIN.h - 0.14,
+        TIMBER,
+        jamb,
+      ),
+      faceBox(
+        b,
+        onBay(b, t, face + G + 0.02, WIN.z0 + WIN.h * 0.58),
+        WIN.w - 0.14,
+        0.04,
+        0.045,
+        TIMBER,
+        [back],
+      ),
     );
+  }
   return {
     frame: merge(parts),
     pane,
-    sill: onBay(b, t, face + 0.14, WIN.z0 - 0.12),
+    sill: onBay(b, t, face + S + 0.03, WIN.z0 - 0.12),
   };
 }
 
@@ -516,9 +593,43 @@ export function walls(
   /** A wall going up: lime mortar slopped off the top course runs down the outer faces (LOD0). */
   mortar = false,
 ): WallMeshes {
+  // Stains on the stones (LOD0): rain off every sill, lime mortar slopped off a rising wall.
+  const stainsOf = new Map<Bay, RainStain[]>();
+  if (lod === 0) {
+    const mr = rng.fork('mortar');
+    for (const b of list) {
+      const own: RainStain[] = [];
+      const top = bayTop(b);
+      if (mortar && top >= 2)
+        for (let i = 0; i < 2; i++) {
+          const t = b.len * mr.range(0.15, 0.85);
+          // Only under a column standing to the top course.
+          if (!has(b, top - 1, Math.min(COLS - 1, Math.floor(t / (b.len / COLS))))) continue;
+          own.push({
+            t,
+            top: PLINTH + top * COURSE - 0.02,
+            len: mr.range(0.6, 1.3),
+            w: mr.range(0.16, 0.28),
+            color: MORTAR_WET,
+            k: 0.75,
+          });
+        }
+      if (glazed(b))
+        // One soft run of grime off each sill, spreading as it falls.
+        own.push({
+          t: b.len / 2 + mr.range(-0.06, 0.06),
+          top: WIN.z0 - (dressed ? 0.32 : 0.12),
+          len: mr.range(1.1, 1.5),
+          w: mr.range(0.5, 0.62),
+          color: STREAK,
+          k: 0.8,
+        });
+      stainsOf.set(b, own);
+    }
+  }
   const ms =
     lod === 0
-      ? list.flatMap((b) => blocks(b, rng))
+      ? list.flatMap((b) => blocks(b, rng, stainsOf.get(b)))
       : lod === 1
         ? list.flatMap(columns)
         : courses(list, roofed);
@@ -526,7 +637,6 @@ export function walls(
   const frames: Mesh[] = [];
   const glow: Mesh[] = [];
   const sills: Vec3[] = [];
-  const stains: Mesh[] = [];
   const quoined = dressed && lod === 0;
   if (quoined) {
     const qr = rng.fork('quoins');
@@ -535,27 +645,6 @@ export function walls(
       if (rows > 0) trim.push(...quoins(c, rows, qr));
     }
     for (const b of list) trim.push(...stringCourse(b));
-  }
-  if (mortar && lod === 0) {
-    const mr = rng.fork('mortar');
-    for (const b of list) {
-      const top = bayTop(b);
-      if (top < 2) continue;
-      for (let i = 0; i < 2; i++) {
-        const t = b.len * mr.range(0.15, 0.85);
-        // Only under a column standing to the top course.
-        if (!has(b, top - 1, Math.min(COLS - 1, Math.floor(t / (b.len / COLS))))) continue;
-        stains.push(
-          streak(onBay(b, t, WALL_T / 2, PLINTH + top * COURSE - 0.02), b.dir, b.out, {
-            w0: mr.range(0.14, 0.26),
-            w1: 0.06,
-            len: mr.range(0.6, 1.3),
-            from: MORTAR_WET,
-            to: [BONE[0] * 0.95, BONE[1] * 0.95, BONE[2] * 0.93],
-          }),
-        );
-      }
-    }
   }
   for (const b of list) {
     const top = bayTop(b);
@@ -572,42 +661,19 @@ export function walls(
       // Bevelled at LOD0 only: at LOD1 the chamfers are below a pixel.
       trim.push(pebble(lod === 0 ? 0 : 2, size, start, BONE_DARK));
     }
-    // Window mid-bay where rows 4–6 stand.
-    if (b.door || ![4, 5, 6].every((r) => b.cells[r]?.every(Boolean))) continue;
+    if (!glazed(b)) continue;
     const w = window(b, lod);
     glow.push(w.pane);
     if (lod < 2) {
       frames.push(w.frame);
       sills.push(w.sill);
     }
-    if (lod === 0)
-      // Three drips off each sill (the middle one longest), fading down the face.
-      for (const [dt, w0, len] of [
-        [-0.28, 0.16, 1.0],
-        [0.02, 0.24, 1.55],
-        [0.3, 0.14, 0.75],
-      ] as const)
-        stains.push(
-          streak(
-            onBay(b, b.len / 2 + dt, WALL_T / 2, WIN.z0 - (dressed ? 0.32 : 0.12)),
-            b.dir,
-            b.out,
-            {
-              w0,
-              w1: w0 * 0.45,
-              len,
-              from: STREAK,
-              to: [BONE[0] * 0.8, BONE[1] * 0.8, BONE[2] * 0.78],
-            },
-          ),
-        );
   }
   return {
     walls: ms.length ? merge(ms) : null,
     trim: trim.length ? merge(trim) : null,
     frames: frames.length ? merge(frames) : null,
     windows: glow.length ? merge(glow) : null,
-    stains: stains.length ? merge(stains) : null,
     sills,
   };
 }

@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Clearcoat red with reflections, glass, chrome side pipes, rubber and brake discs read; the headlamp glow is now a thin DRL strip inside each lamp.",
+      "reason": "Clearcoat red with reflections, glass, chrome side pipes, rubber and brake discs read; the headlamp glow is a thin DRL strip inside each lamp. The thin orange fringe along the lower edge of the near headlamp housing is gone and the tyre sidewalls are now even dark rubber without the pale ring line near the tread (hero.png).",
       "fixes": [
         "orange-peel roughness variation in the clearcoat"
       ]
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "b9e369d0a45f066d3b959a22e479a841b0a3dfc0cc99c70e8e8cf8a997ed4d3b",
+    "hero.png": "88c261ae1cfe6c8379762ba2929395ba437f512350e32fadf9d57df03761775d",
     "sheet.png": "f8c78f14e91dd6da4fd9ffa87340e93ca2711645bcc6b5a2348dd25c8560aa59"
   }
 }

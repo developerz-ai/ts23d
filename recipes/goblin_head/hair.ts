@@ -11,7 +11,7 @@ import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { lock, mix } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
 import { browLayers, withBrowComb } from '../_lib/face/brows.ts';
-import { bustHairFields, type CardHairStyle } from '../_lib/face/hair-cards.ts';
+import { bustHairFields, type CardHairStyle, hugStyle } from '../_lib/face/hair-cards.ts';
 import { C, H, L, SK } from './spec.ts';
 
 export function hairEdits(scalp: Field, lod: number): SculptEdit[] {
@@ -62,8 +62,23 @@ export function wispRoot(s: Surface, dx: number, dy: number): V {
 export const hairBaseEdits = (_scalp: Field, _lod: number): SculptEdit[] => [];
 
 /** Card wisps for `cardHair` on the goblin bust `b`: a sparse crown patch and two tufts behind
- *  the ears, thin stray strands standing up and curling back. */
+ *  the ears, thin stray strands standing up and curling back. LOD1 and LOD2 (D589): the same
+ *  wisps a tenth shorter, lifted at most 0.55 rad and half pressed onto the dome (`hugStyle`)
+ *  with four segments to curl round it: twice as wide and halved in segments, LOD0's 0.75 rad
+ *  lift stood them off the skull as 6 cm quills. */
 export function goblinCardHair(b: BustRecipe, lod: number): CardHairStyle {
+  const style = nearHair(b, lod);
+  if (lod === 0) return style;
+  return hugStyle(style, {
+    keep: ['wisps', 'tufts', 'brows'],
+    lift: 0.55,
+    hug: 0.5,
+    length: 0.9,
+    segments: 8,
+  });
+}
+
+function nearHair(b: BustRecipe, lod: number): CardHairStyle {
   const { skin } = bustHairFields(b, lod);
   const crown: Vec3 = [SK.crown[0] - 0.02 * H, 0, SK.crown[2]];
   const patch: Field = (p) =>

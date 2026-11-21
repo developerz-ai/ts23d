@@ -20,7 +20,7 @@ import {
   symmetric,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { type FigurePoints, figure } from '../_lib/rts/figure.ts';
+import { type FigurePoints, figure, splayLeg, turnHead, unitPose } from '../_lib/rts/figure.ts';
 import {
   band,
   CAKED,
@@ -239,10 +239,13 @@ function armour(add: Add, lod: Lod, pts: FigurePoints): void {
     for (const y of [-0.12, 0, 0.12])
       belt.push(pebble(lod, [0.06, 0.08, 0.09], [0.15, y, 0.9], y === 0 ? BRASS : LEATHER));
   add('belt', merge(belt));
-  const knee = merge([
-    ellipsoid(lod === 0 ? 1 : lod, [0.07, 0.13, 0.5], [0.055, 0.08, 0.085], BONE),
-    pebble(lod, [0.05, 0.1, 0.24], [0.07, 0.13, 0.2], BONE_DARK),
-  ]);
+  const knee = splayLeg(
+    merge([
+      ellipsoid(lod === 0 ? 1 : lod, [0.07, 0.13, 0.5], [0.055, 0.08, 0.085], BONE),
+      pebble(lod, [0.05, 0.1, 0.24], [0.07, 0.13, 0.2], BONE_DARK),
+    ]),
+    pts.pose.splay,
+  );
   add('greave_l', knee);
   add('greave_r', mirrorY(knee));
   // Elbow cops behind each elbow joint (the left one reaches across the body at port arms).
@@ -392,8 +395,16 @@ export const rts_soldier = defineAsset({
       handleR: HANDLE_R,
       mud: 0.34,
       port: { grip: GRIP, axis: U, support: SUPPORT },
+      // Each Warden stands and looks his own way (D597): stance and head turn from the seed.
+      pose: unitPose(ctx.rng.fork('pose')),
     });
-    helmet(add, lod, pts.head, pts.headR);
+    // The helmet, visor and crest turn with the head.
+    helmet(
+      (name, m, opts) => add(name, turnHead(m, pts.pose.headYaw), opts),
+      lod,
+      pts.head,
+      pts.headR,
+    );
     armour(add, lod, pts);
     // The carbine rides the right-hand socket: grip centre at the fist, muzzle forward.
     ctx.socket('hand_r_socket', {

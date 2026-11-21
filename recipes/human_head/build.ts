@@ -8,8 +8,10 @@
 
 import { type BuildContext, hex, type SculptEdit, sculpt } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
+import { structureEdits } from '../_lib/bust/face-forms.ts';
 import { mix } from '../_lib/bust/hair.ts';
-import { C, CHARACTER, EAR, EYE, L, SK, SPEC } from '../_lib/bust/human/spec.ts';
+import { neckEdits } from '../_lib/bust/human/neck.ts';
+import { C, CHARACTER, EAR, EYE, L, SK, SPEC, STRUCTURE } from '../_lib/bust/human/spec.ts';
 import { chain, cone2, creaseOn } from '../_lib/bust/kit.ts';
 import { buildDressedBust } from '../_lib/bust/layers.ts';
 import { armCut } from '../_lib/bust/torso.ts';
@@ -85,8 +87,12 @@ export const HUMAN_BUST: BustRecipe = {
   pores: true,
   finish: 'skin',
   body: () => bodyEdits(),
-  features: (stage, skin) =>
-    stage >= 4
+  features: (stage, skin, lod) => [
+    // The bones and the lids over the soft base (D570–D572).
+    ...structureEdits(SK, EYE, SPEC.H, skin, STRUCTURE, lod),
+    // A man's neck: 118 mm across, sloping into the shoulders (D575).
+    ...neckEdits(SK, SPEC.H, skin, { side: 0.008, traps: 0.012 }),
+    ...(stage >= 4
       ? [
           creaseOn(skin, scarLine(), 0.0024, 0.0012, {
             blend: 0.002,
@@ -95,7 +101,8 @@ export const HUMAN_BUST: BustRecipe = {
             tips: 0.3,
           }),
         ]
-      : [],
+      : []),
+  ],
   hair: hairBaseEdits,
   outfit: outfitEdits,
   extras: (ctx, skin) => ({
@@ -148,6 +155,8 @@ export function buildHuman(ctx: BuildContext): void {
         // (Thin: at a 1 cm vertex spacing heavy dust reads as pale blotches.)
         effects: { dust: { amount: 0.3, strength: 0.2, color: [0.55, 0.47, 0.38] } },
       },
+      // An even film on what faces up, as on the elf's cloak: scattered, it read as pale blotches.
+      even: true,
     },
   });
   // LOD0: the cached Blender groom (groom.ts); LOD1, LOD2 and a cache miss: the card hair.

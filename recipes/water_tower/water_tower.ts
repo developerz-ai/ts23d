@@ -757,6 +757,8 @@ export const water_tower = defineAsset({
         width: 0.4,
         segments: ctx.pick([12, 8, 6]),
         color: steel,
+        // Sheet iron, as the hinge and bands: with no strip it read as a bark-covered log.
+        strip: 'iron',
       }),
       beam({
         from: along(SPOUT_L * 0.7),
@@ -764,6 +766,7 @@ export const water_tower = defineAsset({
         width: 0.32,
         segments: ctx.pick([12, 8, 6]),
         color: steel,
+        strip: 'iron',
       }),
     ];
     if (lod < 2) {

@@ -7,6 +7,7 @@ import { type IntendedCrease, sculptField } from '@developerz.ai/ts23d';
 import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
 import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
+import { graftLine } from '../_lib/bust/ear-graft.ts';
 import { spline, surface, type V } from '../_lib/bust/kit.ts';
 import { neckSeam } from '../_lib/bust/torso.ts';
 import { skullCreases } from '../_lib/face/skull-creases.ts';
@@ -21,7 +22,7 @@ import {
   PARTS,
 } from './clothes.ts';
 import { frontLocks, hairline, longLocks } from './hair.ts';
-import { H, L, SK, SPEC, TORSO } from './spec.ts';
+import { GRAFT, H, L, SK, SPEC, TORSO } from './spec.ts';
 import { bodyEdits } from './torso.ts';
 
 function creases(): IntendedCrease[] {
@@ -39,6 +40,26 @@ function creases(): IntendedCrease[] {
     // Every garment edge the cloth tailoring (clothes.ts) stands off the layer beneath.
     ...outfitCreases(skin),
     ...skullCreases(SK, H),
+    // The fine bridge of the nose where it leaves the brow: a ridge between two steep flanks.
+    ...creaseCurve(
+      'nose_root',
+      'head',
+      [
+        [SK.nasion[0], 0, SK.nasion[2] + 0.008],
+        [SK.nasion[0], 0, SK.nasion[2] - 0.006],
+        [SK.nasion[0] + 0.004, 0, SK.nasion[2] - 0.02],
+      ],
+      0.012,
+      'the narrow bridge of the nose at its root, under the brow',
+    ),
+    ...creaseCurve(
+      'ear_blade',
+      'head',
+      graftLine(SK, GRAFT),
+      0.024,
+      'the ear’s leaf: its rolled helix, antihelix and concha',
+      true,
+    ),
     ...torsoCreases(L, TORSO),
     ...longLocks(7, hair).flatMap(({ ctrl }, i) =>
       ['head', 'bust'].flatMap((part) =>

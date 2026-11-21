@@ -1,221 +1,220 @@
 {
   "asset": "rts_faction",
   "reviewer": "agent-panel",
-  "overall": 5.8,
+  "overall": 6.2,
   "scores": {
     "silhouette": {
-      "score": 6.5,
-      "reason": "panel-1: From the RTS 3/4 camera the HQ reads well: two conical towers with finials, a steep gable and a pedimented porch with banners make a clear 'faction headquarters'. The tank, crystal ore node and soldiers all read at a glance. In the strict silhouettes the front is a flat box with small bumps, the side is a slab with a detached sliver, and the towers do not stand far enough above the roof ridge to dominate. The plot edge walls are low and add nothing to the outline. | panel-2: From the 3/4 views the base reads at once as an RTS HQ: a gabled hall, two conical-roofed towers, a portico, a tank, a squad and a crystal resource node. In the orthographic silhouettes it falls apart. The front is a flat block with two bumps, and the side is a rectangle with a separate sliver for the plot. Nothing in black says faction, and the hall's roof ridge, portico and towers merge into one mass. The towers are the same height and sit symmetrically, so the outline has no hero accent. | panel-3: The HQ reads clearly as a gabled hall with two conical-roofed towers, a porch and banners, and the tank reads as a tank from the side. But the set is one big box plus low clutter: in silhouette.png the side view is a plain rectangle with a stub, the infantry and crystal node vanish into the base slab, and the two towers are identical so nothing marks this as one specific faction. Tower finials and the flag are the only fine accents.",
+      "score": 7,
+      "reason": "panel-1: Reads instantly as an RTS faction HQ from the strategy camera: gabled hall flanked by two conical-roof towers with finials, portico, banners, a tank in a bay, an infantry squad and a crystal resource node. The front elevation silhouette (towers + gable) is distinctive. Side view loses it: the hall and towers merge into one block and the yard props vanish into a flat line. | panel-2: From the RTS camera the set reads at once: a gabled hall with two cone-roofed round towers, porch, banners, a tank, an infantry squad and a crystal resource node, each with a distinct outline. The front elevation is strong. The side elevation is a plain box with a flat roof line, the infantry are near-identical upright pegs, and the perimeter wall is a uniform low bar that adds no shape. | panel-3: From the RTS camera (3/4 front, far LOD2) it reads instantly as a faction HQ: twin conical-roofed towers, gabled red hall with a porch, banners, a tank, troops and a resource crystal node. Front view is a clean symmetric castle-hall read. The side and plan silhouettes are flat (a long low box plus a slab), and the hall itself is a generic barn shape; the towers are small for a stronghold so the outline lacks a dominant hero feature.",
       "fixes": [
-        "Raise the towers about 1.5-2 m above the ridge and add a corbelled parapet or machicolation ring under the cones so they break the outline",
-        "Add a ridge feature (chimney, signal mast or a central belfry) so the front and side silhouettes are not one flat box",
-        "Give the perimeter wall a gate or corner posts so the plot edge has a readable profile",
-        "Make one tower clearly taller (about 1.4x) with a spire or a faction finial so the outline has a dominant vertical",
-        "Push the portico forward and raise its gable above the eave line so it breaks the front silhouette",
-        "Add tall faction elements on the plot (a flag mast taller than the ridge, or a radar or antenna on the HQ) so the side view is more than a slab",
-        "Break the hall's box: add a chimney or command mast with antenna/dish on the ridge, dormers on the roof slope and a taller, differently capped second tower so the two towers are not mirror copies",
-        "Give the roof a visible overhang and ridge cresting so the SIDE outline is not a rectangle",
-        "Raise the crystal node (taller central shard, 2.5-3 m) and add a harvester rig or derrick beside it so the resource reads in black",
-        "Give infantry a readable outline: helmet brim, rifle held clear of the torso, backpack and antenna on the squad leader"
+        "Raise the towers or add crenellation/dormers so they separate from the hall in side view",
+        "Give the yard a tall readable element (watchtower, radio mast, gate arch) to break the flat plinth outline",
+        "Make the crystal cluster larger so the resource reads from the top camera",
+        "Break the hall's side roof line with a chimney, dormer or ridge vent",
+        "Vary the infantry poses and give at least one a distinct outline (kneeling, officer with flag)",
+        "Add wall piers or a gate post taller than the wall run so the perimeter has rhythm",
+        "Give the tank a longer gun barrel so it reads from the side at distance",
+        "Raise the towers ~25% above the ridge and add crenellation or a machicolation band so the outline names a fortified HQ",
+        "Add a central tall element (bell tower, radio mast or keep) to break the long ridge line",
+        "Give the perimeter wall a gatehouse or corner posts so the plan outline is not a bare slab"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "panel-1: Overall 30x25x11.2 m with a roughly 18 m hall and a tank of about 6-7 m is plausible next to 1.8 m soldiers. Problems: the side view shows the roof slab running out past the porch with a thin awning hanging off it, so the porch roof looks stuck on rather than framed into the gable. The window streaks hang below the sills like icicles and visually stretch the wall. The tank turret is very large and set far back for its hull, and the soldiers read as stiff mannequins with oversized heads and backpacks. | panel-2: The overall 30x25x11.2 m footprint is plausible for an RTS HQ plot, and soldiers at about 1.8 m sit right against the doors. Several things are off by eye. The tower doors are squat and narrow next to the tall hall windows. The portico columns are spindly for the gable they carry. The tank looks undersized next to the soldiers: the hull is barely three figures long, and the turret is oversized and domed like a toy. The perimeter wall is only waist-high and stops short, so the yard reads as an open slab rather than an enclosure. | panel-3: Scale between building, tank and soldiers is plausible on the 5 m grid (door height against figures, tank about 6-7 m long). Weaknesses: the infantry are mannequins with oversized spherical heads, cylinder limbs, no neck and no hands or feet shaping; the towers are fat and short for their caps; the hall's storey height is tall relative to the single row of small windows, leaving a large blank wall band under the eave; the porch posts are thin for the pediment they carry; the perimeter wall is knee-to-waist height and thick, reading as a kerb rather than a defensive wall.",
+      "reason": "panel-1: Scale relationships mostly hold: soldiers ~1.8 m against a ~6 m tank and a ~2.5 m door. But the infantry are peg-doll figures with oversized helmet-heads and stubby limbs, the hall windows are large and identical for a stone fortress, the towers have only tiny slit openings with no ground entrance on one, and the courtyard is a large empty slab relative to the building footprint. | panel-2: Building, tank and soldiers sit in a believable RTS scale relationship and the hall's storey height, door and porch work against the figures. The soldiers are mannequins: ball heads, tube limbs, block torsos, with stiff identical stances, which is the weakest proportion in the scene. The ground-floor windows are large and sit low for the wall height, the towers are thick for their height and have one tiny door, the tank turret is big for its hull with a stubby gun, and the crystals are as tall as the soldiers' whole bodies with no mass logic in the rock. | panel-3: Building storey heights, window and door sizes read plausibly against the 5 m grid; walls, sandbags and crates are at believable scale. The tank is small (roughly WWII light/medium size) but fine for RTS. Infantry are stylised with oversized heads and stiff stick limbs and look slightly short beside the door. The towers are narrow and stubby relative to the hall.",
       "fixes": [
-        "Frame the porch roof into the main gable with matching pitch and posts that carry it, instead of an awning protruding past the side wall",
-        "Shrink the tank turret about 15% and move it forward to sit over the hull middle",
-        "Reduce soldier head size to about 1/7.5 of body height and add bent knees/arms variation so they do not read as identical mannequins",
-        "Scale the tank hull to about 6.5-7 m long and reduce the turret to about 45% of the hull length",
-        "Raise the tower doors to 2.1-2.4 m and thicken the portico columns to about 1/8 of their height",
-        "Run the perimeter wall around the whole plot, or end it at gate piers, so the enclosure reads as intended",
-        "Rebuild the infantry at 7.5 heads tall: head about 0.23 m, real neck, tapered limbs, boots and hands, shoulders wider than hips",
-        "Slim the towers (diameter about 0.8x) and raise them one course above the hall eave before the cone starts",
-        "Add a second window row or a string course and cornice to fill the blank wall band under the eave",
-        "Thicken porch posts to about 0.35 m with bases and capitals; raise the perimeter wall to 1.2-1.5 m or turn it into proper jersey barriers with gaps"
+        "Rework infantry with correct 7.5-head proportions, defined shoulders, hands and faces",
+        "Vary window sizes by storey and add a tower door/stair at ground level",
+        "Fill the yard to the footprint: vehicle pad markings, crates, fuel drums, a sentry post",
+        "Rebuild the infantry with a shaped head and helmet, tapered limbs, shoulders and a pelvis; vary stance",
+        "Shrink the hall windows about 15% and raise the sill line",
+        "Slim the towers or raise them one more course above the eave",
+        "Lengthen the tank gun to roughly hull length and reduce turret width",
+        "Seat the crystals in a larger rock base with a spread of sizes",
+        "Rebalance infantry to ~7 heads tall with defined shoulders and bent-knee stances",
+        "Widen tower diameter ~15% and lengthen the cone roofs",
+        "Check the porch door height against a 1.8 m figure; it reads close to 3 m"
       ]
     },
     "materials": {
-      "score": 5.5,
-      "reason": "panel-1: Stone, red roof shingles, dark timber posts, sandbags and crates separate by hue. The tank hull and the rock show no metal or wet sheen; everything has the same mid roughness under raking light. Windows are flat saturated yellow emissive with no glazing or interior. The crystals are flat orange with no translucency or glow, and the red roof is a uniform hue across every shingle. | panel-2: Stone, red roof tile, timber, wall caps and tank paint separate by hue, but nearly everything shares the same matte roughness. The tank shows no metal response, the crystals look like flat orange plastic with no translucency or rim glow, and the windows are flat unlit yellow with no frame depth or interior. The grey squares on the roof read as pasted decals, not missing or replaced tiles. The grey translucent spikes under the windows read as icicles, not stains. | panel-3: Stone block, timber posts, clay tile and painted tank armour separate by hue and value, and the tile roof has a believable sheen. But the windows are flat emissive yellow cards with no glass, reveal depth or reflection; the crystals are opaque orange plastic with no translucency or glow; the ground slab is one uniform grey concrete with only a dark gravel strip; banner cloth is a flat dark red plane with no weave or fold; infantry are a single glossy putty material so cloth, skin and metal do not separate; the tank tracks and wheels are barely darker than the hull.",
+      "score": 6.3,
+      "reason": "panel-1: Clay roof tiles, ashlar stone, timber framing, concrete barriers, painted tank and glowing amber crystals separate well by hue and value; the emissive windows sell interior light. But everything shares one matte response: the tank shows no metallic edge sheen, crystals look like opaque plastic rather than translucent, the gold finials and sun disc are flat yellow, and the ground slab is untextured grey. | panel-2: Clay roof tiles, ashlar stone, dark timber, cloth banners, painted tank steel and glowing crystal all separate by hue and value, and the faction red ties the set together. Lit windows are flat orange rectangles with no glass or interior depth, the stone is one hue across hall, towers, wall and ground slab so the pad looks like the same material as the walls, the tank reads as matte plastic with little metal response, and the crystals are flat-shaded orange without translucency or internal glow gradient. | panel-3: Stone blocks, timber framing, red tile roof, glowing windows, painted tank armour with rust, sandbag cloth and amber crystals all separate by hue and value, coherent in a stylised RTS palette. Glass is emissive-only with no reflection; the tank metal has little specular; the crystals are flat orange with no translucency or glow, which undersells the resource node.",
       "fixes": [
-        "Give the tank exposed steel (track links, barrel muzzle, hatch edges) a metallic, lower-roughness slot so it catches light",
-        "Replace flat emissive windows with a glass slot plus a dimmer warm interior and a frame reflection",
-        "Vary roof shingle albedo per tile by plus or minus 8% value and add a translucent/emissive core to the crystals",
-        "Give the tank hull and tracks a metal finish with edge highlights, and give the tracks a dark rubber or steel roughness",
-        "Give the crystals an emissive core plus a translucent or rim finish so they read as an energy resource",
-        "Recess the windows with frame depth and use a warm emissive gradient instead of a flat fill",
-        "Replace the opaque grey roof squares with darker gaps or slightly offset tiles, and turn the under-window spikes into soft albedo streaks",
-        "Model window reveals 0.15 m deep with a glass pane (low roughness, slight reflection) in front of a dimmer warm interior, plus frames in timber",
-        "Give crystals an emissive core, lower roughness and a transmission/optics preset so they read as mineral, not plastic",
-        "Split infantry paint slots: matte cloth uniform, skin, dark metal weapon, leather webbing",
-        "Break the ground into packed dirt, paved apron and worn concrete with different roughness; darken tracks to rubber/steel with bright worn metal on the running faces",
-        "Add fold geometry and a cloth strip with sheen to the banners"
+        "Give the tank hull metallic edge wear and lower roughness on scuffs",
+        "Make crystals translucent with a brighter core and specular facets",
+        "Add a cobble or packed-earth texture with tyre ruts to the ground; make finials metallic gold",
+        "Give windows a recessed pane with a gradient glow and a mullion with depth",
+        "Shift the ground slab to a different hue and roughness from the wall stone (packed earth or darker paving)",
+        "Raise metalness and add edge highlights on the tank, with darker rubber or steel tracks",
+        "Add emissive falloff and a lighter core to the crystals",
+        "Add a second timber tone for the porch posts",
+        "Give the crystals emissive cores and a lighter rim so they read as a glowing resource",
+        "Add a metallic specular lobe to tank hull edges and tracks",
+        "Vary roof tile tint per tile row to break the uniform red"
       ]
     },
     "detail": {
-      "score": 5.5,
-      "reason": "panel-1: LOD0 has real shingles, coursed stone blocks, window muntins, timber framing, track wheels and rivets on the tank, crates and sandbags. It holds up at RTS zoom but not in a close-up: soldiers are lumpy primitives, the plinth and walls are plain boxes with panel lines only, the porch interior is a dark void, and the tower door and arrow slits are flat insets. The detail heatmap shows triangle density spread evenly over flat walls instead of concentrated on the hero features. | panel-2: Up close the stone coursing, half-timber posts, shingle rows, tank road wheels and sandbags hold up reasonably at third-person distance. The soldiers are crude peg figures with ball heads and no readable faces, hands or kit. The tank has almost no hatches, tools, bolts or vision blocks. Doors, sills, gutters and downpipes are missing on the hall, and the crystal node has no base debris or extraction hardware. | panel-3: The detail heat map shows density concentrated on the hall walls and roof, while the ground, which is most of the frame, is nearly empty. Stone coursing, tile rows, window mullions, tank bolts, sandbags and crates are present and at a sane scale. In close-up (raking_detail.png) it does not hold: the grey roof patches are arbitrary flat rectangles, the streaks under the sills are crude vertical wedges, the door is a plain plank panel, there are no gutters, downpipes, hinges, lamps, cables or signage, the infantry have no faces, gear straps or hands, and 148k triangles buy surprisingly little visible detail.",
+      "score": 6.2,
+      "reason": "panel-1: Good density on the building: individual roof shingles with missing tiles, stone coursing, window frames with mullions, timber posts, a plinth course, sandbags, crates and barrels. The tank has tracks, road wheels and hatches. Weak spots: soldiers are blank-faced pegs, banners are flat planes, the portico interior is a dark void, and the sun emblem is a featureless disc. | panel-2: For an RTS set the density is good: individual roof tiles with missing ones, stone coursing, half-timber framing, window surrounds, banner fringe, tank hatches and tracks, sandbags, crates, barrels, a rutted road and tyre track decals. In the close-up the infantry carry packs and rifles but have no faces or hands, the hall has no door hardware, gutters or chimney, the wall panels repeat exactly, and the ground away from the road is a blank slab. | panel-3: Good density for an RTS base at LOD0: individual roof tiles, stone coursing, window mullions and sills, tank road wheels and hatches, soldiers with packs and rifles, sandbag stacks, crates, a fuel drum cluster and a cobbled road. Up close the soldiers are crude, the banner hangs without folds, and the wall coping is plain; the hall rear is bare.",
       "fixes": [
-        "Model the porch interior: double door, steps with nosings and lanterns on the columns",
-        "Add window sills, lintels and quoins at the building corners and tower base",
-        "Give soldiers helmets, rifles with slings and boots as separate forms instead of capsule stacks",
-        "Sculpt the soldiers with helmets, faces, gloves and webbing pouches",
-        "Add commander and driver hatches, tow hooks, a tool rack and track guards to the tank",
-        "Add gutters, downpipes, door hardware and window sills to the hall",
-        "Add a harvester pad or scattered shards at the base of the crystal node",
-        "Replace the random grey roof rectangles with slipped/missing tiles showing battens, plus ridge tiles, gutters and downpipes at the eaves",
-        "Add door ironwork (strap hinges, handle, studs), lintels and sills in relief, wall lamps by the entrance and a faction crest in relief rather than a flat yellow disc",
-        "Dress the yard: tyre ruts, oil stains, cable runs, fuel drums with bands, ammo boxes with stencils, a radio mast, floodlights",
-        "Give infantry helmets, webbing, pouches, boots and a modelled rifle with stock and magazine",
-        "Add tank tools, tow cable, hatches with hinges, exhausts and track links that read individually at LOD0"
+        "Add faces, webbing and rifle detail to infantry",
+        "Give banners a faction emblem and cloth folds",
+        "Model a door with planks and hardware inside the portico; emboss the gable emblem",
+        "Add helmet rims, faces and hands to the infantry at LOD0",
+        "Add door ironwork, a lantern and a gutter line to the hall",
+        "Break the wall with a damaged or capped section and vary the panel joints",
+        "Scatter ground detail: paving joints, grass tufts at the wall base, puddles, a few stones",
+        "Add cloth folds to the banners and a fringe/emblem",
+        "Add downpipes, chimney and a rear door/loading bay to the hall",
+        "Give soldiers helmets with a brim and readable weapon shapes"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "panel-1: There is an attempt: grey missing-shingle squares on the roof, dark streaks under windows, some tank dirt. But the roof patches are evenly scattered identical grey squares that read as a pattern, not damage, and the window streaks are sharp-edged pointed shapes that read as icicles. No moss at the wall base, no chipped stone edges, no track ruts in the gravel, no dust on the tank lower hull. The perimeter walls and ground slab are perfectly clean. | panel-2: There is some attempt at wear: streaks below the windows, camo weathering on the tank and scattered roof tile breakup. It reads as procedural noise rather than history. The roof squares sit on a regular grid, the streaks look like icicles, and there are no tyre or track marks on the yard even though a tank is parked there. The walls have no chips, and grime does not collect at the wall base or tower plinths. | panel-3: There is some story: replaced grey roof tiles, drip streaks below the sills, darker stone at the tower base, chipped red paint on the tank and worn track ruts in the gravel. It is thin and mechanical: the streaks are identical wedges repeated under every window, the roof patches are uniformly scattered, the ground and perimeter walls are clean and uniform, the banners are pristine, and there is no dirt build-up where walls meet ground, no moss, soot, tyre marks or damage from use.",
+      "score": 6,
+      "reason": "panel-1: Some story: missing roof tiles, rust staining on the tank, dirt at the building base, dark streaks on stone. But the concrete barriers and ground are pristine, no tyre tracks lead to the tank, the crystal node has no mining debris or scorching, and the stone is evenly clean. | panel-2: There is deliberate story: missing and slipped roof tiles, streak stains under the windows, mud on the tank's lower hull, chipped red paint on the turret, ruts and a curved track mark on the ground, sandbags and supply crates. It stays even and mild: the walls are clean near the base, banners are pristine apart from the fringe, the perimeter wall has no damage, and nothing records which way the weather or the traffic comes from. | panel-3: Missing and slipped roof tiles, rusted tank hull lower edges, streaking under windows, darkened wall bases, tire tracks across the yard and a cracked rock under the crystals tell a used, garrisoned base. Paved yard and perimeter wall are a little too clean.",
       "fixes": [
-        "Cluster missing shingles near the eaves and ridge with exposed battens, and drop the even grey-square scatter",
-        "Replace the pointed streak meshes with soft vertex-colour rain streaks that fade downward",
-        "Add mud and dust on the tank lower hull and tracks, track ruts on the gravel path, and grime/moss along the wall bases",
-        "Add track ruts and oil stains on the gravel and paving leading to the tank bay",
-        "Darken the AO and grime at wall bases, tower plinths and under eaves, and chip the edges of the wall caps",
-        "Randomise where the replaced roof tiles fall (clustered near the ridge and eaves) and vary their tone",
-        "Vary drip streaks per window by seed (length, width, opacity) and soften them into the stone instead of hard wedges",
-        "Add ground-contact grime: a dark splash band along the wall base, mud near the gravel road, oil under the tank parking spot",
-        "Chip and stain the perimeter wall tops and corners; crack one or two blocks",
-        "Fray and fade the banner hems, add soot above the chimney/vents and moss or lichen on the north roof slope",
-        "Cluster roof repairs in one or two areas rather than even scatter, and sag the ridge slightly"
+        "Add tyre/track ruts from the tank bay across the yard",
+        "Stain and chip the barriers; add moss and water streaks under the tower windows",
+        "Scatter mined crystal shards and dust around the resource node",
+        "Add splash dirt and moss at the base of the hall and towers",
+        "Fade and tear one banner",
+        "Chip a corner of the perimeter wall and stain it below the coping",
+        "Darken the ground in front of the door and around the tank bay with oil and foot traffic",
+        "Add soot above a chimney or the lit windows",
+        "Add oil stains and track ruts where the tank is parked",
+        "Chip the wall coping corners and add moss/dirt at the wall base"
       ]
     },
     "lod": {
-      "score": 6.5,
-      "reason": "panel-1: LOD2 at 3,894 triangles keeps the outline, towers, porch, banners, tank, soldiers and crystal node, and the colour blocks hold. Losses at the switch are visible but small at RTS distance: tower stone coursing and the gable's gold sun emblem disappear, windows lose muntins, the roof's grey patches vanish, and the tower cones turn lighter and smoother. | panel-2: LOD2 keeps the outline, the red roof, the towers, the banners, the tank and the crystal blocks, with no colour shift. The hall loses its stone coursing and half-timber posts, so the walls go flat beige. The roof loses its tile breakup, and the window mullions turn into plain yellow rectangles. The building visibly flattens at the switch, which would show at RTS zoom-in distances. | panel-3: LOD2 at 3.9k triangles keeps the overall mass, red roofs, tower caps, yellow windows, banners, tank and crystal colour blocks, so at RTS distance the switch is acceptable. Visible losses: the yellow gable disc disappears entirely, tower finials and the flag vanish, the grey roof patches go so the roof shifts to a cleaner, more saturated red, timber framing and the dark plinth are simplified so the facade turns lighter and flatter, window mullions drop and the windows become larger plain yellow cards, and the curved track path at the porch becomes a straight strip.",
+      "score": 6.8,
+      "reason": "panel-1: LOD2 at 3.9k keeps the outline, roof colour, towers, banners, tank, squad and crystals; the switch would be near-invisible at RTS camera distance. Losses: windows become flat yellow rectangles without frames, tower stone coursing and timber framing vanish, roof becomes a flat red plane, and the gable sun disc disappears. | panel-2: LOD2 at 3.9k keeps the full outline and every colour block: red roofs, stone hall, banners, tank with red turret top, squad, crystals, road and walls. Losses that would show: the gold emblem disc on the gable and the tower finials vanish, the half-timber framing and gable trim on the front disappear leaving a flat wall, the windows change from mullioned frames to bare orange rectangles of a different shape, the crystal cluster drops from many shards to a few and the rock shrinks, and the wall loses its coping shape. | panel-3: LOD2 at 3.9k keeps every major silhouette and colour block: towers, roof, porch, banners, windows (now flat yellow squares), tank, troops, crystals and walls. The roof gable glyph and tower finials drop and the stone texture flattens, but at RTS distance the switch is near invisible.",
       "fixes": [
-        "Keep the gold gable emblem as a low-poly disc at LOD2; it is a faction marker",
-        "Bake the stone coursing and roof patches into vertex colour at LOD2 so the value pattern does not pop",
-        "Keep the half-timber posts as cheap boxes at LOD1 and LOD2; they cost a few triangles and carry the facade rhythm",
-        "Bake the stone coursing into the LOD2 vertex colour or trim UVs so the walls do not go flat beige",
-        "Keep the gable emblem as a single flat disc at LOD2 since it is a large high-contrast colour block",
-        "Bake the roof patch value into LOD2 vertex colour so the roof does not turn cleaner and redder",
-        "Keep tower finials and the flag as 2-4 triangle slivers, and keep the timber posts as vertex-colour bands on the wall",
-        "Match LOD2 window size to the LOD0 opening and keep the curved apron outline with a few segments"
+        "Bake stone coursing and timber framing into LOD2 vertex colour/texture",
+        "Keep the gable emblem as a flat decal at LOD2",
+        "Keep the gable emblem as one coloured quad or vertex-colour disc at LOD2",
+        "Keep the finials as a single thin prism each",
+        "Paint the timber frame and gable trim into LOD2 vertex colour",
+        "Match LOD2 window size and position to the LOD0 openings",
+        "Keep the largest five crystals and the full rock footprint",
+        "Keep the tower finials as single spikes at LOD2 since they break the skyline",
+        "Bake mullion lines into the LOD2 window quads so the windows do not turn into plain yellow squares"
       ]
     },
     "technical": {
       "score": 6,
-      "reason": "panel-1: QA is clean. But 148k triangles at LOD0 for an RTS base, which will be seen from high above, is heavy, and the density heatmap shows triangles spread over flat stone walls and ground rather than on the silhouette features. LOD1 at 35k is still large for RTS use. LOD2 at 3.9k is sensible. | panel-2: QA is clean and the LOD ratios (148k to 35k to 3.9k) are sensible. But 148k triangles at LOD0 is very heavy for an RTS base seen mostly from a high camera. Much of it is probably spent on shingles and stone blocks, while the tank, soldiers and crystals stay crude. | panel-3: QA is clean and the LOD ladder (148k / 35k / 3.9k) has sensible ratios. But 148k triangles at LOD0 for an RTS diorama of this visual fidelity is poorly spent: the heat map shows density packed into wall coursing and tiles that read as texture from any gameplay distance, while the infantry, ground and props that need form are starved. LOD2 at 3.9k is reasonable for the whole set, though a single hall plus units would normally ship as separate assets with their own pivots.",
+      "reason": "panel-1: QA clean and the LOD2 budget is excellent for an RTS building. But 130k triangles at LOD0 is very heavy for a piece seen from a strategy camera; much is spent on individual shingles and stone blocks that read as texture at play distance, while infantry remain crude. | panel-2: QA is clean and the LOD2 budget is right for an RTS set. But 130k triangles at LOD0 is heavy for a scene seen from an RTS camera: the detail map shows density saturated across the whole hall and walls, much of it in individually modelled roof tiles and stone courses that could be texture, while the infantry that players look at are crude. The 34:1 drop from LOD0 to LOD2 leaves a large jump for LOD1 to cover. | panel-3: QA clean. LOD2 is excellent value. LOD0 at 130k triangles is heavy for a single RTS building that will be seen from a high camera; many triangles go into individual roof tiles and wall stones that are mostly sub-pixel at gameplay zoom, and LOD1 at 33k is still large.",
       "fixes": [
-        "Cut LOD0 toward 60-80k by moving stone-block and shingle relief to the normal map, keeping geometry for the silhouette, the porch and the tank",
-        "Bring LOD1 to about 12-15k by dropping individual shingles and soldier detail",
-        "Cut the roof shingles to trim-sheet strips at LOD0 and move that triangle budget into the soldiers, the tank and the crystal node",
-        "Aim for about 60-80k triangles at LOD0 for a diorama this size",
-        "Move stone coursing and tile rows from geometry to the trim sheet normal/height and cut LOD0 to roughly 60-80k, spending the savings on infantry, tank and yard props",
-        "Split the faction into separately pivoted parts (hall, tank, squad, resource node) so engines can instance and animate them",
-        "Lower LOD1 toward 20k by dropping per-tile and per-block geometry first"
+        "Replace modelled shingles and stone blocks with a normal-mapped trim at LOD0; target ~40k",
+        "Spend the saved budget on infantry silhouettes and the tank turret",
+        "Move roof tiles and stone coursing to the trim sheet normal at LOD0, keeping modelled tiles only at eaves and for the broken ones",
+        "Target roughly 60-80k for LOD0 and spend some of the saving on the infantry",
+        "Instance wall segments and soldiers so they share geometry",
+        "Check that the draw count for moving parts (turret, banners) is within budget",
+        "Replace modelled roof tiles with a tiled texture/normal on LOD0 except along the eaves and ridge, cutting ~40k triangles",
+        "Target LOD1 near 12-15k by gating wall stone geometry"
       ]
     }
   },
   "renders": {
-    "hero.png": "7a322e463fb47229b56e4542485c3e68b61748bacfb2525be0e0c6b7de73edd5",
-    "sheet.png": "0f09278e16abb91789a6e356805ace42fda97f678f3095bb5e487b20c25f835f",
-    "raking.png": "6b627aec484e465e3d401b7e0ea6323bb0dada590eb403b052b8362ff4a77666",
-    "raking_detail.png": "fb0b6ca74a0f815e1c4dc638d4dcfb1befd18438ae7d1a38e93b259cd6761fb0",
-    "lods.png": "ed3b63cb4b2cdf6f9b3fd7f881776daed8f0a371306cbc96f7d96fc596113daf",
-    "silhouette.png": "b436f4613169ed2affc56e7281821d0c262d1db44c429f014c32cc8bee7df49d",
-    "value.png": "c130b1b8ac413efc82ff3909a852805ddf4aa20e845b9c415d584db86d734714",
-    "detail.png": "f458c7bb5955cd4964dd2d3f181afab8c97e387b7f3ace07440f4f8d4cb02bd6"
+    "hero.png": "071bc2703b7d3d0136c131e5d42d1ceca84069f32a43ab8ac99ff2727713a021",
+    "sheet.png": "25411faae79f7725aa54901cfd15bf664148424a74c0d54e984605fe1bf8c5db",
+    "raking.png": "fa05b466d3f76f1c6a407a97f7d92979df78cb50f247a8ba8857286f83dd74a3",
+    "raking_detail.png": "0353a5adfb60aecbf3b07ad2d6c2b7b8dce33eaf0427c0c4a5d4514a9fb66ba4",
+    "lods.png": "810c7f3854c5cb4ca7f6777855410d09eb985b5d4cc2b5e7eac276757c8aaf52",
+    "silhouette.png": "b75f8f977a5403ad25c21c8dcfd8cb11a2f34836b3c1f47da788c8752d0b9ac6",
+    "value.png": "e8c94ad7a991123838f81c443545249c17de6188743e5dd37adea1c661c0357a",
+    "detail.png": "25f897af7afb7ef7e942354e18f65c32de546457c755fd9218bed81ca1f6d04a"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 0.982
+        "iou": 0.983
       },
       {
         "view": "side",
-        "iou": 0.981
+        "iou": 0.973
       },
       {
         "view": "3/4",
-        "iou": 0.989
+        "iou": 0.99
       }
     ],
     "focal": {
-      "peakPart": "hall_pilasters",
+      "peakPart": "deposit_rock",
       "peak": [
-        222,
-        192
+        551,
+        245
       ],
       "focalShare": 0,
       "focalArea": 0,
       "top": [
         {
-          "part": "hall_window_frames",
-          "share": 0.191
+          "part": "ground",
+          "share": 0.225
         },
         {
-          "part": "hall_windows",
-          "share": 0.135
+          "part": "deposit_rock",
+          "share": 0.129
         },
         {
-          "part": "hall_pilasters",
-          "share": 0.121
+          "part": "hall_plinth",
+          "share": 0.096
         }
       ],
       "declared": []
     },
     "rest": {
-      "share": 0.406,
-      "spread": 0.781,
+      "share": 0.426,
+      "spread": 0.776,
       "min": 0.25
     },
     "shape": {
-      "acuteShare": 0.455,
-      "straightShare": 0.558,
-      "taper": 0.786,
-      "shape": "aggressive"
+      "acuteShare": 0.424,
+      "straightShare": 0.568,
+      "taper": 0.789,
+      "shape": "stable"
     }
   },
   "panel": {
     "reviews": [
       {
         "reviewer": "panel-1",
-        "overall": 5.8,
+        "overall": 6,
         "scores": {
-          "silhouette": 6.5,
+          "silhouette": 7,
           "proportions": 6,
-          "materials": 5.5,
-          "detail": 6,
-          "wear": 5,
-          "lod": 7,
-          "technical": 6
-        }
-      },
-      {
-        "reviewer": "panel-2",
-        "overall": 5.2,
-        "scores": {
-          "silhouette": 6,
-          "proportions": 5.5,
-          "materials": 5,
-          "detail": 5.5,
-          "wear": 4.5,
-          "lod": 6,
+          "materials": 6,
+          "detail": 6.2,
+          "wear": 5.5,
+          "lod": 6.8,
           "technical": 5.5
         }
       },
       {
+        "reviewer": "panel-2",
+        "overall": 6.4,
+        "scores": {
+          "silhouette": 7,
+          "proportions": 6.5,
+          "materials": 6.3,
+          "detail": 6.5,
+          "wear": 6,
+          "lod": 6.5,
+          "technical": 6
+        }
+      },
+      {
         "reviewer": "panel-3",
-        "overall": 5.8,
+        "overall": 6.2,
         "scores": {
           "silhouette": 6.5,
           "proportions": 6,
-          "materials": 5.5,
-          "detail": 5.5,
-          "wear": 5,
-          "lod": 6.5,
-          "technical": 6.5
+          "materials": 6.5,
+          "detail": 6,
+          "wear": 6.5,
+          "lod": 7.5,
+          "technical": 6
         }
       }
     ]

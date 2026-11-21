@@ -20,8 +20,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    11484,
-    2558,
+    9780,
+    2592,
     368
   ],
   "drawCalls": [
@@ -116,10 +116,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.2582,
-      "actual": 0.2582,
+      "target": 0.2584,
+      "actual": 0.2584,
       "eligible": "convex-edges",
-      "area": 2.6981,
+      "area": 2.7186,
       "by": {
         "delver_team": {
           "target": 0.16,
@@ -129,15 +129,15 @@
         "delver": {
           "target": 0.28,
           "actual": 0.28,
-          "area": 2.2077
+          "area": 2.2282
         }
       }
     },
     "scratches": {
-      "target": 0.223,
-      "actual": 0.223,
+      "target": 0.2231,
+      "actual": 0.2231,
       "eligible": "up-facing | side-facing ; touched",
-      "area": 0.4521,
+      "area": 0.4522,
       "by": {
         "delver_team": {
           "target": 0.08,
@@ -147,7 +147,7 @@
         "delver_kit": {
           "target": 0.6,
           "actual": 0.6,
-          "area": 0.1243
+          "area": 0.1244
         }
       }
     },
@@ -155,17 +155,17 @@
       "target": 0.75,
       "actual": 0.75,
       "eligible": "ground-near",
-      "area": 1.9162,
+      "area": 1.9127,
       "by": {
         "delver": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 0.8286
+          "area": 0.8241
         },
         "delver_kit": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 1.0876
+          "area": 1.0886
         }
       }
     },
@@ -173,17 +173,17 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 1.5868,
+      "area": 1.5926,
       "by": {
         "delver": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.4811
+          "area": 0.4852
         },
         "delver_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 1.1057
+          "area": 1.1074
         }
       }
     }

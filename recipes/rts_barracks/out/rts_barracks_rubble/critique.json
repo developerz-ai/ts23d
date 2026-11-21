@@ -19,9 +19,9 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Flagstone floor with readable joints; wall stubs read as stone with damp; the fallen slates in the heap are now ash-grey with only small red flecks in hero.png and soot patches spread over the flags (sheet TOP), so nothing reads as fresh paint at hero distance.",
+      "reason": "Flagstone floor with readable joints; wall stubs read as stone with damp; the fallen slates in the heap are ash-pale with small red flecks and soot patches spread over the flags (sheet TOP). Unchanged this round apart from the renderer fix; in hero.png the heap slates read almost white rather than ash-grey.",
       "fixes": [
-        "a little more value variation between ash-buried and half-exposed slates in the heap"
+        "a little more value variation between ash-buried and half-exposed slates in the heap; darken the palest heap slates toward ash-grey"
       ]
     },
     "detail": {
@@ -49,14 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 14.2k / 3.7k / 720 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k.",
+      "reason": "QA PASS: 13.7k / 3.6k / 720 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0/LOD1 slightly down from 14.2k / 3.7k.",
       "fixes": [
         "spend some of the LOD0 budget on the fixes above (chipped arrises, gravel, splintered ends) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "529817b373f2fe49e677e19d1be51d580b7f0c1674a42c29a93500b3595e56ab",
-    "sheet.png": "4a96d7377f72f419a70568dcdb4b377755707347e7f2825ab44f11a9c7c779e4"
+    "hero.png": "43de853e9945cd8f92bb757fda294ce18b4473c7bf7a930d52f85981ab011226",
+    "sheet.png": "726db6b9cafe1af4827a9237d6b12bd918f359edca696f75474da21ffed066a0"
   }
 }

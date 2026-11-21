@@ -3,7 +3,9 @@
 // inside it, the CONCHA bowl, TRAGUS and ANTITRAGUS, a fleshy LOBE. Races change the declared
 // numbers — length, tip elongation, sweep back, droop, thickness, notches — never the structure.
 // Human base (head analysis, Lee Perry-Smith scan): ear top 0.555 H, bottom 0.292 H, so the ear
-// is 0.263 H long and ≈ 0.55 × its length wide.
+// is 0.263 H long and ≈ 0.55 × its length wide. A skull-stage head has its base mesh's ear, a
+// sheet its race's deformer stretches to a film: ear-graft.ts builds the same anatomy (`sheet`)
+// over it, root to tip, at a declared cartilage thickness.
 
 import type { SculptEdit } from '@developerz.ai/ts23d';
 import { dmath } from '@developerz.ai/ts23d';
@@ -66,24 +68,57 @@ function blade(e: EarSpec): { mid: Array<[number, number]>; half: number[] } {
   return { mid, half };
 }
 
-export function earEdits(e: EarSpec): SculptEdit[] {
-  const f = earFrame(e);
-  const { mid, half } = blade(e);
+/** The auricle as a sheet in frame `f`: the cartilage blade along `mid` (u, v) with half-widths
+ *  `half`, the helix rolled round its rim, the antihelix inside it, the concha bowl, notches. */
+export function sheet(
+  f: Frame,
+  mid: ReadonlyArray<readonly [number, number]>,
+  half: readonly number[],
+  e: Pick<EarSpec, 'thick' | 'simple' | 'notches'> & {
+    readonly reach: number;
+    readonly w: number;
+    /** A free-standing leaf: the helix rolled all the way round, down the front edge to the
+     *  root, and the blade a slab of the full thickness out to a round edge (the flattened cones
+     *  thin to a knife edge, which a mesh cell cannot hold: a serrated rim). */
+    readonly leaf?: boolean;
+  },
+): SculptEdit[] {
   const th = e.thick;
   const box = (r: number): [V, V] => [
     [-r, -r, -r],
-    [e.length * (2 + (e.tip ?? 0)) + r, r, r],
+    [e.reach + r, r, r],
   ];
   const g: SculptEdit[] = [];
+  const cones = mid.slice(1).map((b, i) => {
+    const a = mid[i] ?? b;
+    return k.roundCone([a[0], a[1], 0], [b[0], b[1], 0], half[i] ?? th, half[i + 1] ?? th);
+  });
+  if (e.leaf) {
+    const r = th / 2;
+    g.push(
+      local(
+        f,
+        (u, v, w) => {
+          let d = Infinity;
+          for (const c of cones) d = Math.min(d, c(u, v, 0));
+          // The outline extruded ± r and rounded by r: a slab with a half-round edge.
+          const a = d + r;
+          const b = Math.abs(w);
+          return dmath.hypot(Math.max(a, 0), Math.max(b, 0)) + Math.min(Math.max(a, b), 0) - r;
+        },
+        box(e.reach),
+      ),
+    );
+  }
   // Cartilage blade: flattened round cones along the midline, each as wide as the ear there.
-  for (let i = 0; i + 1 < mid.length; i++) {
+  for (let i = 0; !e.leaf && i + 1 < mid.length; i++) {
     const a = mid[i] ?? [0, 0];
     const b = mid[i + 1] ?? [0, 0];
     const ra = half[i] ?? th;
     const rb = half[i + 1] ?? th;
     const sq = Math.max(1, Math.max(ra, rb) / (th * 0.5));
     g.push(
-      local(f, k.roundCone([a[0], a[1], 0], [b[0], b[1], 0], ra, rb), box(e.length), {
+      local(f, k.roundCone([a[0], a[1], 0], [b[0], b[1], 0], ra, rb), box(e.reach), {
         squash: sq,
         blend: th * 0.6,
       }),
@@ -97,7 +132,7 @@ export function earEdits(e: EarSpec): SculptEdit[] {
   };
   const back = mid.map((_, i) => edge(1, i, th * 0.4));
   const front = mid.map((_, i) => edge(-1, i, th * 0.4)).reverse();
-  const rim = spline([...back.slice(1), ...front.slice(1, 4)], 20);
+  const rim = spline([...back.slice(1), ...front.slice(1, e.leaf ? front.length - 1 : 4)], 20);
   if (!e.simple) {
     // Helix: the rolled rim.
     g.push(chain(rim, th * 0.55, { blend: th * 0.5, join: th * 0.3 }));
@@ -117,15 +152,33 @@ export function earEdits(e: EarSpec): SculptEdit[] {
           (half[2] ?? th) * 0.5,
           th * 0.8,
         ),
-        box(e.length),
+        box(e.reach),
         { op: 'subtract', blend: th * 0.5 },
       ),
     );
   }
   for (const n of e.notches ?? []) {
-    const p = rim[Math.round(n.t * (rim.length - 1))] ?? e.root;
-    g.push(ball(p, n.depth * e.length * (e.width ?? 0.55), { op: 'subtract', blend: th * 0.2 }));
+    // (A leaf's notch is bitten out of its trailing edge, centred on the edge itself.)
+    const i = Math.round(n.t * (mid.length - 1));
+    const p = e.leaf ? edge(1, i, 0) : (rim[Math.round(n.t * (rim.length - 1))] ?? f.o);
+    g.push(ball(p, n.depth * e.w, { op: 'subtract', blend: th * 0.2 }));
   }
+  return g;
+}
+
+export function earEdits(e: EarSpec): SculptEdit[] {
+  const f = earFrame(e);
+  const { mid, half } = blade(e);
+  const th = e.thick;
+  const box = (r: number): [V, V] => [
+    [-r, -r, -r],
+    [e.length * (2 + (e.tip ?? 0)) + r, r, r],
+  ];
+  const g = sheet(f, mid, half, {
+    ...e,
+    reach: e.length * (2 + (e.tip ?? 0)),
+    w: e.length * (e.width ?? 0.55),
+  });
   // Root: a flattened knot buried in the side of the head, so the cartilage grows out of it —
   // sized by the root (a human ear's), not by a stylised blade's length.
   const rl = Math.min(e.length, e.rootLength ?? e.length);

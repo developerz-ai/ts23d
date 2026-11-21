@@ -23,9 +23,11 @@ export const rts_faction = defineAsset({
     'Saltmarch Accord sample RTS faction as a compound: barracks, a wedge of three soldiers on the gate road, a light tank on its hardstand, two workers at a claimed sunstone deposit, perimeter wall, sandbags, stores; one team slot (8 liveries).',
   tags: ['rts', 'saltmarch', 'faction', 'scene', 'team-colour'],
   sources: ['recipes/rts_faction/README.md (the style guide this scene checks)'],
-  // Measured 159k / 35k / 4.4k: the sum of the weathered assets plus the ground (true-scale salt
-  // flat, road and ruts), the perimeter and the stores.
-  budget: { triangles: [160000, 36000, 4600] },
+  // Measured 131k / 32.9k / 3.9k: the sum of the weathered assets plus the ground (true-scale
+  // salt flat, road and ruts), the perimeter and the stores. Was 148k (D590): the figures' small
+  // forms at LOD1 rings, the tank's wheels and wear cells and the hall's slates and towers
+  // trimmed where the strategy camera never looks (D596).
+  budget: { triangles: [132000, 34000, 4600] },
   paint: TEAM_PAINT,
   variants: TEAM_VARIANTS,
   build(ctx) {
@@ -35,18 +37,25 @@ export const rts_faction = defineAsset({
     ctx.use(rts_barracks, { prefix: 'hall', at: [-8, 0, 0] });
     // The Brinehound parked on its hardstand, nose to the road gate.
     ctx.use(rts_tank, { prefix: 'tank', at: [PARK.x, PARK.y, 0] });
-    // Three Wardens in a wedge on the gate road, facing out.
-    for (const [i, [x, y]] of [
-      [6.2, 0],
-      [5.0, -1.15],
-      [5.0, 1.15],
+    // Three Wardens in a wedge on the gate road, facing out, each his own stance and glance
+    // (the seed picks it, D597) and squared off a little differently.
+    for (const [i, [x, y, yaw]] of [
+      [6.2, 0, 0.05],
+      [5.0, -1.15, -0.12],
+      [5.0, 1.15, 0.1],
     ].entries())
-      ctx.use(rts_soldier, { prefix: `warden_${i}`, at: [x ?? 0, y ?? 0, 0] });
+      ctx.use(rts_soldier, {
+        prefix: `warden_${i}`,
+        at: [x ?? 0, y ?? 0, 0],
+        yaw: yaw ?? 0,
+        seed: 11 + i,
+      });
     for (let i = 0; i < 2; i++)
       ctx.use(rts_worker, {
         prefix: `delver_${i}`,
         at: [4.4 + i * 1.5, 5.4 + i * 0.5, 0],
-        yaw: 0.9,
+        yaw: 0.9 - i * 0.25,
+        seed: 21 + i,
       });
     ctx.use(rts_resource, { prefix: 'deposit', at: [7.2, 8.3, 0], yaw: -0.8 });
   },

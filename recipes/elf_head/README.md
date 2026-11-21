@@ -24,11 +24,13 @@ collar, a **teal cloak** and a **silver leaf clasp** — cut as a collectible bu
 | expression lines | none (smooth) | some | `lines: 0` |
 
 ## Skull stage (2026-11)
-The head is now the CC0 base warped by `ELF_FACE` (`spec.ts`): ears ×1.7 drawn back and up to a
-point, eyes ×1.15 set ×1.166 (IPD 64 mm), almond tilt +2 % H, cheekbones +2 % H, jaw ×0.85 dropped
+The head is now the CC0 base warped by `ELF_FACE` (`spec.ts`): the ears' tips drawn 0.3 H back and
+up in the ear's own plane (tip 0.15 H over the eye line, between brow and crown, 0.16 H out from
+the skull) and grafted as 36 mm leaves of 4.2 mm cartilage with a rolled helix (`GRAFT`, D573), eyes ×1.15 set ×1.166 (IPD 64 mm), almond tilt +2 % H, cheekbones +2 % H, jaw ×0.85 dropped
 5 % H, slender neck ×0.85; soft planes, no lines (`forms`), no beard shadow. It is checked against
 `ELF_PROPORTIONS` — the human bands with the declared deltas (eyes ×1.15, a longer lower face, a
-slender neck 0.5–0.75 × head breadth). The table above records the earlier primitive head.
+slender neck 0.5–0.75 × head breadth). The bones over it come from `STRUCTURE`: a light brow over
+a soft orbit, lids 2.4 mm thick, high cheekbones (D570–D572; `recipes/_lib/bust/face-check.test.ts`). The table above records the earlier primitive head.
 
 ## Built by
 `spec.ts` (2026-11: the mid-face 3 % shorter, a thinner upper lid, ears held 13° out so the tips

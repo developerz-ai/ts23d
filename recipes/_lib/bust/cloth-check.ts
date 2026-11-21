@@ -3,9 +3,10 @@
 // read its colour there. A point whose outer colour is the skin tone is skin punching through the
 // garment (a fold valley dipping under the skin, cloth thinner than the head pipeline's skin, a
 // paint mask gone wrong). Returns those points so a test can fail on them and name where.
+// `strayPaint`: a garment's paint outside the wear it declares (stains placed by noise, D580).
 
-import type { Field } from '@developerz.ai/ts23d';
-import { dmath } from '@developerz.ai/ts23d';
+import type { Field, SculptEdit } from '@developerz.ai/ts23d';
+import { dmath, sculpt, sculptField } from '@developerz.ai/ts23d';
 import type { Surface, V } from './kit.ts';
 
 export interface SkinCheck {
@@ -56,5 +57,41 @@ export function skinShowing(c: SkinCheck): V[] {
         const d = dmath.hypot(col[0] - c.tone[0], col[1] - c.tone[1], col[2] - c.tone[2]);
         if (d < 0.06) out.push(q);
       }
+  return out;
+}
+
+/** A garment layer for the stray-paint check: its edits and where its paint may sit. */
+export interface PaintedLayer {
+  readonly name: string;
+  readonly color: V;
+  readonly edits: readonly SculptEdit[];
+  /** Where paint may change its colour (≤ 0): trims, seams, grime from its causes. */
+  readonly wear?: Field;
+}
+
+/**
+ * The stray-paint check (D580): a garment's vertices, meshed at `cell`, where its paint moves the
+ * colour more than `tol` (relative luminance) outside the layer's declared `wear`. Stains placed by
+ * noise land on open panels, where nothing dirties cloth: they read as holes in the texture.
+ */
+export function strayPaint(l: PaintedLayer, cell: number, tol = 0.06): V[] {
+  const solid = l.edits.filter((e) => !('op' in e && e.op === 'paint'));
+  const plain = sculptField(solid, { color: l.color, mirror: 'y' });
+  const painted = sculptField(l.edits, { color: l.color, mirror: 'y' });
+  const m = sculpt({ edits: solid, resolution: cell, color: l.color, mirror: 'y' });
+  const lum = (c: V): number => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  const wear = l.wear;
+  const out: V[] = [];
+  for (let i = 0; i < m.positions.length / 3; i++) {
+    const p: V = [
+      m.positions[i * 3] ?? 0,
+      m.positions[i * 3 + 1] ?? 0,
+      m.positions[i * 3 + 2] ?? 0,
+    ];
+    if (wear && wear(p) <= 0) continue;
+    const a = lum(plain.colorAt(p));
+    const b = lum(painted.colorAt(p));
+    if (Math.abs(b - a) > tol * Math.max(a, 1e-3)) out.push(p);
+  }
   return out;
 }

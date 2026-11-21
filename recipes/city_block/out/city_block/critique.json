@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Brick tones vary per building, windows read as framed grids, the asphalt has dashes, edge lines and worn patches, the sidewalk is laid in slabs; the tree crowns now carry a mottled leaf-clump texture instead of the streaky grain, though the faceted crown shapes still read as solid gumdrops; roofs remain one flat colour each.",
+      "reason": "Brick tones vary per building, windows read as framed grids, the asphalt has dashes, edge lines and worn patches; the sidewalk slabs lost the pale diagonal streaks that crossed them and the stucco facade lost the pale lines under each window row (hero.png), so both read cleaner. The faceted tree crowns still read as solid gumdrops and the roofs remain one flat colour each.",
       "fixes": [
         "patches, gravel and vents on each roof membrane",
         "break the tree crown outline with alpha leaf cards or several overlapping clumps so the facets do not read"
@@ -59,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "995cc368bdf41d73bf8dacd63a3dd27608db83103cccafdbb1d3b6ffb88839cc",
+    "hero.png": "2119dfb3eea265125b77867b031271dadc97c71a7d48eda44e2015021051b5f3",
     "sheet.png": "ace9467f02c0687deefcc3d038b2aa597b0d72b0345c38306aff41f3c266f4db"
   }
 }

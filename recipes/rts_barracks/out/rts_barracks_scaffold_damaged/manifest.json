@@ -20,8 +20,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    17152,
-    4622,
+    18328,
+    4062,
     662
   ],
   "drawCalls": [
@@ -127,15 +127,15 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1217,
-      "actual": 0.1217,
+      "target": 0.1221,
+      "actual": 0.1221,
       "eligible": "convex-edges",
-      "area": 586.384,
+      "area": 576.5821,
       "by": {
         "hall_masonry": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 272.4011
+          "area": 262.8963
         },
         "hall_plinth": {
           "target": 0.12,
@@ -145,7 +145,7 @@
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 148.8683
+          "area": 148.5712
         },
         "hall_rubble": {
           "target": 0.32,
@@ -158,18 +158,18 @@
       "target": 0.7,
       "actual": 0.7,
       "eligible": "fasteners | below-fasteners",
-      "area": 4.295
+      "area": 4.6278
     },
     "moss": {
-      "target": 0.4405,
-      "actual": 0.4405,
+      "target": 0.4404,
+      "actual": 0.4404,
       "eligible": "ground-near & !down-facing ; ground-near & side-facing",
-      "area": 166.2065,
+      "area": 164.5951,
       "by": {
         "hall_masonry": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 101.5657
+          "area": 100.014
         },
         "hall_plinth": {
           "target": 0.4,
@@ -179,20 +179,20 @@
         "hall_render": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 33.1773
+          "area": 33.1176
         }
       }
     },
     "mud": {
-      "target": 0.5392,
-      "actual": 0.5392,
+      "target": 0.5391,
+      "actual": 0.5391,
       "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near",
-      "area": 146.302,
+      "area": 144.7503,
       "by": {
         "hall_masonry": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 107.1826
+          "area": 105.6309
         },
         "hall_plinth": {
           "target": 0.5,
@@ -210,7 +210,7 @@
       "target": 0.4865,
       "actual": 0.4865,
       "eligible": "up-facing",
-      "area": 277.3344,
+      "area": 277.2007,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -225,7 +225,7 @@
         "hall_render": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 33.2087
+          "area": 33.075
         },
         "hall_rubble": {
           "target": 0.45,

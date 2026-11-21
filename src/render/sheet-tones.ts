@@ -16,10 +16,10 @@ import {
   STRIP_ROWS,
   sheetFor,
 } from '../material/index.ts';
-import { chain, type Mip, SRGB, sample } from './texture.ts';
+import { chain, type Mip, SHEET_CELLS, SRGB, sample, sheetRegion } from './texture.ts';
 
 /** Cells per sheet row (1/16 of the sheet each), in the rows above the strips. */
-const CELLS = 16;
+const CELLS = SHEET_CELLS;
 const CELL_ROWS = Math.round((1 - STRIP_ROWS * STRIP_H) * CELLS);
 
 export interface SheetTones {
@@ -115,23 +115,12 @@ export function albedoAt(
 ): void {
   const L = Math.max(0, Math.min(t.albedo.length - 1, level));
   const s = t.albedo[L]?.size ?? t.sheet.size;
-  const r = Math.max(0, Math.floor(v / STRIP_H));
-  const strip = r < STRIP_ROWS;
-  const cr = Math.min(CELL_ROWS - 1, Math.floor((v - STRIP_ROWS * STRIP_H) * CELLS));
-  const v0 = strip ? r * STRIP_H : STRIP_ROWS * STRIP_H + cr / CELLS;
-  const tall = strip ? STRIP_H : 1 / CELLS;
-  if (tall * s < 2) {
+  if (sheetRegion(u, v).tall * s < 2) {
     toneAt(t, u, v, out);
     return;
   }
-  const half = 0.5 / s;
-  let su = u;
-  if (!strip) {
-    const uu = u - Math.floor(u);
-    const u0 = Math.floor(uu * CELLS) / CELLS;
-    su = Math.min(u0 + 1 / CELLS - half, Math.max(u0 + half, uu));
-  }
-  sample(t.albedo, L, su, Math.min(v0 + tall - half, Math.max(v0 + half, v)), TAP);
+  // `sample` keeps the tap inside the strip row or cell holding (u, v).
+  sample(t.albedo, L, u, v, TAP);
   out[0] = TAP[0] ?? 1;
   out[1] = TAP[1] ?? 1;
   out[2] = TAP[2] ?? 1;
