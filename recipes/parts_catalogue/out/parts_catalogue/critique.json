@@ -19,10 +19,11 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Wood strips, rust on the drum and beam, rubber tyre and a frosted window read; the sheet now shows wood grain on the floor and crate and the window is see-through; the crane post is still a plain dark green and the floor tone barely varies.",
+      "reason": "Wood strips, rust on the drum and beam, rubber tyre and a frosted window read; the tan fringe line along the back edge of the floor board is gone (hero.png, right) and the table and crate edges hold their own wood. The crane post is still a plain dark green, green specks still sit along the I-beam flange, and the floor tone barely varies.",
       "fixes": [
         "a painted-steel finish on the crane post",
-        "more tone variation on the floor boards"
+        "more tone variation on the floor boards",
+        "rust-brown instead of green flecks on the I-beam flange"
       ]
     },
     "detail": {
@@ -55,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "4e9d08e322891fcfa142e2b9af483df14a18a0ae81984c80b6a8762a0d5cc18b",
+    "hero.png": "16a2550466c7f20921fdd471afd4bb66f03cf0968659b5243b7a3f652dbf4ffa",
     "sheet.png": "727f54639ee864645b1ecb042284617c7ffbf089f6c1360b511693a66173bce1"
   }
 }

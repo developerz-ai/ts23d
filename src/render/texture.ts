@@ -1,10 +1,14 @@
-// The trim sheet as the beauty renderer samples it: albedo (linear, alpha), tangent-space normal
-// and ORM, each as a box-filtered mip chain, sampled bilinearly — U repeats (strips tile), V clamps
-// (rows never bleed). The mip level is chosen per triangle by the caller (texel ÷ pixel footprint).
-// Albedo mips are cutout-safe (alpha-mips.ts): thin strands stay strands instead of eroding away.
+// The trim sheet as the renderers sample it: albedo (linear, alpha), tangent-space normal and ORM,
+// each as a box-filtered mip chain, sampled bilinearly inside the strip row or cell that holds the
+// UV: U repeats along a strip, V is clamped half a texel inside its row (a cell clamps U too), and
+// the level never goes coarser than the one holding two texel rows of it. A 2×2 box never
+// straddles a row while the row is 2+ texels tall, so no row ever reads its neighbour (D600: a
+// plain bilinear tap at a band's edge, at mip 4 of a 2048² sheet, was half `glass` / `oak`). The
+// level is chosen per triangle by the caller (texel ÷ pixel footprint). Albedo mips are
+// cutout-safe (alpha-mips.ts): thin strands stay strands instead of eroding away.
 
 import { dmath } from '../core/index.ts';
-import type { PaintedSheet } from '../material/index.ts';
+import { type PaintedSheet, STRIP_H, STRIP_ROWS } from '../material/index.ts';
 import { keepCoverage, weighted } from './alpha-mips.ts';
 
 /** One level of a mip chain. */
@@ -75,8 +79,51 @@ export function sheetTextures(sheet: PaintedSheet): SheetTextures {
   return t;
 }
 
-/** Bilinear sample of mip `level` at (u, v) into out[0..3]. */
+/** Cells per sheet row (1/16 of the sheet each), in the rows above the strips. */
+export const SHEET_CELLS = 16;
+const CELL_V0 = STRIP_ROWS * STRIP_H;
+const CELL_ROWS = Math.round((1 - CELL_V0) * SHEET_CELLS);
+
+/** The strip row or cell of the sheet that holds (u, v): its V start and height, and its U start
+ *  (undefined for a strip row, which tiles along U). */
+export interface SheetRegion {
+  readonly v0: number;
+  readonly tall: number;
+  readonly u0: number | undefined;
+}
+
+/** Which strip row (V below the sheet: the first) or cell (above it: the top row) holds (u, v). */
+export function sheetRegion(u: number, v: number): SheetRegion {
+  const r = Math.max(0, Math.floor(v / STRIP_H));
+  if (r < STRIP_ROWS) return { v0: r * STRIP_H, tall: STRIP_H, u0: undefined };
+  const cr = Math.min(CELL_ROWS - 1, Math.floor((v - CELL_V0) * SHEET_CELLS));
+  const cu = Math.floor((u - Math.floor(u)) * SHEET_CELLS);
+  return { v0: CELL_V0 + cr / SHEET_CELLS, tall: 1 / SHEET_CELLS, u0: cu / SHEET_CELLS };
+}
+
+const clamp = (x: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, x));
+
+/**
+ * Sample the trim sheet's mip `level` at (u, v) into out[0..3]: bilinear inside the strip row or
+ * cell holding (u, v), at most as coarse as the level that keeps two texel rows of it.
+ */
 export function sample(
+  mips: readonly Mip[],
+  level: number,
+  u: number,
+  v: number,
+  out: Float32Array,
+): void {
+  const { v0, tall, u0 } = sheetRegion(u, v);
+  let L = clamp(level, 0, mips.length - 1);
+  while (L > 0 && tall * (mips[L]?.size ?? 0) < 2) L--;
+  const half = 0.5 / (mips[L]?.size ?? 1);
+  const su = u0 === undefined ? u : clamp(u - Math.floor(u), u0 + half, u0 + tall - half);
+  bilinear(mips, L, su, clamp(v, v0 + half, v0 + tall - half), out);
+}
+
+/** Bilinear sample of mip `level` at (u, v) into out[0..3]: U repeats, V clamps to the image. */
+function bilinear(
   mips: readonly Mip[],
   level: number,
   u: number,

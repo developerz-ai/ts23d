@@ -98,7 +98,7 @@ import {
   scaffoldWreck,
 } from './site.ts';
 import { emblem, FLOOR, floor, STAIN, type Stain } from './surface.ts';
-import { plinth, walls } from './walls.ts';
+import { plinth, WINDOW_LIGHT, walls } from './walls.ts';
 import { groundStains, hod, sheerLegs, slabChunks } from './yard.ts';
 
 /** Materials: dressed stone, lime plaster, oak timber, tarred gate planks, weathered scaffold
@@ -320,8 +320,12 @@ const hall = defineFamily({
   budget: { triangles: [52000, 9500, 1200] },
   paint: TEAM_PAINT_WORN,
   variants: TEAM_VARIANTS,
-  // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
-  glow: [{ parts: ['windows', 'oculus', 'beacon_*', 'lamp_glow'], color: GLOW, strength: 1.2 }],
+  // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white. Windows are
+  // lamplit rooms behind glass, dimmer than a lamp (D594).
+  glow: [
+    { parts: ['windows'], color: WINDOW_LIGHT, strength: 1.0 },
+    { parts: ['oculus', 'beacon_*', 'lamp_glow'], color: GLOW, strength: 1.2 },
+  ],
   defaults: { stage: 'complete' as Stage, damage: 'intact' as Damage },
   build(ctx, p) {
     const lod = ctx.lod;
@@ -369,7 +373,6 @@ const hall = defineFamily({
     const damp = (top: number) => (m: Mesh) =>
       band(m, { top, full: PLINTH + 0.05, color: DAMP, k: 0.5 }, 0.12);
     if (w.walls) add('walls', w.walls, {}, zones, damp(PLINTH + 1.0));
-    if (w.stains) add('wall_stains', w.stains, {}, zones);
     if (w.trim) add('pilasters', w.trim, {}, zones, damp(PLINTH + 1.0));
     if (w.frames) add('window_frames', w.frames, {}, zones);
     if (w.windows) add('windows', w.windows);

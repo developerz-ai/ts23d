@@ -5,8 +5,9 @@
 // vertex colour, so one strip serves every colour of that cloth (no dividing a dye by the strip's
 // own colour, as tinting the natural `canvas` strip needed).
 //
-// Custom rows are per asset (docs/architecture/materials.md): these hold rows 7, 10 and 11,
-// clear of the skin strips (12, 13) and the hair card strip (1) a bust also maps onto.
+// Custom rows are per asset (docs/architecture/materials.md): these hold rows 2, 7, 10 and 11,
+// clear of the skin strips (12, 13) and the hair card strip (1) a bust also maps onto. `HIDE` is
+// a vest's leather (the library's leather painter) on the same near-white ground.
 
 import { defineMaterial, hex } from '@developerz.ai/ts23d';
 
@@ -56,3 +57,23 @@ export const LINEN = defineMaterial({
 
 /** The strips' own albedo (linear): for a recipe that still tints by division at a far LOD. */
 export const CLOTH_ALBEDO = hex('#f2efe9');
+
+/** Hide for a vest or a strap: the leather painter's pebble grain and fine creases on a near-white
+ *  ground, dyed by vertex colour, with none of the library leather's creases or burnished patches. A
+ *  garment's strip is laid per triangle (cloth-tone.ts), and those 30 cm patches, read at a
+ *  different offset on each projection plane, broke a vest into a patchwork of pale and dark
+ *  triangles; its wear is the garment's own, from its causes (cloth-grime.ts). Row 2 (the
+ *  library's `fur`, which no bust wears): clear of the skin strips' rows (0, 3, 5, 6, 8, 9, 12,
+ *  13), the hair's (1, 4) and the cloth's. */
+export const HIDE = defineMaterial({
+  id: 'bust_hide',
+  row: 2,
+  kind: 'leather',
+  scaleMetres: 0.5,
+  roughness: 0.6,
+  albedo: '#f0ebe4',
+  albedo2: '#bdb2a4',
+  params: { pebble: 0.003, creases: 0, wear: 0, relief: 0.55, cavity: 0.3, cavityRough: 0.1 },
+  description: 'Hide: pebble grain and fine creases, no broad wear; dyed by vertex colour.',
+  sources: SOURCES,
+});

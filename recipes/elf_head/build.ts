@@ -8,13 +8,15 @@
 
 import { type BuildContext, hex, sculpt } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
+import { earGraft } from '../_lib/bust/ear-graft.ts';
+import { structureEdits } from '../_lib/bust/face-forms.ts';
 import { mix } from '../_lib/bust/hair.ts';
 import { buildDressedBust } from '../_lib/bust/layers.ts';
 import { armCut } from '../_lib/bust/torso.ts';
 import { cardHair } from '../_lib/face/hair-cards.ts';
 import { clasp, hiddenBody, outfitEdits, outfitLayers } from './clothes.ts';
 import { CAP, elfCardHair, farHair, hairBaseEdits, hairline } from './hair.ts';
-import { C, CHARACTER, EAR, EYE, L, NECK, SPEC, TORSO } from './spec.ts';
+import { C, CHARACTER, EAR, EYE, GRAFT, L, NECK, SK, SPEC, STRUCTURE, TORSO } from './spec.ts';
 import { bodyEdits } from './torso.ts';
 
 /** The scalp paint under the cards: the cap's gold in deeper shade (a parting reads as depth). */
@@ -59,6 +61,13 @@ export const ELF_BUST: BustRecipe = {
   pores: true,
   finish: 'skin',
   body: () => bodyEdits(),
+  // The bones and the lids over the soft base (D570–D572).
+  features: (_stage, skin, lod) => [
+    ...structureEdits(SK, EYE, SPEC.H, skin, STRUCTURE, lod),
+    // The ears as leaf blades of real thickness (D573); LOD1's 1.1 cm cell holds a plain one
+    // no thinner than itself.
+    ...earGraft(SK, lod === 0 ? GRAFT : { ...GRAFT, thick: 0.012, simple: true }),
+  ],
   hair: hairBaseEdits,
   outfit: outfitEdits,
   extras: (ctx, skin) => ({

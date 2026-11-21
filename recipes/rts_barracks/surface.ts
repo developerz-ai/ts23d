@@ -1,8 +1,8 @@
 // Warden Hall surfaces that carry the story at RTS-hero distance: the hall floor as laid
 // flagstones (each its own tone, scorched, ash-drifted or mud-trodden where the stage says), the
-// team chevron painted onto those flags (worn: every flag's piece its own shade, some flaked off),
-// and stain decals on wall faces (rain streaks under the sills, fading down the wall). All colour
-// is decided here per flag or per vertex, so it reads in the sheet's flat colour and in the hero.
+// team chevron painted onto those flags (worn: every flag's piece its own shade, some flaked off).
+// Wall stains live on the stones themselves (rain.ts). All colour is decided here per flag or per
+// vertex, so it reads in the sheet's flat colour and in the hero.
 
 import {
   applyAffine,
@@ -232,48 +232,4 @@ export function emblem(
       );
     }
   return applyAffine(merge(out), frame([1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, FLOOR - 0.002]));
-}
-
-/**
- * A rain streak down a wall face from `top` (plan point on the face, z), `w0` wide there and `w1`
- * at its foot `len` below: a 4 mm decal, dark at the top and fading to the stone tone `to`.
- * `along` runs with the wall, `out` is the face's outward normal.
- */
-export function streak(
-  top: Vec3,
-  along: Vec3,
-  out: Vec3,
-  o: {
-    readonly w0: number;
-    readonly w1: number;
-    readonly len: number;
-    readonly from: Vec3;
-    readonly to: Vec3;
-  },
-): Mesh {
-  const profile: Vec2[] = [
-    [-o.w0 / 2, 0],
-    [-o.w1 / 2, -o.len],
-    [0, -o.len * 1.08],
-    [o.w1 / 2, -o.len],
-    [o.w0 / 2, 0],
-  ];
-  const slab = prism({ profile, depth: 0.004, plane: 'xz', color: o.from, strip: 'concrete' });
-  const shaded = recolourZ(slab, (z) => mix(o.from, o.to, dmath.pow(Math.min(1, -z / o.len), 0.8)));
-  // Local x along the wall, local y out of it, z up: keep the frame right-handed.
-  const up: Vec3 = [0, 0, 1];
-  const c: Vec3 = [
-    along[1] * out[2] - along[2] * out[1],
-    along[2] * out[0] - along[0] * out[2],
-    along[0] * out[1] - along[1] * out[0],
-  ];
-  const x: Vec3 = c[2] * up[2] >= 0 ? along : [-along[0], -along[1], -along[2]];
-  const at: Vec3 = [top[0] + out[0] * 0.003, top[1] + out[1] * 0.003, top[2]];
-  return applyAffine(shaded, frame(x, out, up, at));
-}
-
-function recolourZ(m: Mesh, f: (z: number) => Vec3): Mesh {
-  const colors = new Float32Array(m.colors.length);
-  for (let i = 0; i < colors.length; i += 3) colors.set(f(m.positions[i + 2] ?? 0), i);
-  return { ...m, colors };
 }

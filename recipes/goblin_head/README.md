@@ -25,7 +25,7 @@ scarf** — cut as a collectible bust on a turned plinth.
 ## Skull stage (2026-11)
 The head is now the CC0 base warped by `GOBLIN_FACE` (`spec.ts`): vault ×1.12 high and ×1.14 wide,
 eyes ×1.45 (orbit, lids, ball) set ×1.28, nose ×2.8 projecting and hooked 5 % H, mouth ×1.4, chin
-receding ×0.7, ears ×2.6 swung out 60°, thin neck ×0.8; hard planes and deep lines (`forms`), the
+receding ×0.7, ears swung 48° out with the tips drawn 0.56 H out and back in the ear's own plane and grafted as 44 mm leaves of 5.5 mm cartilage (`GRAFT`, D574), thin neck ×0.8; a heavy brow shelf over deep orbits, lids 3 mm thick, knobbly cheekbones (`STRUCTURE`, D570–D572); hard planes and deep lines (`forms`), the
 grin's teeth, worried brow and warts (`features.ts`) placed on the skull's landmarks. It is checked
 against `GOBLIN_PROPORTIONS` — the human bands with each delta declared and justified. The table
 above records the earlier primitive head.
@@ -35,8 +35,8 @@ above records the earlier primitive head.
 flat bony chest, the body sat 2.2 cm higher under the head, `LT`), `features.ts` (the `teeth` part,
 LOD0/1: small pointed upper teeth each its own length, lean and stain hanging over the lower lip,
 and two short lower fangs — small curved tusks, the lower lip swollen round their bases — rising
-in front of the upper lip: the underbite; sculpted cones finer than the head cell had vanished, worried brow creases, six warts each its own size, the ear tips' cartilage
-edge, the far LOD's ear blades), `hair.ts` (wisps), `clothes.ts` (the outfit as layers) and
+in front of the upper lip: the underbite; sculpted cones finer than the head cell had vanished, worried brow creases, six warts each its own size, the lips as rolls round the mouth's dark gap (D576), the ears' leaves,
+the far LOD's ear blades), `hair.ts` (wisps), `clothes.ts` (the outfit as layers) and
 `creases.ts` (the intended folds as ≤ 3 cm regions from the same geometry) on the shared bust
 library `../_lib/bust/`. Eye `socket` joints as on every bust.
 

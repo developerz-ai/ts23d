@@ -1,12 +1,14 @@
 // Elf bust spec: the measured human anchor (docs/research/head-analysis.md) with the elf's declared
 // exaggerations — slender: cranium width ×0.94, jaw (bigonial) ×0.85, chin pointed and forward;
 // high cheekbones ×1.35; refined narrow nose ×0.8; eyes a touch larger, wider set and almond
-// (lid line tilted +10°); ears with the human ear's structure and the helix drawn out to a long
-// point swept back and up (total length ×2.3 the human ear).
+// (lid line tilted +10°); ears with the human ear's structure, the helix drawn out to a point
+// swept back and up to between the brow and the crown, grafted as a leaf of real cartilage.
 
 import { hex } from '@developerz.ai/ts23d';
 import type { EarSpec } from '../_lib/bust/ear.ts';
+import { type EarGraft, tipPull } from '../_lib/bust/ear-graft.ts';
 import type { EyeSpec } from '../_lib/bust/eye.ts';
+import type { Structure } from '../_lib/bust/face-forms.ts';
 import { type HeadSpec, HUMAN, landmarks } from '../_lib/bust/head.ts';
 import type { V } from '../_lib/bust/kit.ts';
 import type { NeckRange, TorsoSpec } from '../_lib/bust/torso.ts';
@@ -81,8 +83,25 @@ export const SPEC: HeadSpec = {
 
 export const L = landmarks(SPEC);
 
-/** The elf's face on the CC0 base (the race preset, ../_lib/face/races.ts, pushed): ears ×1.7
- *  long with the helix drawn back and up to a point (the elf_head design's long swept ear), eyes
+const EAR_OUT = 20;
+
+/** The base's ear before any elf reshaping (the ear deformer moves no landmark). */
+const EAR0 = skullLandmarks(
+  skullOf(
+    {
+      race: ELF_RACE,
+      age: 0,
+      weight: 0,
+      asym: 0,
+      tone: { base: C.skin, flush: C.warm, lips: C.lips, cool: C.cool, cavity: C.cavity },
+      eyes: { iris: C.iris },
+    },
+    { H, glabella: [0, 0, 0] },
+  ),
+);
+
+/** The elf's face on the CC0 base (the race preset, ../_lib/face/races.ts, pushed): the ears'
+ *  tips drawn 0.3 H back and up in the ear's own plane, the ear held 20° out (`tipPull`), eyes
  *  ×1.06 and set ×1.166 wide (IPD 64 mm, human 0.265 H × 1.05), almond (tilt +2 % H), cheekbones high (+2 % H), slender neck ×0.85. */
 export const ELF_FACE: FaceSpec = {
   ...ELF_RACE,
@@ -91,8 +110,11 @@ export const ELF_FACE: FaceSpec = {
   face: ELF_RACE.face * 0.97,
   jaw: { width: 0.85, drop: 0.05 },
   zygoma: { width: 1.04, height: 0.02, forward: 0.008 },
-  // (Held 13° out: the tips break the outline of the hair at three-quarter view.)
-  ears: { length: 1.7, tip: [0.2, 0.065, 0.26], out: 13 },
+  // (Length ×1: a stretched base ear leaves the bust's fine ear box, and its rim turns ragged.)
+  // The tip drawn 0.3 H up and back in the ear's own plane, raked 44° from its axis: it ends a
+  // fifth of the head over the eye line, between the brow and the crown (at +0.37 H it stood
+  // beside the crown, inside the hair, D573), the ear held 20° out so it clears the hair.
+  ears: { length: 1, tip: tipPull(EAR0, EAR_OUT, 44, 0.3), out: EAR_OUT },
   // (Shoulders ×0.78: the base mesh brings its own shoulder tops above the torso's.)
   body: { neck: 0.85, traps: -0.01, shoulders: 0.78 },
 };
@@ -117,10 +139,34 @@ export const EYE: EyeSpec = {
   iris: SK.eyeR * 0.52,
   // A thin upper lid, its crease high: a young eye.
   upper: 0.2,
-  lower: 0.1,
-  lid: 0.0018,
+  lower: 0.06,
+  // (2.4 mm: a margin the face's finest cell holds, D571.)
+  lid: 0.0024,
   tilt: 10,
   colours: { sclera: C.sclera, iris: C.iris, pupil: C.pupil, wet: C.wet, caruncle: C.caruncle },
+};
+
+/** The elf's bones over the soft base (../_lib/bust/face-forms.ts): a light brow over a soft
+ *  orbit, high cheekbones, a smooth cheek under them. */
+export const STRUCTURE: Structure = {
+  brow: 0.005,
+  orbit: 0.45,
+  depth: 0.6,
+  rim: 0.024,
+  cheek: 0.008,
+  hollow: 0,
+  lash: hex('#5a4030'),
+  lid: hex('#e2bc9e'),
+};
+
+/** The leaf blade over the base's stretched ear (../_lib/bust/ear-graft.ts): 36 mm wide near
+ *  its base, cartilage 4.2 mm thick under a rolled helix (D573). */
+export const GRAFT: EarGraft = {
+  out: EAR_OUT,
+  width: 0.036,
+  belly: 0.2,
+  thick: 0.0042,
+  lead: 0.02,
 };
 
 export const EAR: EarSpec = {

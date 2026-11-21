@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Worn steel-grey lattice with lighter flanges and darker shade faces, rust tints on the posts (now also visible as streaks on the LOD2 posts in the sheet), galvanised handrail, timber deck with plank grain in TOP, arms red with white bands.",
+      "reason": "Worn steel-grey lattice with lighter flanges and darker shade faces, rust tints on the posts, galvanised handrail, timber deck with plank grain in TOP, arms red with white bands; the orange timber fringe that ran along the walkway edge in hero.png is gone, so the girder edge reads as steel and the timber only shows on the soffit.",
       "fixes": [
         "a little more rust bloom at the lattice nodes and feet so the lighter steel does not read clean"
       ]
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "1b653da23ebcfcea2b11e7097219dcd3dcf5e24a94ef9025d43ea168ad36817e",
+    "hero.png": "6f2a51510a5a55b970b9d416cddc1fb819f01be5ed6860d07b7bad12a85570b9",
     "sheet.png": "ade6e35e0d09311c4ccdf0b81fdca098b7e953edaa480f2190974341e5e27bbd"
   }
 }

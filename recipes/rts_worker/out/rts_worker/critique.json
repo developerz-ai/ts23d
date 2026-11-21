@@ -5,7 +5,7 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Pick now carried across the body with its head out past the shoulder, red hard hat with goggles, big pack with red lid, rolled tarp and slung shovel: reads \"builder\" in FRONT as well as 3/4.",
+      "reason": "Pick carried across the body with its head past the shoulder, red hard hat with goggles, big pack with red lid, rolled tarp and slung shovel; the legs now stand apart in an A-stance and the head is turned slightly (goggles off-centre in sheet FRONT and TOP), so the pose is less rigid. Reads \"builder\" from every view.",
       "fixes": [
         "angle the pick head a little further out so it clears the face in FRONT"
       ]
@@ -19,10 +19,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Olive canvas, brown leather gloves and boots, red hat, steel pack, and the face has nose, brow and moustache; canvas and leather share one roughness. Thin-part transmission changed nothing visible on the face or hands, apart from one new bright red pixel in the moustache under the nose (hero.png, ~501,110).",
+      "reason": "Olive canvas, brown leather gloves and boots, red hat, steel pack, and the face has nose, brow and moustache; canvas and leather share one roughness. The red speckle round the moustache is fainter than before (hero.png ~500,110) but a few dark-red pixels remain at the nose.",
       "fixes": [
         "rougher canvas than leather (roughness contrast)",
-        "remove the red firefly in the moustache (clamp the transmitted sample)"
+        "remove the remaining red specks round the moustache (clamp the transmitted sample)"
       ]
     },
     "detail": {
@@ -50,14 +50,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 11.5k / 2.6k / 368 tris, 3 / 3 / 2 draws.",
+      "reason": "QA PASS: 9.8k / 2.6k / 368 tris, 3 / 3 / 2 draws; LOD0 down from 11.5k.",
       "fixes": [
         "spend fewer LOD0 triangles on the pack box edges"
       ]
     }
   },
   "renders": {
-    "hero.png": "94e4cd79628d0d7bb517e4807a3efd70d52370786176aac6b51282b8c0ff39f5",
-    "sheet.png": "e139653a58693f23135e11ba786c9ade1c5159055cb357357fd65a212f217514"
+    "hero.png": "55baefefefd613397c8cd8c53b18e8638994b505e8b3cc786b0def18461c063d",
+    "sheet.png": "6907b89dd0a33cb507533dc73d73d04a62024ef2269af313ace7ac5f2eb137f4"
   }
 }

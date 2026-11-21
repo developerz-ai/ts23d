@@ -23,6 +23,7 @@ import {
   weather,
 } from '@developerz.ai/ts23d';
 import { type BustRecipe, buildBust, bustEdits, SECTION } from './bust.ts';
+import { onCloth, SECTION_SHADE, type SectionSource, sectionColours } from './cloth-tone.ts';
 import { faceRigOf } from './face-rig.ts';
 import type { Surface, V } from './kit.ts';
 
@@ -43,6 +44,12 @@ export interface GarmentLayer {
    * millimetres apart, which at a far cell flips vertex by vertex into a per-triangle checker.
    */
   readonly sources?: readonly GarmentLayer[];
+  /** A sawn section plug: each vertex the colour of the nearest of these garments' shells, in
+   *  shade (cloth-tone.ts `sectionColours`). */
+  readonly cutThrough?: readonly SectionSource[];
+  /** Where its paint may change its colour (≤ 0): trims, seams and grime from its causes
+   *  (cloth-grime.ts); paint anywhere else is a stray stain (cloth-check.ts `strayPaint`, D580). */
+  readonly wear?: Field;
 }
 
 export interface GarmentOptions {
@@ -199,15 +206,33 @@ export function garmentParts(
             bounds: EVERYWHERE,
             op: 'paint',
             blend: 0.001,
-            color: [l.color[0] * 0.55, l.color[1] * 0.55, l.color[2] * 0.55],
+            color: [
+              l.color[0] * SECTION_SHADE,
+              l.color[1] * SECTION_SHADE,
+              l.color[2] * SECTION_SHADE,
+            ],
           },
         ]
       : l.edits;
-    const raw = fair(
-      sculpt({ edits, resolution: ctx.pick(l.cell), color: l.color, mirror: 'y', strip: l.strip }),
-      { iterations: lod < 2 ? 8 : 0, keep: 'none' },
+    // (On its strip per triangle after fairing: the mesher's per-vertex axes grey a sleeve, D578.)
+    const raw = onCloth(
+      fair(
+        sculpt({
+          edits,
+          resolution: ctx.pick(l.cell),
+          color: l.color,
+          mirror: 'y',
+          strip: l.strip,
+        }),
+        { iterations: lod < 2 ? 8 : 0, keep: 'none' },
+      ),
+      l.strip,
     );
-    const toned = l.sources ? outermostColours(raw, l.sources) : raw;
+    const toned = l.sources
+      ? outermostColours(raw, l.sources)
+      : l.cutThrough
+        ? sectionColours(raw, l.cutThrough)
+        : raw;
     meshes[l.name] = lod === 2 && o.far ? o.far(toned, l) : toned;
   }
   let worn = meshes;
@@ -290,16 +315,25 @@ export function buildDressedBust(ctx: BuildContext, b: BustRecipe, d: Dress): Su
   const cell = ctx.pick(b.cells.bust);
   const slab = Math.max(0.012, cell * 2.5);
   const k = slab * 0.5;
+  const layers = d.layers(skin, lod);
+  // The garments' solids: a skin part left wholly inside them is not built.
+  const covered = sculptField(
+    layers.flatMap((l) => l.edits.filter((e) => !('op' in e && e.op === 'paint'))),
+    { color: [0, 0, 0], mirror: 'y' },
+  ).field;
   buildBust(
     ctx,
     { ...b, ...d.built, body: () => d.body((p) => -hidden(p)), outfit: () => [] },
-    { skin },
+    // (The skin under the outfit is cut away too: nobody sees it, D584.)
+    { skin, hidden, covered },
   );
-  const layers = d.layers(skin, lod);
   const first = layers[0];
+  // (Coloured by the garments it cuts through, not a dark neutral, D579.)
+  const cloth = layers.flatMap((l) => l.sources ?? [l]);
   if (cut && first)
     layers.push({
       name: 'section',
+      ...(b.section ? {} : { cutThrough: cloth }),
       strip: first.strip,
       color: dark,
       cell: [cell, cell, cell],

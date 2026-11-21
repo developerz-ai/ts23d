@@ -1,165 +1,167 @@
 {
   "asset": "goblin_head",
   "reviewer": "agent-panel",
-  "overall": 4.9,
+  "overall": 5.1,
   "scores": {
     "silhouette": {
-      "score": 6.2,
-      "reason": "panel-1: The strongest read of these busts: big swept-back pointed ears, bald domed skull and a long hooked nose name a goblin in front and side silhouettes. Weakened by the ears being paper-thin spikes with a ragged tip, the stray wire hairs adding noise, and the vest torso being a boxy block. | panel-2: Big swept ears, hooked nose, bald dome and neckerchief knot name a goblin from the front and 3/4 outline. In side view the ears lie flat against the skull and disappear, the ear tips end in thin ragged needles, and the sparse hairs add noise rather than shape. The torso is a boxy lump. | panel-3: Strongest read of the set: big swept ears, bald dome, hooked nose and scrawny neck name a goblin instantly in front and side silhouette. Weakened by the ears being razor-thin blades from the side and the wispy strand hair adding noise rather than shape.",
+      "score": 6.5,
+      "reason": "panel-1: Reads as a goblin from the shadow: large swept-out ears, long hooked nose in profile, bald dome with wispy hair, scarf at the neck. The ears are the strongest feature in front view. But from the side/rear (raking.png) the ear collapses to a thin vertical slab and the head becomes a plain bald egg; the vest is a rounded pillow that adds nothing. | panel-2: The shadow names a goblin at once: long horizontal ears, bald domed skull, hooked nose and a scarf knot all read in the front and 3/4 views. Held back by the ears being thin flat paddles that vanish edge-on in side view, the sparse hair reading as bent wires, and a boxy vest block with no shoulder shape. | panel-3: The strongest read of the set: wide swept-back ears, a long hooked nose, a bulbous bald cranium with wiry hair tufts all name a goblin from front, side and top. Weaknesses: the ears are thin flat flaps that nearly disappear edge-on (raking side view shows only a slot), and the bust body below is a generic vest block.",
       "fixes": [
-        "Give the ears thickness at the base and a cupped concha so they read as cartilage, not fins",
-        "Cut the floating wire hairs to a few tufts that sit on the scalp",
-        "Shape the torso with sloped, narrow goblin shoulders instead of a rectangular vest block",
-        "Angle the ears back and outward by 25-35 degrees so they read in the side silhouette",
-        "Thicken the ear tips and round off the needle ends",
-        "Group the white hairs into two or three tufts with a clear shape",
-        "Narrow and slope the shoulders into a hunched goblin posture",
-        "Give the ears thickness and a curled rim so they hold volume in side view",
-        "Group the stray hairs into a few deliberate tufts (crown, behind ears) instead of scattered wires",
-        "Hunch the head forward on the neck for a more characterful profile"
+        "Give the ear real thickness and a cupped shape so it still reads as a big ear from behind and in profile",
+        "Hunch the neck forward and drop the head lower into the shoulders for a goblin posture",
+        "Break the vest outline with a ragged hem, hood or strap",
+        "Give the ears thickness and a cupped, slightly forward-rotated form so they read in side view",
+        "Replace the single bent hair wires with a few tapered wispy tufts",
+        "Slope the vest shoulders and narrow them to suit a small hunched goblin frame",
+        "Give the ears real thickness (helix rim and cartilage ridge) so they hold up edge-on and in the side silhouette",
+        "Hunch the shoulders forward and push the head ahead of the chest for a characteristic goblin posture"
       ]
     },
     "proportions": {
-      "score": 5,
-      "reason": "panel-1: Goblin caricature mostly works: large cranium, long nose, small chin, wide ears. But the neck is long and thin for the head, the eyes sit shallow and small without heavy lids, the mouth is a narrow slit tucked under the nose with tiny tusks, and the jaw has little structure. Torso is too wide and square relative to a scrawny goblin build. | panel-2: As a stylised goblin the head works: large cranium, big nose, small jaw with lower teeth. Problems: the ear is a thin flat sheet welded along a vertical ridge on the skull with no concha or thickness, the eyes are small and shallow under a soft brow, the mouth is a thin slit with teeth that sit on the lip rather than in a jaw, the back of the skull is a plain sphere and the neck is a smooth tube. The torso is as wide as it is featureless. | panel-3: Cranium-to-face ratio and nose size are appropriately caricatured. But the ears attach too high and too far forward on the skull (root near the temple), eyes are small and shallow without lid thickness, the mouth line is a narrow slot with tiny teeth tacked on, and the neck is a long uniform tube that meets the collar abruptly.",
+      "score": 5.2,
+      "reason": "panel-1: Face reads as goblin: heavy brow, deep-set amber eyes, long nose, underbite teeth. However the neck is long, straight and thin like a human mannequin's, the cranium is a smooth round egg with no occipital or temporal structure, and the shoulders are wide and boxy. The mouth is a narrow slit with teeth pasted in rather than a lipped mouth with a jaw mass behind it. | panel-2: The stylised goblin proportions mostly work: large cranium, heavy brow, long nose and wide thin mouth with small teeth. But the ear root is wrong: from the side the ear attaches as a vertical slot with a torn-looking channel and holes, not a cartilage base, and it sits behind and below a strange yellow bulge at the temple. The eyes are small and shallow under the brow with no lid thickness, the neck is a long smooth tube, and the back of the skull is a plain sphere without an occipital shape. The torso is too wide and square for the head. | panel-3: Large cranium, small jaw and big ears are the right goblin language. But the neck is long and thin for a goblin (no muscle mass, a straight column into the vest), the eyes sit a little high and shallow under the brow, and in profile the face is flat from brow to nose base with a recessive mouth that almost vanishes. The ear-to-head attachment sits too far back on the skull in side view.",
       "fixes": [
-        "Shorten the neck and add a forward head-carriage hunch",
-        "Enlarge the eyes and add heavy, drooping upper lids and deep orbits",
-        "Widen the mouth toward the cheeks and give the underbite visible lower fangs",
-        "Narrow and slope the shoulders; reduce torso width ~15%",
-        "Rebuild the ear with a thick root, concha bowl and rolled helix, attached at the jaw hinge",
-        "Deepen the orbits and add a heavy brow ridge and lids",
-        "Open the mouth line and seat the teeth in the lower gum behind the lip",
-        "Add occipital bulge, neck tendons and collarbones",
-        "Drop the ear root to brow-to-nose height behind the jaw hinge",
-        "Recess the eyes and add heavy upper lids and bags for goblin character",
-        "Widen the mouth and sculpt an underbite with the teeth seated in a lip line",
-        "Taper the neck with visible tendons into the trapezius"
+        "Shorten the neck and give it tendons and a forward lean",
+        "Add temporal hollows, occipital bulge and a pronounced jaw/chin mass",
+        "Widen the mouth with defined lips and corners; seat the teeth inside a gum line",
+        "Rebuild the ear root with a proper concha and tragus blended into the skull; remove the slot and holes",
+        "Remove the temple bulge above the ear",
+        "Deepen the eye sockets and add upper and lower lids",
+        "Shorten the neck and push the head forward for a hunched goblin posture",
+        "Narrow the torso to about 1.6 head widths",
+        "Shorten and thicken the neck; tilt it forward",
+        "Deepen the orbits under a heavier brow ridge so the eyes sit inside the skull",
+        "Move the ear root forward to just behind the jaw hinge",
+        "Push the mouth/muzzle forward slightly and add an underbite so the teeth read in profile"
       ]
     },
     "materials": {
       "score": 5,
-      "reason": "panel-1: Skin has a decent olive tone with reddish cheek and ear flush and a subtle sheen, though it reads more rubber than skin. Hair strands render as silver-white wire. Leather vest has some brown value variation, but the cream shirt panels carry dark grey blobs that read as holes in the texture; the red scarf is a smooth tube with no cloth weave. | panel-2: Green skin has some mottling, red on cheeks and ear rims and a mild sheen, which is the best skin of the set; amber eyes read. Leather vest is a brown smear with a faint tooled line pattern, the neckerchief is flat red clay, the shirt is plain cream, and dark grey patches on the sleeve openings read as missing texture. Hairs are white ribbons with black edges. | panel-3: Green skin has some colour variation (red flush on cheeks and inner ear) and the amber eyes read well. Leather vest reads as brown leather by hue but has the same roughness as skin; the red scarf looks like rubber tubing; patches are flat grey-cream decals with black holes that read as missing texture.",
+      "reason": "panel-1: Green skin, leather vest, linen shirt and red scarf separate cleanly by hue. Skin has faint vein mottling, warmer cheeks and a yellowish ear glow, but its roughness is uniform and slightly plasticky; hair strands are white wire with grey card edges. Leather has no grain or edge darkening; the vest patch reads as a sticker. Eyes are good and have a highlight. | panel-2: Green skin, red wool scarf, brown leather vest and pale shirt separate cleanly by hue and value, and the scarf has a readable knit. The skin has a fine pore texture and mild mottling but is near uniform in hue and gloss with dark smudges that read as brush errors on the scalp. The vest is smooth and blotchy, more like clay than leather, and the shirt panels are flat. The hair is white glossy wire. | panel-3: Green skin has some mottling, a red blush at the cheek and darker veining on the scalp, which helps. Still a uniform satin sheen; the scalp shows odd bright yellow highlights near the ear that look like stretched texture. Vest leather vs linen shirt vs red cloth scarf separate by hue but all share the same soft matte; the leather has no grain or edge darkening. Teeth are small and greyish, not enamel.",
       "fixes": [
-        "Lower skin specular, add pore-scale roughness and darker crease tint around eyes and nostrils",
-        "Make the hair coarse grey-brown with tapered tips instead of shiny white wire",
-        "Replace the dark blobs on the shirt with stitched patches or torn holes showing depth",
-        "Give the scarf a knitted or woven roughness and flatten its cross-section",
-        "Give the leather a grain normal and edge highlights, lower roughness on worn areas",
-        "Add a cloth weave and fold shading to the neckerchief and shirt",
-        "Fix the dark grey patches at the arm openings: cap them with shirt or skin colour",
-        "Remove the black outline on the hair cards (alpha or vertex colour bleed)",
-        "Raise leather roughness variation and add edge darkening on the vest",
-        "Model the scarf as knotted cloth with folds rather than a rounded tube",
-        "Give the patches stitched borders and cloth weave instead of flat holes",
-        "Add a wet specular to the eyes and subtle veining on the scalp"
+        "Vary skin roughness (oily nose and brow, dry scalp) and add warty bumps in normal",
+        "Make hair strands thinner and alpha-blended, darker at the roots",
+        "Add leather grain, edge burnish and stitching around the patch",
+        "Add skin hue variation: yellower on the ears and nose, darker and browner in the folds, pinker at the lips and ear tips",
+        "Give the vest a leather grain normal, edge darkening and a specular response distinct from the cloth",
+        "Add a linen weave to the shirt",
+        "Replace the scalp smudges with veins or age spots placed on purpose",
+        "Lower the hair gloss and make the strands coarse grey rather than white",
+        "Fix the stretched yellow patch behind the ear (UV or vertex colour bleed)",
+        "Add leather grain and darker oily edges to the vest; give the scarf a coarse knit/weave",
+        "Make teeth yellowed enamel with a wet gum line"
       ]
     },
     "detail": {
-      "score": 4.8,
-      "reason": "panel-1: Some character detail: brow ridge wrinkle line, wispy eyebrows, small tusks, nostril. Missing: forehead and eye-corner wrinkles, ear inner structure, warts or skin folds typical of goblins, stitching or buckles on the vest; the scarf knot is a lump. | panel-2: Forehead wrinkle, brow hairs, teeth, a knot in the neckerchief and a vest lace give some close-up interest. The skin has no warts, pores or wrinkles around eyes and mouth; ears have no veins or notches; the vest has no stitching, edge thickness or lacing holes; hair is about fifteen floating ribbons, several visibly doubled as stepped zigzag lines at the back. | panel-3: Brow wrinkles, teeth, eyebrow tufts and a vest with stitch lines give some LOD0 interest. Ears lack inner fold structure, the nose has no nostril definition from the side, the vest has no buckles or lacing, and skin lacks warts or wrinkles you expect on a goblin.",
+      "score": 5,
+      "reason": "panel-1: Brow wrinkles, cheek folds, a nose wart, teeth and ear notches are present and help. But the ear interior is a flat slab with a slot from behind (raking_detail), the scarf is a smooth tube, the vest has no seams, buttons or stitching, and the scalp is featureless beyond the stray hairs. | panel-2: There is a real second level of form: brow wrinkles, cheek folds, a scar, warts, individual teeth, scalloped ear edges, a stitched patch on the back of the vest and a toggle on the front. It falls short of a third-person close-up because the eyes lack lids, the teeth are tiny uneven specks, the ear interior is undefined, the hair is a dozen polyline wires with visible kinks, and the vest has no seams, stitching lines or edge thickness. | panel-3: Brow wrinkles, nostrils, a row of small teeth, a patch on the vest back and a toggle on the front show intent. The ear interior is ragged in the right way. Missing: eyelid thickness, forehead and crow's-foot creases at the depth a goblin needs, warts or skin pores; hair cards are sparse floating strands that look pasted on.",
       "fixes": [
-        "Sculpt crow's feet, forehead furrows and neck folds",
-        "Model the inner ear (helix, concha) and a notch or ring in one ear",
-        "Add vest seams, lacing or a crude buckle, and a readable knot on the scarf",
-        "Add crow's feet, nasolabial folds, warts and a pore normal to the skin",
-        "Add notches, a ring or tears to the ears with real thickness",
-        "Model vest edge thickness, stitch rows and eyelets for the lace",
-        "Smooth the hair card curves (more segments) and root them in the scalp",
-        "Sculpt ear helix/concha and a nick or notch in one ear",
-        "Add nostril flare, forehead and crow's-feet wrinkles and a few warts",
-        "Add vest lacing, toggles and a belt strap"
+        "Model the ear concha, helix and back of the ear; add nicks and a cartilage ridge",
+        "Knot the scarf with folds and frayed ends; add seams and lacing to the vest",
+        "Add scalp wrinkles, moles and a few scars",
+        "Model eyelids and a wet lower lid line",
+        "Enlarge and separate the teeth, with one or two prominent fangs",
+        "Sculpt the ear interior folds",
+        "Smooth the hair card curves and increase strand count per tuft",
+        "Add vest seams, edge thickness and lacing",
+        "Sculpt deeper forehead furrows, crow's feet and nasolabial folds; add a few warts",
+        "Root the hair strands into the scalp with thicker bases and a stubble texture underneath",
+        "Add stitching around the vest patch and buttons/laces on the vest front"
       ]
     },
     "wear": {
-      "score": 4.8,
-      "reason": "panel-1: Hints of story: patched vest, a nick in the ear outline, scruffy hair, flushed skin. But patches are flat grey blobs, the vest grime is uniform, and the skin has no scars or dirt; it reads lightly worn rather than lived-in. | panel-2: Red sore patches on the cheek and ear, yellowed teeth, grey thinning hair and a mottled vest suggest an old, scruffy goblin. It stays generic: stains are soft blotches not tied to folds or edges, the cloth is not frayed, and left and right are nearly mirrored. | panel-3: Patched vest and scruffy hair begin to tell a story of a poor scavenger, and the cheek flush adds life. But patches look like holes rather than repairs, skin is clean, and there is no dirt, scars or chipped teeth.",
+      "score": 5,
+      "reason": "panel-1: Some story: a patch sewn on the vest back, a scruffy combover, nicked ears, crooked teeth. But the clothes are clean, the skin has no grime, the plinth is pristine. | panel-2: Some story is present: a cheek scar, warts, a sewn patch on the vest, a ragged scarf and uneven teeth. The rest is clean: no dirt in the wrinkles, no staining on the shirt, no nicks in the ears, no frayed vest edges, and the blotches on the vest read as noise rather than wear. | panel-3: The patched vest, chipped edges on the leather and a scuffed ear give some history; the face is aged with sagging brows. But no dirt, no torn ear notch, the scarf is clean, and the skin lacks scars or grime.",
       "fixes": [
-        "Add a scar across the brow or a notched ear, dirt under the eyes and in skin creases",
-        "Make patches real stitched cloth with edge fraying, and darken grime at vest hems and seams",
-        "Stain and fray the scarf ends",
-        "Fray the neckerchief ends and add a patch or tear to the vest",
-        "Put grime in the vest folds and under the collar from a cavity mask",
-        "Break symmetry: one torn ear, a missing tooth, a scar across one brow",
-        "Turn patch holes into sewn-on mismatched fabric with crude stitches",
-        "Add grime at the neck, nails-scratched scar on the scalp and a chipped tooth",
-        "Fade and stain the scarf"
+        "Add dirt in skin creases and under the nails/neck line",
+        "Stain and fray the scarf and shirt edges; scuff the vest leather at the shoulders",
+        "Dust and chip the plinth",
+        "Add a notch or tear in one ear",
+        "Put grime in the skin folds and under the scarf",
+        "Stain the shirt at the collar and fray the vest armholes",
+        "Scuff the leather on the shoulders and around the patch",
+        "Yellow and chip the teeth",
+        "Add a notch or tear in one ear and a scar across the brow for asymmetry",
+        "Grime in skin creases and under the fingernail-level details; dirt on the vest hem and scarf"
       ]
     },
     "lod": {
-      "score": 4,
-      "reason": "panel-1: LOD2 keeps the outline and colour blocks reasonably (ears, nose, dome, scarf, vest), but the eyes collapse into sockets, ears turn into flat paddles with sharp corners, tusks vanish and the shirt/vest become jagged colour shards. | panel-2: LOD2 keeps the green head and brown torso blocks, but the ears change from long thin points to short blunt horns with a black gap at the root, the eyes become dark pits, the teeth and mouth vanish, the neckerchief turns into red spikes and the shirt into jagged cream shards. The ear change alone alters the signature outline. | panel-3: LOD2 keeps the outline, ears and colour blocks, which is good. But the eyes sink into dark pits, mouth and teeth vanish, ears become flat angular cards, and the vest patches turn into jagged cream polygons.",
+      "score": 3,
+      "reason": "panel-1: LOD2 loses the character: the big ear becomes a thin stick, the eye sockets become a blotchy hole, the mouth and teeth vanish, the brow flattens and the head becomes a smooth green balloon. Clothing colour blocks turn jagged. Clear pop at the switch. | panel-2: LOD2 keeps the skull, the skin colour and the scarf and vest blocks, but the ears, the signature feature, collapse to a thin bent stick with a blob on the end, the mouth and teeth vanish, the amber eyes become grey pits with dark artefacts, all facial folds go flat so the face becomes an egg, the hair almost disappears, and the scarf and shirt edges turn into zigzag triangles. The ear change alone alters the silhouette at distance. | panel-3: LOD2 breaks the character: the ears collapse into a thin stick/pipe shape, the mouth and teeth vanish, eyes become dark holes, and the vest shows jagged triangle colour patches. The far view in the sheet keeps the head but the ears read as antennae. The switch would pop clearly.",
       "fixes": [
-        "Keep eye geometry as a simple shell at LOD2 so the eyes do not vanish into holes",
-        "Preserve ear taper at LOD2 with a few more verts along the edge",
-        "Simplify the vest/shirt boundary into clean colour regions instead of jagged triangles",
-        "Keep ear length and tip position identical at LOD2 with a simple two-plane wedge; close the black gap at the root",
-        "Paint eyes and mouth onto a clean LOD2 face instead of collapsing the sockets",
-        "Emit the neckerchief as a simple ring and the shirt as a clean panel at LOD2",
-        "Keep eye sockets and lids as smooth loops at LOD2",
-        "Bake the patches into vertex colour rather than separate jagged geometry",
-        "Keep one row of teeth as a simple strip at LOD2"
+        "Keep the ear as a flat but full-width card with its outline at LOD2",
+        "Preserve brow ridge, nose and mouth line in the LOD2 mesh or bake them to vertex colour",
+        "Bake vest/scarf/shirt borders to clean edge loops; keep the plinth round",
+        "Keep the ear as a flat triangular blade of the LOD0 outline at LOD2",
+        "Keep the mouth as a dark line and the eyes as amber patches in vertex colour",
+        "Bake the brow and cheek fold shading into LOD2 vertex colour",
+        "Use clean ring edges for the scarf and shirt opening at LOD2",
+        "Clean the dark artefacts around the LOD2 eye",
+        "Keep the ear as a 6-10 triangle flat wedge with its full outline at LOD2",
+        "Preserve a mouth line and eye sockets in the LOD2 face",
+        "Clean the vest/shirt boundary at LOD2 so colour blocks stay as clean regions"
       ]
     },
     "technical": {
-      "score": 5.5,
-      "reason": "panel-1: QA clean, triangle counts reasonable for a bust (56k/14k/3.2k). Density is spent in face and scarf where it reads, though the vest and hidden back absorb a lot and LOD2 loses the eyes. | panel-2: QA is clean and 56k / 14k / 3.2k is fair for a bust. The LOD0 count is not visible in the result: face and clothes are soft, ear sheets are paper thin, and there are open dark patches at the sleeves. LOD2 wastes triangles on jagged collar shards. | panel-3: QA clean. 56k LOD0 is high but more of it shows (ears, face) than on the haired heads; LOD1 14k and LOD2 3.2k are reasonable steps.",
+      "score": 5.3,
+      "reason": "panel-1: QA clean; 57k / 14k / 3k is heavy for a bust at LOD0 but less wasteful than the hair-heavy heads since most triangles sit in the face. Still, the ear back and mouth are under-resolved while the smooth cranium and vest carry dense, flat tessellation. | panel-2: QA is clean and 57k is the leanest of this family, with triangles spent on the face where they show. But the ear root has holes and a slot visible in the raking close-up, the hair wires are kinked polylines, and LOD2 destroys the ears without any gate catching it. | panel-3: QA is clean. 57k at LOD0 is heavy but much of it is visible in face and ears rather than hair; LOD1 14k and LOD2 3k are sensible counts. LOD2 spends triangles on the vest while losing the ears.",
       "fixes": [
-        "Redirect vest triangles into ear thickness and eyelids",
-        "Reserve a fixed LOD2 budget for eyes and tusks",
-        "Drop back-of-torso and plinth density",
-        "Spend LOD0 triangles on ear thickness, lids and mouth interior",
-        "Close the arm openings so no backface or untextured patch shows",
-        "Add an ear-length and silhouette match gate between LOD0 and LOD2",
-        "Drop scattered hair wires and spend the saving on face loops around eyes and mouth"
+        "Move triangles from the smooth cranium and vest back to the ears and mouth",
+        "Target ~35k at LOD0 for a bust of this size",
+        "Close and remesh the ear root",
+        "Add a check that the LOD2 silhouette keeps the ear area within a tolerance of LOD0",
+        "Raise hair curve segment count or use cards with alpha",
+        "Reallocate LOD2 triangles from the smooth cranium to ears and mouth",
+        "Rebalance LOD2 so ear and face silhouette triangles survive before torso interior",
+        "Trim LOD0 torso density which is hidden under flat vest shading"
       ]
     }
   },
   "renders": {
-    "hero.png": "cf35849c091014df50824df98fb9596335e52f5124a5e77792520f2e78f37af1",
-    "sheet.png": "cb4bf4246814a8d110a377b92aaf2ecf0fa4c9ac542e3c37092b1213f00d38bb",
-    "raking.png": "d9def7b624695538dea374fcc9888be3d9b7ca8cf1466235900bb20e66bd98d4",
-    "raking_detail.png": "56c4966ec11bd1ebe32c342f8e0c5ba68a9a478a93e70f2901d56c572b511da1",
-    "lods.png": "b1659b5955b7b1aae128be4da4802c1bc14e30e3a1815bb0fbaf291d150b00d9",
-    "silhouette.png": "7f554340ff9287a35865482d6ba5944dc237991102e10d5deb78775faeff61d2",
-    "value.png": "419929fbf1b0625ac43da62d7abbe80733618e085aae1460a7cb3bc3e71736d6",
-    "detail.png": "9860ef2c5267650d06176a9ec16add014405f38ceda1e25dfdd3dfd14669d0f6"
+    "hero.png": "95cc29cebef88262838117343812b7a42b38ee5d872712cbc7b03904c2f520d7",
+    "sheet.png": "c50fe03cb4dd9785039fc9ece9004e6eda359011c9a5223352e2b47ed7e8bfb2",
+    "raking.png": "7a9b0ede15c207d17c6279e7c87348dcd0be60a00a51101b1d42c89c84be22d2",
+    "raking_detail.png": "d9052995f75fc45c2c213c78e7f322d961db03d7cadcd91b3423dcccd9ca767b",
+    "lods.png": "5195223fcc54f88244718e95a19024fd98cede21fdd45dd66b2a53d6f948d45b",
+    "silhouette.png": "8986d9dc6bceabfa1d6b2cc90734a072f37e047239a0a5d5866ce5261ab80160",
+    "value.png": "fc096a9071d463b638c1846feecff02edf88a5496f047c1163336f0fbff0a5dd",
+    "detail.png": "7d0b90d3f3d802f458862334795284fd0241e548d10366f2c32b036348f6bcc2"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 0.933
+        "iou": 0.915
       },
       {
         "view": "side",
-        "iou": 0.911
+        "iou": 0.917
       },
       {
         "view": "3/4",
-        "iou": 0.916
+        "iou": 0.914
       }
     ],
     "focal": {
-      "peakPart": "clothes",
+      "peakPart": "head",
       "peak": [
-        233,
-        397
+        276,
+        189
       ],
-      "focalShare": 0.156,
-      "focalArea": 0.573,
+      "focalShare": 0.402,
+      "focalArea": 0.57,
       "top": [
         {
-          "part": "clothes",
-          "share": 0.481
-        },
-        {
           "part": "hair",
-          "share": 0.34
+          "share": 0.435
         },
         {
           "part": "head",
-          "share": 0.156
+          "share": 0.402
+        },
+        {
+          "part": "clothes",
+          "share": 0.141
         }
       ],
       "declared": [
@@ -167,25 +169,25 @@
       ]
     },
     "rest": {
-      "share": 0.593,
-      "spread": 0.611,
+      "share": 0.537,
+      "spread": 0.619,
       "min": 0.25
     },
     "grounded": {
-      "rise": 0.371,
+      "rise": 0.385,
       "bands": [
-        0.266,
-        0.338,
-        0.369,
-        0.408,
-        0.602
+        0.289,
+        0.326,
+        0.372,
+        0.428,
+        0.623
       ]
     },
     "shape": {
-      "acuteShare": 0.55,
-      "straightShare": 0.635,
-      "taper": 0.117,
-      "shape": "aggressive",
+      "acuteShare": 0.265,
+      "straightShare": 0.423,
+      "taper": 0.084,
+      "shape": "friendly",
       "declared": "aggressive"
     }
   },
@@ -193,40 +195,40 @@
     "reviews": [
       {
         "reviewer": "panel-1",
-        "overall": 4.6,
+        "overall": 4.8,
         "scores": {
           "silhouette": 6,
-          "proportions": 5,
-          "materials": 4.5,
-          "detail": 4,
-          "wear": 4,
-          "lod": 4,
-          "technical": 5
+          "proportions": 5.2,
+          "materials": 4.8,
+          "detail": 4.8,
+          "wear": 4.5,
+          "lod": 3.2,
+          "technical": 5.2
         }
       },
       {
         "reviewer": "panel-2",
-        "overall": 5.3,
+        "overall": 5.1,
         "scores": {
-          "silhouette": 6.5,
-          "proportions": 5.5,
-          "materials": 5.5,
-          "detail": 5,
-          "wear": 5.5,
-          "lod": 4,
-          "technical": 5.5
+          "silhouette": 6.8,
+          "proportions": 5.8,
+          "materials": 5.3,
+          "detail": 5.3,
+          "wear": 5,
+          "lod": 3,
+          "technical": 5.3
         }
       },
       {
         "reviewer": "panel-3",
-        "overall": 4.9,
+        "overall": 5.2,
         "scores": {
-          "silhouette": 6.2,
+          "silhouette": 6.5,
           "proportions": 5,
           "materials": 5,
-          "detail": 4.8,
-          "wear": 4.8,
-          "lod": 4.4,
+          "detail": 5,
+          "wear": 5,
+          "lod": 3,
           "technical": 6
         }
       }

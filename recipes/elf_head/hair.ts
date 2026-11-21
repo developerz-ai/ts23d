@@ -12,7 +12,13 @@ import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { flowLocks, hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
 import { browLayers, browLine, withBrowComb } from '../_lib/face/brows.ts';
-import { bustHairFields, type CardHairStyle, skullHairline } from '../_lib/face/hair-cards.ts';
+import {
+  bustHairFields,
+  type CardHairStyle,
+  earClear,
+  hugStyle,
+  skullHairline,
+} from '../_lib/face/hair-cards.ts';
 import { C, H, L, SK } from './spec.ts';
 
 /** Where the hair grows on the skull: trichion 4.6 cm above the glabella, the nape line 2 cm up,
@@ -23,6 +29,8 @@ export const hairline: Field = skullHairline(SK, {
   ear: 0.016,
   temple: 0.008,
 });
+
+const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 
 export function hairEdits(scalp: Field, lod: number): SculptEdit[] {
   const box: [V, V] = [
@@ -98,8 +106,6 @@ export function frontLocks(on: Surface): Array<{ ctrl: V[]; y: number }> {
   }));
 }
 
-const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
-
 /** Negative on the front third of the skull (forehead to just past the temples). */
 const front = (p: Vec3): number =>
   (SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]) - 0.33;
@@ -128,18 +134,24 @@ function capLines(hair: Surface): V[][] {
 }
 
 /** The base layer under card hair: the parted mass, combed into broad locks (LOD0/1) so the
- *  crown, where the cards lie flattest, still reads as strands drawn back from the parting. */
+ *  crown, where the cards lie flattest, still reads as strands drawn back from the parting.
+ *  LOD1 and LOD2 grow the mass into the hair shell (D585): as thick as LOD0's locks lie over
+ *  the 7 mm cap (a median 3 mm: 1.1 cm in all, 1.5 cm at the back), so the few cards
+ *  left lie on hair, not on a bare skull. */
 export const hairBaseEdits = (scalp: Field, lod: number): SculptEdit[] => {
   const box: [V, V] = [
     [L.back - 0.05, -0.15, L.mz - 0.2],
     [L.gx + 0.06, 0.15, L.crown + 0.05],
   ];
+  const back = (p: Vec3): number =>
+    clamp01(((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0])) * 2 - 1);
+  const thick = lod === 0 ? 0.007 : (p: Vec3): number => 0.011 + 0.004 * back(p);
   // The cap under the cards: a shadowed gold (hair in shade), so a parting or a gap between locks
   // reads as depth, not as an orange scalp (half the mid tone: under the lock style's darker
   // cards, at 0.7 it showed through the parting as a pale flat disc).
   const mass: SculptEdit = {
     // 6 mm inside the hairline: the cap's edge lies under the cards.
-    ...hairMass(scalp, 0.007, (p) => hairline(p) + 0.006, box, CAP, 0.03),
+    ...hairMass(scalp, thick, (p) => hairline(p) + 0.006, box, CAP, 0.03),
     blend: 0.006,
   };
   if (lod === 2) return [mass];
@@ -185,8 +197,21 @@ const long = (p: Vec3): number => {
 };
 
 /** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the elf bust `b`: long,
- *  centre-parted. */
+ *  centre-parted. LOD1 (D586): the locks lie on the shell and down the back (`hugStyle`), no
+ *  stray wisps (twice as wide at that LOD they stood off the head as spikes). */
 export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
+  const style = nearHair(b, lod);
+  if (lod === 0) return style;
+  // Six segments after the LOD1 rule halves them: at four the fall's 6 cm steps left the
+  // occiput straight back and the locks stood out behind the head like a wind-blown fan.
+  const o = { lift: 0.02, segments: 12 };
+  const near = hugStyle(style, { ...o, keep: ['hair_base', 'hair_long', 'hair_top', 'brows'] });
+  // The crown's flat locks twice as dense: at a quarter its front showed the shaded cap.
+  const crown = hugStyle(style, { ...o, keep: ['hair_crown'], density: 2 });
+  return { ...near, layers: [...near.layers, ...crown.layers] };
+}
+
+function nearHair(b: BustRecipe, lod: number): CardHairStyle {
   // Roots on the finished head (cap and all), falling round it.
   const { skin } = bustHairFields(b, lod);
   // No lock in front of the ears below the brow: a solid there pushes them back behind the ears.
@@ -337,14 +362,29 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
   };
 }
 
-/** The far LOD's hair from the card style: its long locks and crown only, a quarter as many and
- *  three times as wide (scalpCards' LOD1 rule halves and widens them again), in the same tones. */
+/** Negative farther than 3 cm from either ear. */
+const EAR_CLEAR = earClear(SK, 0.03);
+
+/** The far LOD's hair from the (LOD1) card style (D585, D588): the shell carries the hair, and
+ *  a few locks lie on it and fall down the back behind the ears: the long locks a tenth as
+ *  many as LOD0, the crown's three tenths, 1.5 × as wide once scalpCards' LOD1 rule has run,
+ *  four segments each so they bend round the skull and hang (at three the fall streamed
+ *  straight back off the occiput). (A thirteenth as many and 3.2 × as wide, they stood off the
+ *  head as a fan of 11 cm slabs.) */
 export function farHair(style: CardHairStyle): CardHairStyle {
-  const keep = ['hair_long', 'hair_top', 'hair_crown'];
+  const o = { width: 0.9, lift: 0.02, segments: 8 };
+  const locks = hugStyle(style, { ...o, keep: ['hair_long'], density: 0.4 });
+  // The crown's flat locks three times as dense as the long ones (LOD1's are already doubled):
+  // the gold over the top, where the shell's shaded cap showed as a brown dome between them.
+  const crown = hugStyle(style, { ...o, keep: ['hair_crown'], density: 0.6 });
+  const far = { ...locks, layers: [...locks.layers, ...crown.layers] };
+  // No far lock rooted within 3 cm of an ear: hugging the head, it lay down over the blade and
+  // the far head lost its ears (D588).
   return {
-    ...style,
-    layers: style.layers
-      .filter((l) => keep.includes(l.name))
-      .map((l) => ({ ...l, density: l.density * 0.3, width: l.width * 1.6 })),
+    ...far,
+    layers: far.layers.map((l) => ({
+      ...l,
+      region: (p: Vec3) => Math.max(l.region(p), EAR_CLEAR(p)),
+    })),
   };
 }

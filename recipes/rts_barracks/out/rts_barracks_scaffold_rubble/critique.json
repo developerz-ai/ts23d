@@ -49,14 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 13.6k / 3.8k / 656 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k.",
+      "reason": "QA PASS: 13.1k / 3.6k / 656 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0/LOD1 slightly down from 13.6k / 3.8k; renders unchanged apart from the renderer fix.",
       "fixes": [
         "spend some of the LOD0 budget on the fixes above (chipped arrises, gravel, splintered ends) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "3e83a44509eec2f2ea12e16dca597882ba30c953f997bfad9f7a98bb4021bf55",
-    "sheet.png": "2e281bc4ce45ec57b7df16371275b9ff022aa18561aad9d43f1dbefbc5d11ee6"
+    "hero.png": "11161a8129509c79b286ad9ae8eff641c2064532138286b27a484b5367081de3",
+    "sheet.png": "2badf8c1df9de56af6433d9c842e9e72d84592b149ad2ca9830e95057e2b0867"
   }
 }

@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Wet sheen, pale sucker rims and mottling read; the papillae are now skin-brown bumps rather than pale dots, but they are evenly sized and spaced over the mantle like studs, and the pale mantle streaks read as a smear.",
+      "reason": "Wet sheen, pale sucker rims and mottling read, and the dark seam line that ran down the right side of the mantle is now much softer (hero.png); the papillae are evenly sized and spaced over the mantle like studs, and the pale mantle streaks read as a smear.",
       "fixes": [
         "papillae varied in size and clustered, larger over the eyes",
         "mantle mottling as soft irregular patches, not streaks"
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "730f6be794040bea6fd8f9acea3a1cacf4aa55297eb93ae6ed7bfd9df0ada524",
+    "hero.png": "0f23f6799578caf62009a8bee8b7afd42043d1cbf5cc52fe5e41862efc511336",
     "sheet.png": "f986b16b9e1db7ec8616f62dce9f39480c61e7c3d2e9468f4d53e3fa1a89f632"
   }
 }

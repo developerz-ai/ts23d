@@ -59,6 +59,7 @@ import {
   tube,
 } from '../_lib/rts/style.ts';
 import { hullDressing, turretBolts } from './dressing.ts';
+import { STEEL_STRIP, STEEL_TINT } from './metal.ts';
 import { type Add, runningGear, TRACK_W, TRACK_Y } from './running.ts';
 
 const DECK = 1.42; // hull roof height
@@ -96,7 +97,7 @@ const ENAMEL = defineMaterial({
   albedo2: '#5a5148',
   params: {
     paint: 1,
-    paintRough: 0.6,
+    paintRough: 0.42,
     chips: 0.015,
     cast: 0.2,
     streaks: 0,
@@ -119,7 +120,7 @@ const PAINTS: readonly Vec3[] = [BONE, BONE_DARK, SLATE];
 const RULES: readonly Rule[] = [
   role(TEAM, 'steel_painted'),
   role(teamShade(0.95), 'steel_painted'),
-  role(IRON, 'iron_cast'),
+  { from: IRON, strip: STEEL_STRIP, color: STEEL_TINT },
   role(BRASS, 'brass'),
   role(RUBBER, 'rubber'),
   role(SHAFT, 'oak'),
@@ -128,7 +129,7 @@ const RULES: readonly Rule[] = [
  *  sprocket teeth, brass hubs; tyres on a rough greyscale strip (`rubber` is near black: no mud
  *  would show). */
 const GEAR_RULES: readonly Rule[] = [
-  role(IRON, 'iron_cast'),
+  { from: IRON, strip: STEEL_STRIP, color: STEEL_TINT },
   role(BRASS, 'brass'),
   { from: RUBBER, strip: 'concrete', color: TYRE },
 ];
@@ -521,9 +522,12 @@ export const rts_tank = defineAsset({
     'recipes/rts_faction/README.md (original design brief)',
     'docs/playbooks/vehicles/afv.md (light-tank ranges)',
   ],
-  // LOD0/1 measured 37.8k / 9.5k: hull dressing plus the 25 / 60 cm cut of the plates near the
-  // ground, so chips, mud and soot have vertices, and the team plates cut for their wear. LOD2 (590) stays at the crowd budget.
-  budget: { triangles: [38000, 9500, 600] },
+  // LOD0/1 measured 30.5k / 8.1k: hull dressing plus the 25 / 60 cm cut of the plates near the
+  // ground, so chips, mud and soot have vertices, and the team plates cut for their wear. Trimmed
+  // where the RTS camera never looks (D596, was 37.5k / 9.4k): 20-sided road wheels with bolts on
+  // their outer face only, 10-sided at LOD1, the hull's wear cells at 32 cm. LOD2 (590) stays at
+  // the crowd budget.
+  budget: { triangles: [31000, 8200, 600] },
   paint: TEAM_PAINT_WORN,
   variants: TEAM_VARIANTS,
   // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
@@ -650,6 +654,8 @@ export const rts_tank = defineAsset({
       {
         wear: {
           ...base('brinehound_hull', 61),
+          // 32 cm cells: chips still land on every plate edge, 2.2k triangles under 22 cm (D596).
+          resolution: [0.32, 0.6, 0],
           ground: 0,
           fasteners: exhaust,
           effects: { chips, ...(lod < 2 ? { rust: SOOT_STAIN } : {}) },

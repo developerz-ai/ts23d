@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Slates with per-slate value and moss, brick with per-course variation and a dark plinth, pale coping; the per-pixel sheet now shows a soft flag pattern on the platform in TOP and crisper brick in hero.png, but the flags have no joint lines, the canopy is still a flat grey sheet, and the hero shows a fine speckle in the shadow under the canopy.",
+      "reason": "Slates with per-slate value and moss, brick with per-course variation and a dark plinth, pale coping, a soft flag pattern on the platform in TOP; the new render only cleans sub-pixel edges on the name board and window frames, with no visible change at hero scale. The flags have no joint lines, the canopy is still a flat grey sheet, and a fine speckle remains in the shadow under the canopy.",
       "fixes": [
         "canopy as ridged corrugated/boarded sheet with lighter ridges",
         "dark joint lines between the platform flags"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "3e1dd89431552811831c1019593d941158ca1011270eff990e71370d58618a17",
+    "hero.png": "c0d4823dfca85cd15da1d7ad00d7e23a6fedcb88454ee2f5c90ee1d968b50fd3",
     "sheet.png": "5afdcba7eef65fbda2046e80fd186b92cd29b5e1e46b64501c584d680f038648"
   }
 }

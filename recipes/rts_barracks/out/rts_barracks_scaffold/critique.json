@@ -33,8 +33,9 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Pale mortar drips run down under the laid courses and the banner hems are frayed (hero.png); no mud at the pole feet and the deck planks are unstained.",
+      "reason": "The pale mortar icicles under the laid courses are gone; mortar runs are now soft vertex-colour stains on the stones, but they are faint and brownish and barely read in hero.png. Banner hems are frayed; no mud at the pole feet and the deck planks are unstained.",
       "fixes": [
+        "make the mortar runs paler and a touch stronger so fresh mortar reads under the top course",
         "mud at the pole feet",
         "mortar splash on the deck planks"
       ]
@@ -48,14 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 16.8k / 4.4k / 610 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~1k.",
+      "reason": "QA PASS: 18.2k / 3.8k / 610 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 up ~1.4k (from 16.8k) for the stain grid, LOD1 down from 4.4k.",
       "fixes": [
         "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "1a7d657c7ed4c7976b46cf79d527e09e5c0ac39ba605ca85c6dfde2929762a55",
-    "sheet.png": "613eb697415b4c4a861b8fe53d1b0fc5530b4c41cc039d1deef99a82e839d4c7"
+    "hero.png": "00a891a5da5627e3702a198991a0e40384117c95974635537f0941c14cdd1457",
+    "sheet.png": "791f3cce7756774ed84dd230d488a48f0a38877df256542e3bfc7fd371e79454"
   }
 }

@@ -20,8 +20,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    37526,
-    9380,
+    30466,
+    8132,
     590
   ],
   "drawCalls": [
@@ -226,15 +226,15 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.0701,
-      "actual": 0.0701,
+      "target": 0.0692,
+      "actual": 0.0692,
       "eligible": "convex-edges",
-      "area": 66.8339,
+      "area": 70.0988,
       "by": {
         "brinehound_hull": {
           "target": 0.05,
           "actual": 0.05,
-          "area": 22.372
+          "area": 25.6369
         },
         "brinehound_kit": {
           "target": 0.05,
@@ -257,7 +257,7 @@
       "target": 0.5,
       "actual": 0.5,
       "eligible": "fasteners | below-fasteners",
-      "area": 0.2728
+      "area": 0.2166
     },
     "dust": {
       "target": 0.1,

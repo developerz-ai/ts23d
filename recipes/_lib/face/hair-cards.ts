@@ -5,12 +5,17 @@
 // `hairBaseEdits` as the bust's `hair` so the sculpted cap (painted hair colour) sits under the
 // cards. `bustHairFields` gives a style the skull scalp (`bustScalp`) for the cap and the finished
 // bust the head is meshed from, to root on and collide with; `skullHairline` draws a hairline
-// from the skull's own landmarks (`SK`), clear of the ears.
+// from the skull's own landmarks (`SK`), clear of the ears. `hugStyle` lays a style's cards onto
+// the far LODs' hair shell (D585–D589): flat, bent round the skull, never standing off it;
+// `hairValue` is the colour a LOD's hair renders, so the LODs can be held to one another.
 
 import {
   type BuildContext,
+  type CompiledAsset,
+  dmath,
   type Field,
   type Mesh,
+  renderBeauty,
   type ScalpCardOptions,
   scalpCards,
   sculptField,
@@ -48,6 +53,46 @@ export function farStyle(
         ...l,
         density: l.density * (o.density ?? 0.25),
         width: l.width * (o.width ?? 1.8),
+      })),
+  };
+}
+
+/**
+ * A style whose cards lie ON the hair (LOD1 and the far LOD's silhouette cards, D585/D586):
+ * flat to the root surface (lift ≤ `lift`, pressed down by `hug`, default 1, little roll),
+ * `segments` along each so a card bends round the skull instead of leaving it as a straight
+ * shard, only the `keep` layers
+ * (default every layer but the stray `wisp`s), `density` × as many, `width` × as wide and
+ * `length` × as long. `scalpCards` then applies its LOD1 rule (¼ the cards, ×2 wide, half the
+ * segments) at LOD1 and LOD2.
+ */
+export function hugStyle(
+  style: CardHairStyle,
+  o: {
+    readonly keep?: readonly string[];
+    readonly density?: number;
+    readonly width?: number;
+    readonly length?: number;
+    readonly lift?: number;
+    readonly hug?: number;
+    readonly segments?: number;
+  } = {},
+): CardHairStyle {
+  const keep = o.keep;
+  const k = o.length ?? 1;
+  return {
+    ...style,
+    ...(o.segments ? { segments: o.segments } : {}),
+    layers: style.layers
+      .filter((l) => (keep ? keep.includes(l.name) : l.kind !== 'wisp'))
+      .map((l) => ({
+        ...l,
+        density: l.density * (o.density ?? 1),
+        width: l.width * (o.width ?? 1),
+        length: (p: Vec3) => (typeof l.length === 'number' ? l.length : l.length(p)) * k,
+        lift: Math.min(l.lift ?? 0.25, o.lift ?? 0.03),
+        roll: Math.min(l.roll ?? 0.5, 0.1),
+        hug: o.hug ?? 1,
       })),
   };
 }
@@ -102,19 +147,50 @@ export function skullHairline(k: SkullLandmarks, s: HairlineShape): Field {
   const zB = k.nape[2] + s.nape;
   const span = g[0] - k.occiput[0];
   const wide = Math.abs(k.euryon[1]);
-  const lobe = k.earLobe;
-  const top = k.earTop;
-  const tip = k.earTip;
+  const ear = earClear(k, s.ear);
   return (p) => {
     const t = Math.min(1.2, Math.max(0, (g[0] - p[0]) / span));
     // Temples: the front line climbs toward the sides (an M), fading out behind the ear line.
     const side = Math.min(1, Math.abs(p[1]) / wide);
     const temple = (s.temple ?? 0) * side * side * Math.max(0, 1 - t * 2.5);
     const line = zF + (zB - zF) * t * t + temple;
-    const q: Vec3 = [p[0], Math.abs(p[1]), p[2]];
-    const ear = s.ear - Math.min(segDist(q, lobe, top), segDist(q, top, tip));
     // Never outside the skull's own width: the back of a long ear's blade is further than `ear`
     // from the lobe → top → tip line, and a lock rooted on it hangs in the air beside the head.
-    return Math.max(line - p[2], ear, q[1] - wide - 0.006);
+    return Math.max(line - p[2], ear(p), Math.abs(p[1]) - wide - 0.006);
   };
+}
+
+/** Negative farther than `d` from either ear (lobe → top → helix tip), mirrored across Y. */
+export function earClear(k: SkullLandmarks, d: number): Field {
+  return (p) => {
+    const q: Vec3 = [p[0], Math.abs(p[1]), p[2]];
+    return d - Math.min(segDist(q, k.earLobe, k.earTop), segDist(q, k.earTop, k.earTip));
+  };
+}
+
+/**
+ * The colour the hair renders at a LOD (D587): the mean sRGB (0–255) of the middle third of a
+ * narrow (6°) beauty render aimed at `target` from 0.7 m along `dir`, cards over the shell as the
+ * strip shows them (their texture and cut-out, the shell's skin strip and finish).
+ */
+export function hairValue(asset: CompiledAsset, target: Vec3, dir: Vec3): Vec3 {
+  const n = dmath.hypot(dir[0], dir[1], dir[2]) || 1;
+  const eye: Vec3 = [
+    target[0] + (dir[0] / n) * 0.7,
+    target[1] + (dir[1] / n) * 0.7,
+    target[2] + (dir[2] / n) * 0.7,
+  ];
+  const size = 90;
+  const r = renderBeauty(asset, { eye, target, fovDeg: 6, width: size, height: size });
+  const sum = [0, 0, 0];
+  let k = 0;
+  for (let y = size / 3; y < (2 * size) / 3; y++)
+    for (let x = size / 3; x < (2 * size) / 3; x++) {
+      const i = y * size + x;
+      if ((r.mask[i] ?? 0) < 255) continue;
+      for (let c = 0; c < 3; c++) sum[c] = (sum[c] ?? 0) + (r.rgba[i * 4 + c] ?? 0);
+      k++;
+    }
+  const m = Math.max(1, k);
+  return [(sum[0] ?? 0) / m, (sum[1] ?? 0) / m, (sum[2] ?? 0) / m];
 }

@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The CLINCHFIELD lettering runs across the braces and reads at 3/4 in hero.png (a hairline gap where a brace crosses); with per-pixel shading the sheet now shows board seams, nail rows and wood grain on the sides and a grained grey running board in TOP, and painted boards, weathered running board and dark iron separate well.",
+      "reason": "The CLINCHFIELD lettering runs across the braces and reads at 3/4 in hero.png (a hairline gap where a brace crosses); the sheet shows board seams, nail rows, grain and a grained grey running board. The grab irons on the B end now read as dark iron instead of bright silver and the end-board edges lost their pale fringe (hero.png, right end).",
       "fixes": [
         "close the remaining hairline gap in the lettering where the braces cross it",
         "slight roughness lift on the worn running-board walk path"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "5413ec9d26d3b1e089550c2d0b2726c71ef395943e10cc81e7efd063b609ff7c",
+    "hero.png": "48c349e3a78cd95aa01e6a2795632a46085d8f474dabc48f2c594a186702ad43",
     "sheet.png": "a98bba76f56cb5d0383f905d99cba4bf165f7edafb38fac1fd098254fb43d2c1"
   }
 }

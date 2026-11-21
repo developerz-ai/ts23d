@@ -10,7 +10,13 @@ a **blue tunic** with folds, a **standing leather collar**, a **red mantle** ove
 ## Proportions (sourced; checked every build by `proportionCheck`)
 The head is the CC0 MakeHuman base (the gender-neutral anthropometric average) warped to the hero
 (`HERO_FACE` in `../_lib/bust/human/spec.ts`), then planes, muscles, features and skin tones on
-top ([face-base.md](../../docs/research/face-base.md), "Skull stage").
+top ([face-base.md](../../docs/research/face-base.md), "Skull stage"). The base is soft, so the
+bones are sculpted over it from `STRUCTURE` (`recipes/_lib/bust/face-forms.ts`): a brow shelf 9 mm
+ahead of the cornea over an orbit 9 mm deep, lids 2.6 mm thick round a 9.6 mm fissure (the upper
+lid covers 16 % of the iris, the lower 2 %), the lateral orbital rim, cheekbones 8 mm proud of the
+buccal plane; and the neck is thickened to 120 mm across (`human/neck.ts`; ANSUR II male neck
+circumference 395 mm). `recipes/_lib/bust/face-check.test.ts` measures each on the built skin
+(D570–D572, D575).
 
 | Ratio | Band (source) | As built |
 |---|---|---|

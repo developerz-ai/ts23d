@@ -371,24 +371,54 @@ export function bustEdits(
   };
 }
 
+/** Every vertex of `m` inside `solid` (≤ 0): a part nobody can see. */
+function inside(m: Mesh, solid: Field): boolean {
+  const P = m.positions;
+  for (let i = 0; i < P.length; i += 3)
+    if (solid([P[i] ?? 0, P[i + 1] ?? 0, P[i + 2] ?? 0]) > 0) return false;
+  return true;
+}
+
 /** Hero tier (ADR 012): LOD0 head and bust cells grow by these; the field's detail is baked. */
 export const HERO_CELL = { head: 2.2, bust: 1.5 } as const;
 
 /** `hero`: a lighter LOD0 whose skin parts carry their field for the hero bake (finish/hero.ts).
- *  `skin`: the anatomy handed to `extras` in place of the built one (layers.ts). */
+ *  `skin`: the anatomy handed to `extras` in place of the built one (layers.ts). `hidden`: the
+ *  body an outfit hides (≤ 0 = hidden), cut out of the built skin: the torso's masses are cut by
+ *  it already, but the skull stage brings a neck and shoulders of its own, meshed whole under the
+ *  clothes (D584). `covered`: the garments' solids (≤ 0 inside); a `bust` part left wholly
+ *  inside them by that cut (a tall collar over the whole seam) is not built at all. */
 export function buildBust(
   ctx: BuildContext,
   b: BustRecipe,
-  o: { hero?: boolean; skin?: Surface } = {},
+  o: { hero?: boolean; skin?: Surface; hidden?: Field; covered?: Field } = {},
 ): void {
   if (!b.skull) checkNeck(b.l, b.torso, b.neck);
   const lod = ctx.lod;
   const hero = o.hero === true && lod === 0;
-  const { edits, skin } = bustEdits(b, ctx.pick([4, 4, 2]), lod, ctx.rng.fork('features'));
+  const built = bustEdits(b, ctx.pick([4, 4, 2]), lod, ctx.rng.fork('features'));
+  const skin = built.skin;
   const seam = b.split ?? neckSeam(b.l).field;
   const cell = ctx.pick(b.cells.head) * (hero ? HERO_CELL.head : 1);
   const bustCell = ctx.pick(b.cells.bust) * (hero ? HERO_CELL.bust : 1);
   const lap = bustCell * 0.5;
+  const hidden = o.hidden;
+  // (Intersected with a fillet half a bust cell wide: a hard cut's crease meshed as triangles
+  // facing against their normals at the far LOD's cell.)
+  const edits: SculptEdit[] = hidden
+    ? [
+        ...built.edits,
+        {
+          field: (p) => -hidden(p),
+          bounds: [
+            [-2, -2, -1],
+            [2, 2, 3],
+          ],
+          op: 'intersect',
+          blend: lap,
+        },
+      ]
+    : built.edits;
   const rng = ctx.rng.fork('skin');
   const { l } = b;
   const oil = b.pores ? oilOf(b) : undefined;
@@ -414,7 +444,14 @@ export function buildBust(
   };
   const meshes: Record<string, Mesh> =
     lod === 2
-      ? { head: skinMesh(edits, cell, { rng, ...look, far: true, detail: farFaceDetail(b, lod) }) }
+      ? {
+          head: skinMesh(edits, cell, {
+            rng,
+            ...look,
+            far: true,
+            detail: farFaceDetail(b, lod),
+          }),
+        }
       : {
           head: skinMesh(edits, cell, {
             rng,
@@ -441,6 +478,8 @@ export function buildBust(
           }),
           ...(b.extras ? b.extras(ctx, o.skin ?? skin) : {}),
         };
+  const torso = meshes['bust'];
+  if (torso && o.covered && inside(torso, o.covered)) delete meshes['bust'];
   meshes['plinth'] = plinth(ctx, {
     radius: b.plinth.radius,
     top: b.torso.cutZ,

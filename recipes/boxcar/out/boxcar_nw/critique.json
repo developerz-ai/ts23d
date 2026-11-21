@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The NORFOLK & WESTERN lettering runs across the braces and reads at 3/4 in hero.png (a hairline gap where a brace crosses); with per-pixel shading the sheet now shows board seams, nail rows and wood grain on the sides and a grained grey running board in TOP, and painted boards, weathered running board and dark iron separate well.",
+      "reason": "The NORFOLK & WESTERN lettering runs across the braces and reads at 3/4 in hero.png (a hairline gap where a brace crosses); the sheet shows board seams, nail rows, grain and a grained grey running board. The grab irons on the B end now read as dark iron instead of bright silver and the end-board edges lost their pale fringe (hero.png, right end).",
       "fixes": [
         "close the remaining hairline gap in the lettering where the braces cross it",
         "slight roughness lift on the worn running-board walk path"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "22b816f1c076930713493e5a0aae9e9cff849d329b1e49a9642b56be4169160c",
+    "hero.png": "1c996e23165611ff737f57ffbe55bdf6555100d53a54014ecd95113c5ac3b63c",
     "sheet.png": "88c67f29e7fac6ee77677476594999de83a209657af2fbd8fef9879e3dd4c738"
   }
 }

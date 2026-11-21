@@ -8,7 +8,11 @@
 // neck edge rolled, a shoulder seam from the neck to each shoulder point, a woven border band
 // down its front edges, those edges rubbed pale, pipe folds hanging from the shoulders and slung
 // between the shoulder blades, a darned patch on the left shoulder, road dust on top and mud
-// toward the hem; pinned by two brass brooches joined by a leather cord.
+// toward the hem; pinned by two brass brooches joined by a leather cord. Grime has a cause, never
+// noise (../_lib/bust/cloth-grime.ts, D580): the folds' valleys, the hem, where the cord rubs.
+// LOD0 sews it: a running stitch along the mantle's shoulder seams, round the darn (its own fine
+// layer, its rim rolled) and along the top of the shirt's collar (D581, D582); the tunic and the
+// mantle gather in short folds round the neck (D583).
 // `outfitEdits` is every layer in one list: the whole dressed bust as one field (hair collision,
 // the cloth check). The necklines are the shared human bust's (../_lib/bust/human); the mantle is
 // cut closer over the chest than its, so it reads as a mantle, not as sleeves.
@@ -20,18 +24,21 @@ import {
   hex,
   type IntendedCrease,
   type SculptEdit,
+  sculptField,
   valueNoise,
 } from '@developerz.ai/ts23d';
 import { type Fold, foldField } from '../_lib/bust/cloth-folds.ts';
 import { type Cloth, cloth, clothField, edgeBand, memo } from '../_lib/bust/cloth-garment.ts';
+import { grime, grimeZone } from '../_lib/bust/cloth-grime.ts';
 import { collarBand, type NeckSection, neckline } from '../_lib/bust/cloth-neck.ts';
-import { drag, hang, sag } from '../_lib/bust/cloth-paths.ts';
+import { drag, hang, radiate, sag } from '../_lib/bust/cloth-paths.ts';
+import { dropOnto, seamGroove, stitches, stitchLayer } from '../_lib/bust/cloth-seam.ts';
 import { CLOTH_ALBEDO, LINEN, WOOL } from '../_lib/bust/cloth-strips.ts';
 import { creaseCurve, edgeCreases } from '../_lib/bust/creases.ts';
 import { mix } from '../_lib/bust/hair.ts';
 import { neckOf } from '../_lib/bust/human/clothes.ts';
 import { C, H, L } from '../_lib/bust/human/spec.ts';
-import { alongZ, chain, type Surface, spline, type V } from '../_lib/bust/kit.ts';
+import { alongZ, chain, type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
 import type { GarmentLayer } from '../_lib/bust/layers.ts';
 import { baseZ, bustCut } from '../_lib/bust/torso.ts';
 import { TORSO } from './torso.ts';
@@ -76,14 +83,21 @@ const K = {
   darn: on(hex('#5e2c22')),
   mud: on(mix(C.mantle, hex('#4a3c2c'), 0.75)),
   cord: on(C.leather),
+  thread: on(hex('#c8b890')),
 };
 
 /** One garment layer: its own sculpt on its own strip. */
 export type Layer = GarmentLayer;
 
-/** Wear masks: seeded world-space noise (the same spots at every LOD). */
-const BLOTCH = valueNoise(createRng(0x4a01), { scale: 0.045, octaves: 3 });
+/** Fine jitter of an edge's wear line (never a stain on its own: the same spots at every LOD). */
 const SPECK = valueNoise(createRng(0x4a02), { scale: 0.01, octaves: 2 });
+/** The nearest of several wear zones (≤ 0 inside any). */
+const worn =
+  (...zones: Field[]): Field =>
+  (p) =>
+    Math.min(...zones.map((z) => z(p)));
+/** Where mud starts above the bust's base, metres. */
+const MUD = L.mz - 0.72 * H;
 
 /** A paint edit where `mask` < 0, fading over `blend` metres. */
 const paint = (mask: Field, color: V, blend: number): SculptEdit => ({
@@ -150,6 +164,14 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
   const tunic: Field = (p) => Math.max(tunicV(p), -mantle(p) - LAP);
   const shirt = neckline(neck, 0.003, 0.002, CAP);
   const collar = collarOf(neck);
+  const tunicFold = foldField(tunicFoldSet(skin));
+  const mantleFold = foldField(mantleFolds(skin));
+  // The tunic greys in its creases and along the cord that rubs it; the mantle in its valleys.
+  const tunicCauses = {
+    folds: tunicFold,
+    spots: cord(skin).map((at) => ({ at, r: 0.007 })),
+  };
+  const mantleCauses = { folds: mantleFold };
   const tunicCloth: Cloth = {
     body,
     thick: TUNIC,
@@ -157,7 +179,7 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     floor,
     hem: { width: 0.012, lift: 0.0015, roll: 0.004 },
     ...(fine ? { stitch: { at: 0.015, depth: 0.0008, width: 0.005 } } : {}),
-    ...(fine ? { folds: foldField(tunicFoldSet(skin)) } : {}),
+    ...(fine ? { folds: tunicFold } : {}),
   };
   const mantleCloth: Cloth = {
     body,
@@ -167,7 +189,7 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     drape: { x: -0.09, lean: 0.18, top: L.mz - 0.33 * H, wrap: 0.8, halfY: 0.13, within: SOCLE },
     hem: { width: 0.016, lift: 0.004, roll: 0.008 },
     ...(fine ? { stitch: { at: 0.022, depth: 0.0009, width: 0.006 } } : {}),
-    ...(fine ? { folds: foldField(mantleFolds(skin)) } : {}),
+    ...(fine ? { folds: mantleFold } : {}),
   };
   const linenLayer: Layer = {
     name: 'linen',
@@ -192,8 +214,8 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
       ),
       // Sweat and skin grease where the collar rubs the neck, greyer toward the nape.
       paint((p) => collar(p) + 0.002 + 0.004 * SPECK(p), K.linenGrime, 0.006),
-      paint((p) => 0.014 - 0.03 * BLOTCH(p), mix(K.linen, K.linenGrime, 0.6), 0.012),
     ],
+    wear: (p) => collar(p) - 0.005,
   };
   const tunicLayer: Layer = {
     name: 'tunic',
@@ -203,18 +225,12 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     cell: [0.0102, 0.015, 0.026],
     edits: [
       cloth(tunicCloth, { bounds: BOX, color: K.tunic, blend: 0 }),
-      // An old spill down the front, and the cloth darkened where the cord rubs it.
-      paint(
-        (p) => dmath.hypot(p[1] + 0.03, (p[2] - (L.mz - 0.7 * H)) * 0.5) - 0.03 + 0.03 * BLOTCH(p),
-        K.tunicStain,
-        0.016,
-      ),
-      paint(
-        (p) => 0.02 - 0.04 * BLOTCH([p[0], p[1] + 0.4, p[2]]),
-        mix(K.tunic, K.tunicStain, 0.5),
-        0.02,
-      ),
+      // The wool darkened in its creases and where the cord rubs it.
+      ...(fine
+        ? [grime(tunicCauses, mix(K.tunic, K.tunicStain, 0.55), { bounds: BOX, fade: 0.012 })]
+        : []),
     ],
+    wear: grimeZone(tunicCauses, 0.012),
   };
   // The braid: the tunic's own cloth, a hair thicker, on a band round the V, and only its top
   // 5.5 mm (a strip, not a wall through the body).
@@ -246,6 +262,21 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     ],
   };
   const patch = patchRegion(mantle);
+  // The darn: a square of coarser cloth sewn over a tear on the left shoulder, its rim rolled
+  // under. LOD0 meshes it on a cell of its own (at the mantle's 1 cm cell the rim melted, D581).
+  const darn = cloth(
+    {
+      body,
+      thick: MANTLE + 0.003,
+      region: patch,
+      depth: 0.007,
+      floor,
+      hem: { width: 0.006, lift: 0.0016, roll: 0.0026 },
+      ...(lod === 0 ? { stitch: { at: 0.0045, depth: 0.0007, width: 0.0016 } } : {}),
+      ...(fine ? { folds: mantleFold } : {}),
+    },
+    { bounds: BOX, color: K.darn, blend: 0, mirror: false },
+  );
   const mantleLayer: Layer = {
     name: 'mantle',
     part: 'mantle',
@@ -254,22 +285,16 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
     cell: [0.0102, 0.0175, 0.026],
     edits: [
       cloth(mantleCloth, { bounds: BOX, color: K.mantle, blend: 0 }),
-      // A darn on the left shoulder: a square of coarser cloth sewn over a tear.
-      cloth(
-        {
-          body,
-          thick: MANTLE + 0.003,
-          region: patch,
-          floor,
-          hem: { width: 0.005, lift: 0.0006, roll: 0.0015 },
-          ...(fine ? { folds: foldField(mantleFolds(skin)) } : {}),
-        },
-        { bounds: BOX, color: K.darn, blend: 0.002, mirror: false },
-      ),
+      ...(lod > 0 ? [darn] : []),
+      // The shoulder seams: a groove from the neck to each shoulder point.
+      ...(fine ? [seamGroove(shoulderLine(skin), 0.003, mix(K.mantle, K.border, 0.4))] : []),
       // The woven border: a darker band 12–30 mm in from the front edges.
       paint((p) => Math.max(edgeBand(mantleRegion, 0.012, 0.03)(p), -p[0] - 0.02), K.border, 0.003),
-      // Mud and damp toward the hem, splashed up in blotches.
-      paint((p) => p[2] - (L.mz - 0.72 * H) + 0.05 * BLOTCH(p), K.mud, 0.03),
+      // Grime in the valleys of its folds; mud and damp toward the hem, its line ragged.
+      ...(fine
+        ? [grime(mantleCauses, mix(K.mantle, K.mud, 0.4), { bounds: BOX, fade: 0.012 })]
+        : []),
+      paint((p) => p[2] - MUD + 0.012 * SPECK(p), K.mud, 0.03),
       // Wear: the front edges rubbed pale and thin, breaking inward.
       paint(
         (p) => Math.max(edgeBand(mantleRegion, -0.002, 0.008)(p), -p[0] - 0.02) + 0.003 * SPECK(p),
@@ -277,8 +302,15 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
         0.004,
       ),
     ],
+    wear: worn(
+      (p) => Math.max(edgeBand(mantleRegion, 0.009, 0.033)(p), -p[0] - 0.02),
+      (p) => Math.max(edgeBand(mantleRegion, -0.006, 0.012)(p), -p[0] - 0.02) - 0.002,
+      (p) => p[2] - MUD - 0.027,
+      grimeZone(mantleCauses, 0.012),
+    ),
   };
   const layers = [linenLayer, tunicLayer, braidLayer, mantleLayer];
+  if (lod === 0) layers.push(...sewn(skin, linenLayer, mantleLayer, darn, collar));
   if (fine) return layers;
   // Far LOD: one sculpt of every layer (one watertight surface: separate shells 2 mm apart would
   // cross at a 2.6 cm cell), the colour blocks kept flat.
@@ -334,6 +366,100 @@ export function outfitCreases(skin: Surface): IntendedCrease[] {
   ];
 }
 
+/** LOD0's sewing, threads a millimetre thick (LOD1's cell would lose them): the darn as its own
+ *  fine layer, and running stitches along the shoulder seams, round the darn and along the top of
+ *  the shirt's collar, each seated on the garment as made. */
+function sewn(
+  skin: Surface,
+  linen: Layer,
+  mantle: Layer,
+  darn: SculptEdit,
+  collar: Field,
+): Layer[] {
+  const solid = (l: Layer, more: SculptEdit[] = []) =>
+    sculptField([...l.edits.filter((e) => !('op' in e && e.op === 'paint')), ...more], {
+      color: l.color,
+      mirror: 'y',
+    }).field;
+  const wool = solid(mantle, [darn]);
+  const shirt = surface(solid(linen));
+  const top = L.mz;
+  const low = L.mz - 0.6 * H;
+  const rim = darnRim().flatMap(([x, y]): V[] => {
+    const q = dropOnto(wool, x, y, top, low);
+    return q ? [q] : [];
+  });
+  // The collar's top stitch: 4 mm under its rolled top, across the front where the V shows it.
+  const ring = neckOf(skin.field).ring;
+  const c = neckOf(skin.field).c;
+  const band = ring
+    .filter((p) => p[0] - c[0] > 0.6 * dmath.hypot(p[0] - c[0], p[1]))
+    .map((p): V => {
+      const d = dmath.hypot(p[0] - c[0], p[1]) || 1;
+      return [p[0] + ((p[0] - c[0]) / d) * 0.012, p[1] + (p[1] / d) * 0.012, p[2] + 0.011];
+    })
+    .sort((a, b) => a[1] - b[1])
+    .map((p) => shirt.on(p))
+    .filter((p) => collar(p) < -0.002);
+  const look = { pitch: 0.0065, length: 0.0038, r: 0.0009, color: K.thread };
+  return [
+    {
+      name: 'darn',
+      part: 'mantle',
+      strip: WOOL,
+      color: K.darn,
+      cell: [0.0028, 0.0028, 0.0028],
+      edits: [darn],
+    },
+    stitchLayer(
+      [
+        ...stitches(shoulderLine(skin, wool), { ...look, side: 0.0045 }),
+        ...stitches(rim, { ...look, pitch: 0.006, mirror: false }),
+        ...stitches(band, { ...look, pitch: 0.005, length: 0.003, r: 0.0007, mirror: false }),
+      ],
+      { strip: LINEN, color: K.thread, part: 'mantle' },
+    ),
+  ];
+}
+
+/** The darn's stitch row in plan (x, y): round its rounded square 4.5 mm in from the edge. */
+function darnRim(): [number, number][] {
+  const at = DARN;
+  const [hu, hv] = [0.0205, 0.0165];
+  const corners: [number, number][] = [
+    [hu, hv],
+    [-hu, hv],
+    [-hu, -hv],
+    [hu, -hv],
+  ];
+  const out: [number, number][] = [];
+  for (let i = 0; i <= 24; i++) {
+    const a = corners[Math.floor(i / 6) % 4] ?? [0, 0];
+    const b = corners[(Math.floor(i / 6) + 1) % 4] ?? a;
+    const t = (i % 6) / 6;
+    const u = a[0] + (b[0] - a[0]) * t;
+    const v = a[1] + (b[1] - a[1]) * t;
+    out.push([at[0] + u * 0.94 - v * 0.34, at[1] + u * 0.34 + v * 0.94]);
+  }
+  return out;
+}
+
+/** The shoulder seam's line (left, mirrored): over the top of the shoulder from the mantle's
+ *  neck edge out to the shoulder point, a little behind the darn; dropped onto `on` (the mantle
+ *  as made) when given. */
+function shoulderLine(skin: Surface, on?: Field): V[] {
+  const x = L.back + 0.4 * H;
+  const sh = TORSO.shoulders;
+  const ctrl: V[] = [
+    [x, 0.085, L.mz - 0.33 * H],
+    [x, 0.5 * (0.085 + 0.92 * sh), L.mz - 0.36 * H],
+    [x - 0.004, 0.92 * sh, L.mz - 0.42 * H],
+  ];
+  return spline(ctrl, 10).map(
+    (p) => (on && dropOnto(on, p[0], p[1], L.mz, L.mz - 0.6 * H)) || skin.off(p, MANTLE),
+  );
+}
+
 /** Tunic: everything below the neckline but a V opening down the front (≤ 0 inside). */
 function tunicRegion(neck: NeckSection): Field {
   const top = neckline(neck, 0.006, 0.004, CAP);
@@ -350,9 +476,12 @@ function tunicRegion(neck: NeckSection): Field {
   };
 }
 
+/** The darn's centre in plan (x, y): on the top of the left shoulder. */
+const DARN: readonly [number, number] = [L.back + 0.5 * H, TORSO.shoulders * 0.62];
+
 /** The darn: a rounded square on the top of the left shoulder (≤ 0 inside). */
 function patchRegion(mantle: Field): Field {
-  const at: V = [L.back + 0.5 * H, TORSO.shoulders * 0.62, 0];
+  const at: V = [DARN[0], DARN[1], 0];
   return (p) => {
     const u = Math.max(Math.abs((p[0] - at[0]) * 0.94 + (p[1] - at[1]) * 0.34) - 0.02, 0);
     const v = Math.max(Math.abs(-(p[0] - at[0]) * 0.34 + (p[1] - at[1]) * 0.94) - 0.016, 0);
@@ -380,7 +509,21 @@ function tunicFoldSet(s: Surface): Fold[] {
     [0.1, 0.035, L.mz - 0.78 * H],
     [0.1, 0.075, L.mz - 0.77 * H],
   ];
-  return [...drag(s, pit, to, look), ...hang(s, under, [0.05, 0.045], { ...look, amp: 0.0022 })];
+  // Short folds where the tunic's neckline gathers in round the neck, either side of the V.
+  const ring = neckOf(s.field).ring;
+  const gather = radiate(s, ring, neckOf(s.field).c, 3, 0.04, {
+    amp: 0.0022,
+    width: 0.009,
+    lift: TUNIC,
+    drop: 1.2,
+    from: 0.07,
+    to: 0.17,
+  });
+  return [
+    ...drag(s, pit, to, look),
+    ...hang(s, under, [0.05, 0.045], { ...look, amp: 0.0022 }),
+    ...gather,
+  ];
 }
 
 /** Mantle folds: pipe folds hanging from the front of each shoulder and down the back, U folds
@@ -406,5 +549,14 @@ function mantleFolds(s: Surface): Fold[] {
       look,
     ),
     ...drag(s, BROOCH, pull, { ...look, amp: 0.0035 }),
+    // Compression folds where the mantle's collar is pulled in round the back of the neck.
+    ...radiate(s, neckOf(s.field).ring, neckOf(s.field).c, 4, 0.05, {
+      amp: 0.004,
+      width: 0.012,
+      lift: MANTLE,
+      drop: 0.8,
+      from: 0.3,
+      to: 0.45,
+    }),
   ];
 }

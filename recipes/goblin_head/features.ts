@@ -4,13 +4,32 @@
 // inner ends), warts seeded over nose, cheeks and dome, and flush on the nose and ears.
 
 import { dmath, type Mesh, merge, type Rng, type SculptEdit } from '@developerz.ai/ts23d';
-import { ball, cone2, creaseOn, norm, type Surface, spline, type V } from '../_lib/bust/kit.ts';
+import { earGraft } from '../_lib/bust/ear-graft.ts';
+import { structureEdits } from '../_lib/bust/face-forms.ts';
+import {
+  ball,
+  chain,
+  cone2,
+  creaseOn,
+  ell,
+  norm,
+  type Surface,
+  spline,
+  taper,
+  type V,
+} from '../_lib/bust/kit.ts';
 import { mix, tooth } from '../_lib/face/teeth.ts';
 import { ivoryTusk } from '../_lib/face/tusks.ts';
-import { C, H, SK } from './spec.ts';
+import { C, EYE, GRAFT, H, SK, STRUCTURE } from './spec.ts';
 
-export function featureEdits(stage: number, s: Surface, _lod: number, _rng: Rng): SculptEdit[] {
-  const out: SculptEdit[] = [];
+export function featureEdits(stage: number, s: Surface, lod: number, _rng: Rng): SculptEdit[] {
+  // The bones and the lids over the soft base (D570–D572).
+  const out: SculptEdit[] = structureEdits(SK, EYE, H, s, STRUCTURE, lod);
+  // The ears as leaf blades of real thickness (D574); LOD1's 1 cm cell holds a plain one no
+  // thinner than itself, unnotched.
+  out.push(
+    ...earGraft(SK, lod === 0 ? GRAFT : { ...GRAFT, thick: 0.011, simple: true, notches: [] }),
+  );
   // Grin: cheeks bunched up at the mouth corners.
   out.push(
     ball(
@@ -21,19 +40,9 @@ export function featureEdits(stage: number, s: Surface, _lod: number, _rng: Rng)
       },
     ),
   );
-  out.push(fangLips());
+  // (The lips' rolls and the mouth's gap are finer than LOD1's cell.)
+  out.push(...(lod === 0 ? lipEdits() : []), fangLips());
   if (stage < 4) return out;
-  // The ear's drawn-out tip: its cartilage edge thickened over the last 3 cm (the blade thins to
-  // a film there, and the rim reads as an edge, not a paper cut-out).
-  const tip: V = [SK.earTip[0], Math.abs(SK.earTip[1]), SK.earTip[2]];
-  const top: V = [SK.earTop[0], Math.abs(SK.earTop[1]), SK.earTop[2]];
-  const d = dmath.hypot(tip[0] - top[0], tip[1] - top[1], tip[2] - top[2]) || 1;
-  const at = (back: number): V => [
-    tip[0] - ((tip[0] - top[0]) / d) * back,
-    tip[1] - ((tip[1] - top[1]) / d) * back,
-    tip[2] - ((tip[2] - top[2]) / d) * back,
-  ];
-  out.push(cone2(at(0.022), at(0.004), 0.002, 0.0011, { blend: 0.003 }));
   // Worried brow: three creases, inner ends raised.
   for (const l of browLines()) out.push(creaseOn(s, l, 0.008 * H, 0.004 * H));
   // Warts, seeded: on the nose, the cheeks and the dome (not mirrored).
@@ -84,6 +93,45 @@ export function grinLine(): V[] {
       a[2] + (b[2] - a[2]) * t,
     ],
   );
+}
+
+/** The lips as rolls of flesh along the slit (on the base they are a cut in a flat muzzle: a
+ *  slot, D576): an upper lip standing over the teeth's roots, a lower lip set back under their
+ *  tips (the receding jaw), both tapering into the corners, lip-coloured; the dark gap of the
+ *  mouth between them; and the mentolabial hollow under the lower lip that turns the chin into a
+ *  form of its own. */
+export function lipEdits(): SculptEdit[] {
+  const line = grinLine();
+  const n = line.length;
+  const roll = (dx: number, dz: number): V[] =>
+    line.map((p, i): V => {
+      const t = i / (n - 1);
+      return [p[0] + dx * H * (0.4 + 0.6 * t), p[1], p[2] + dz * H * (0.6 + 0.4 * t)];
+    });
+  const brush = { blend: 0.008 * H, color: C.lips } as const;
+  return [
+    chain(roll(0.002, 0.028), taper(n, 0.005 * H, 0.011 * H), brush),
+    chain(roll(-0.008, -0.036), taper(n, 0.005 * H, 0.012 * H), brush),
+    // The mouth itself: a dark gap between the lips, behind the teeth (they stand in a jaw,
+    // not on a lip).
+    chain(roll(-0.012, -0.006), taper(n, 0.003 * H, 0.011 * H), {
+      op: 'subtract',
+      blend: 0.004 * H,
+      color: C.mouth,
+    }),
+    ...roll(-0.012, -0.006).map((p, i) =>
+      ball(p, (0.004 + 0.007 * (i / (n - 1))) * H, {
+        op: 'paint',
+        blend: 0.003 * H,
+        color: C.mouth,
+      }),
+    ),
+    ell(
+      [SK.stomion[0] - 0.024 * H, 0, SK.stomion[2] - 0.052 * H],
+      [0.02 * H, Math.abs(SK.cheilion[1]) * 0.55, 0.014 * H],
+      { op: 'subtract', blend: 0.014 * H, mirror: false },
+    ),
+  ];
 }
 
 /** A lower fang's radius where it leaves the lip. */
