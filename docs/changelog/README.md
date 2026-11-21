@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.21.0](0.21.0.md) | 2026-11-21 | Raster renders lose the black lines along folds, and the human and elf busts keep a readable face and clean garment edges at their far LOD. |
 | [0.20.0](0.20.0.md) | 2026-11-21 | Renders stop borrowing colour from neighbouring texture rows, busts get carved faces, real ears, sewn clothes and far-LOD hair shells, and the RTS faction gets rain-stained walls, recessed windows, worn roofs and a lighter scene. |
 | [0.19.0](0.19.0.md) | 2026-11-21 | Hair shows fine strands and a sheen instead of straw, skin pores hold an even scale on every triangle, far-LOD busts keep their faces, the orc wears real forged steel, and `ctx.use`, bone clips, sockets and `t3d shot --lods` export what you built. |
 | [0.18.1](0.18.1.md) | 2026-11-21 | Other recipes loaded in the same process no longer change or break an asset's materials on rows its compile did not record, or on finished and hero-baked parts: a test run, `t3d mcp` and the gallery workers no longer fail on materials other recipes share a row with. |
