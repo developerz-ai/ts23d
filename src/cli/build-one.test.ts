@@ -2,7 +2,7 @@ import { expect, it } from 'bun:test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { compile, cylinder, defineAsset, readGlbChunks } from '../index.ts';
+import { box, compile, cylinder, defineAsset, readGlbChunks } from '../index.ts';
 import { parseArgs } from './args.ts';
 import { buildOne, qaOf } from './build-one.ts';
 
@@ -78,6 +78,37 @@ it('lists no clips in the manifest when --no-animations writes GLBs without any'
     const glb = new Uint8Array(await Bun.file(join(out, 'spinner', 'lod0.glb')).arrayBuffer());
     expect(readGlbChunks(glb).json['animations']).toBeUndefined();
     expect(still.clips).toBeUndefined();
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+});
+
+it('draws the hero LOD0 and the far LOD2 whatever --lods builds (D559)', async () => {
+  // A red top block only at LOD0: a sheet drawn from the wrong LOD loses or gains it.
+  const lodpick = defineAsset({
+    name: 'lodpick',
+    kind: 'prop',
+    budget: { triangles: [2000, 2000, 2000] },
+    build(ctx) {
+      ctx.part('base', box({ size: [1, 1, 1], at: [0, 0, 0.5], color: [0.5, 0.5, 0.5] }));
+      if (ctx.lod === 0)
+        ctx.part('top', box({ size: [0.5, 0.5, 0.5], at: [0, 0, 1.25], color: [0.8, 0.2, 0.2] }));
+    },
+  });
+  const out = await mkdtemp(join(tmpdir(), 't3d-build-one-'));
+  try {
+    const shot = async (picked: string): Promise<Uint8Array[]> => {
+      const dir = join(out, picked);
+      await buildOne(lodpick, parseArgs(['shot', 'lodpick.ts', '--lods', picked, '--out', dir]));
+      return Promise.all(
+        ['thumb.png', 'sheet.png'].map(
+          async (f) => new Uint8Array(await Bun.file(join(dir, 'lodpick', f)).arrayBuffer()),
+        ),
+      );
+    };
+    const all = await shot('0,1,2');
+    expect(await shot('1')).toEqual(all);
+    expect(await shot('0')).toEqual(all);
   } finally {
     await rm(out, { recursive: true, force: true });
   }

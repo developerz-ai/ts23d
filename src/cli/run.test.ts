@@ -1,5 +1,5 @@
 import { afterAll, expect, it } from 'bun:test';
-import { rm } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { run } from './run.ts';
 
@@ -98,6 +98,22 @@ it('fails a bad --size with a coded error, before writing anything', async () =>
   expect(code).toBe(2);
   expect(JSON.parse(printed).error.code).toBe('T3D_CLI_USAGE');
   expect(await Bun.file(join(out, 'bad', 'crate', 'hero.png')).exists()).toBe(false);
+});
+
+it('fails a directory that holds no recipe instead of building nothing (D560)', async () => {
+  const empty = join(out, 'empty');
+  await mkdir(empty, { recursive: true });
+  const log = console.log;
+  let printed = '';
+  console.log = (m: string) => {
+    printed += m;
+  };
+  const code = await run(['build', empty, '--out', join(out, 'none'), '--json']);
+  console.log = log;
+  expect(code).toBe(1);
+  const env = JSON.parse(printed);
+  expect([env.ok, env.error.code]).toEqual([false, 'T3D_RECIPE_NOT_FOUND']);
+  expect(env.error.fix).toContain('<name>.ts');
 });
 
 it('renders a hero and a review pack', async () => {

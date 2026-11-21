@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    114270,
-    30710,
-    4144
+    115128,
+    29638,
+    4372
   ],
   "drawCalls": [
     4,
@@ -99,11 +99,41 @@
     "docs/research/face-base.md (CC0 MakeHuman base head and its landmarks)"
   ],
   "weather": {
+    "chips": {
+      "target": 0.45,
+      "actual": 0.45,
+      "eligible": "convex-edges",
+      "area": 0.1269
+    },
+    "scratches": {
+      "target": 0.06,
+      "actual": 0.06,
+      "eligible": "exposed-panels | side-facing",
+      "area": 0.2641
+    },
+    "rust": {
+      "target": 0.12,
+      "actual": 0.12,
+      "eligible": "below-fasteners | fasteners",
+      "area": 0.0532
+    },
     "mud": {
       "target": 0.5,
       "actual": 0.5,
-      "eligible": "ground-near",
-      "area": 0.0252
+      "eligible": "cavities ; ground-near",
+      "area": 0.0564,
+      "by": {
+        "plate": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.0312
+        },
+        "fur_and_strap": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.0252
+        }
+      }
     },
     "dust": {
       "target": 0.3,

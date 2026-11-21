@@ -98,9 +98,16 @@ export function frontLocks(on: Surface): Array<{ ctrl: V[]; y: number }> {
   }));
 }
 
-// The cap is the hair's root colour in shade: at the mid gold it read through the crown's
-// gaps in the portrait as a pale scalp patch under the whorl.
-export const CAP: V = mix(C.hairRoot, [0, 0, 0], 0.45);
+const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+
+/** Negative on the front third of the skull (forehead to just past the temples). */
+const front = (p: Vec3): number =>
+  (SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]) - 0.33;
+
+// The cap is the locks' own gold in shade (D543): the swept-back locks leave their buried first
+// centimetre bare behind the front hairline, and at the root colour in shade the cap showed
+// there as a brown strip. (The mid gold unshaded read as a pale scalp patch.)
+export const CAP: V = mix(mix(C.hairRoot, C.hairTip, 0.25), [0, 0, 0], 0.3);
 
 /** Lock lines over the cap (left half, mirrored): meridians from the brow over the crown and
  *  down the back, fanning from the centre parting; kept where the hair grows. */
@@ -142,16 +149,6 @@ export const hairBaseEdits = (scalp: Field, lod: number): SculptEdit[] => {
   return [mass, ...flowLocks(hair, capLines(hair), 0.0058, tone)];
 };
 
-/** The pole the cap's lock lines fan out from (capLines' centre, 30° up from straight ahead):
- *  the cap shows there as a dark disc between the cards' roots unless a layer covers it. */
-const WHORL: V = [
-  (SK.glabella[0] + SK.occiput[0]) / 2 + 0.1 * dmath.cos(Math.PI / 6),
-  0,
-  SK.euryon[2] + 0.1 * dmath.sin(Math.PI / 6),
-];
-
-const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
-
 /** Half-width of the solid in front of the ears that keeps locks off the face: a finger past the
  *  ear tips. (At 16 cm a lock that met it slid out along its side and hung in the air beside the
  *  shoulder as a stray.) */
@@ -159,18 +156,24 @@ const SHIELD = Math.abs(SK.earTip[1]) + 0.012;
 
 /** Away from the centre parting, then back and down: over the ears' roots the hair is swept back
  *  hard, so it falls behind them; at the back straight down to the shoulders. */
-const comb = (p: Vec3, n: Vec3): Vec3 => {
+export const comb = (p: Vec3, n: Vec3): Vec3 => {
   const out = Math.sign(p[1] || 1);
   const top = clamp01(n[2]);
   // 0 at the forehead, 1 at the back of the skull.
   const t = clamp01((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]));
   // Near the ear (above and in front of its root): back, not down.
   const ear = clamp01(1 - dmath.hypot(p[0] - SK.earTop[0], p[2] - SK.earTop[2] - 0.03) / 0.06);
+  const back = clamp01((t - 0.12) / 0.25);
   return [
     -(1.1 - 0.7 * t) - 1.2 * ear,
     // Off the parting: sideways only once past the crown's front, so the front stays covered.
     out * (0.5 * top * clamp01((t - 0.15) / 0.3) * (1 - t) + 0.1),
-    -0.25 - 1.1 * (1 - top) * (1 - ear) - 0.5 * t,
+    // Down only at the sides and past the crown's front (D542): on the slope above the forehead
+    // a downward comb pointed straight into the skin, its tangent vanished and the locks rayed
+    // out of that pole like a flower, baring the cap.
+    -0.25 * back -
+      1.1 * (1 - top) * (1 - ear) * Math.max(back, clamp01(Math.abs(n[1]) * 3)) -
+      0.5 * t,
   ];
 };
 
@@ -291,30 +294,6 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         under: 0,
         fly: 0,
       },
-      // The whorl: short locks over the cap lines' pole above the forehead, where every other
-      // layer's comb leads away, so no disc of the cap shows there at portrait distance.
-      {
-        name: 'hair_whorl',
-        kind: 'hair',
-        region: (p: Vec3) =>
-          Math.max(
-            hairline(p),
-            dmath.hypot(p[0] - WHORL[0], p[1] - WHORL[1], p[2] - WHORL[2]) - 0.045,
-          ),
-        density: 6000,
-        length: 0.055,
-        width: 0.024,
-        lift: 0.03,
-        bend: 0.9,
-        droop: 0.3,
-        roll: 0.12,
-        fold: 0.4,
-        tone: [0.72, 1],
-        tint: pale,
-        hug: 1,
-        under: 0,
-        fly: 0,
-      },
       // Hairline: short strands rooted on the edge band, over the cap's edge.
       {
         name: 'hair_edge',
@@ -332,6 +311,23 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         fold: 0,
         hug: 0.5,
         tone: [0.75, 1.05],
+      },
+      // Baby hairs (D543): sparse fine strands from 4 mm inside the hairline to 8 mm out on the
+      // skin, so the hair thins out into the forehead instead of ending on a ruled edge.
+      {
+        name: 'hair_baby',
+        kind: 'wisp',
+        region: (p: Vec3) => Math.max(hairline(p) - 0.008, -hairline(p) - 0.004, front(p) - 0.15),
+        density: 36000,
+        length: 0.026,
+        width: 0.007,
+        lift: 0.25,
+        bend: 0.7,
+        droop: 0.1,
+        roll: 0.4,
+        fold: 0,
+        hug: 0.4,
+        tone: [0.8, 1.05],
       },
       // (No flyaways: at this length a strand with no clump to hold it arcs out past the
       // shoulders as a stray lock.)

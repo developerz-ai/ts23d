@@ -56,7 +56,7 @@ import { serverMain } from './server-cmd.ts';
 import { setupMain } from './setup-cmd.ts';
 import { loadTextureCache } from './texture-cache.ts';
 import { printTune, type TuneRun, tuneFile } from './tune-cmd.ts';
-import { entriesOf, watchMain } from './watch.ts';
+import { emptyRecipeDirs, entriesOf, watchMain } from './watch.ts';
 
 const RENDERS = ['hero', 'review', 'critique', 'icon', 'finish'];
 
@@ -133,6 +133,8 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
   const listed: { asset: string; file: string }[] = [];
   const failed: Failed[] = [];
   const seen = new Map<string, string>();
+  for (const { dir, error } of emptyRecipeDirs(args.files))
+    failed.push({ file: dir, error: error.toJSON() });
   for (const file of entriesOf(args.files)) {
     let assets: Asset[];
     try {

@@ -16,6 +16,8 @@
 // rigidly to their nearest bone. Bones live in the asset frame, so a skinned mesh must sit at the
 // root: a group that never moves (no motion up to the root, no clip keying it; a `ctx.use` prefix
 // group) hands its geometry to the root, baked into world space, once any of it is skinned.
+// A part a clip keys morph weights on keeps its own node under the pivot it would merge into
+// (D555): the track still finds it by name, and its targets keep the order the keys are in.
 
 import {
   type CompiledAsset,
@@ -142,9 +144,12 @@ export function mergeToPivots(
   };
   // Pivots that never move (no motion up to the root, no clip keys them) and hold skinned
   // geometry: all of it goes to the root, where the bones are.
-  const keyed = new Set(
-    (asset.clips ?? []).flatMap((c) => c.tracks.flatMap((t) => ('part' in t ? [t.part] : []))),
+  const tracks = (asset.clips ?? []).flatMap((c) => c.tracks);
+  const keyed = new Set(tracks.flatMap((t) => ('part' in t ? [t.part] : [])));
+  const morphKeyed = new Set(
+    tracks.flatMap((t) => ('part' in t && t.path === 'weights' ? [t.part] : [])),
   );
+  const ownNodes: { part: Part; layer: string; glow: number }[] = [];
   const still = (name: string): boolean => {
     for (let q = byName.get(name); q; q = q.parent ? byName.get(q.parent) : undefined)
       if (q.motion !== null || keyed.has(q.name)) return false;
@@ -167,7 +172,14 @@ export function mergeToPivots(
     const pivot = lifted.has(under) ? ROOT : under;
     const t = xf.get(p.name) ?? identity;
     const pt = pivot === ROOT ? identity : (xf.get(pivot) ?? identity);
-    bucket(pivot, layer, intoPivot(p.mesh, t, pt));
+    const mesh = intoPivot(p.mesh, t, pt);
+    if (morphKeyed.has(p.name) && p.name !== ROOT) {
+      const parent = pivot === ROOT ? null : pivot;
+      const part: Part = { name: p.name, mesh, at: [0, 0, 0], parent, yaw: 0, motion: null };
+      ownNodes.push({ part, layer, glow: glowOf(p.name) });
+      continue;
+    }
+    bucket(pivot, layer, mesh);
   }
   const used = <T>(of: (p: Part) => T | undefined): T[] =>
     [...new Set(asset.parts.flatMap((p) => of(p) ?? []))].sort();
@@ -246,6 +258,11 @@ export function mergeToPivots(
     const { surface: _drop, paint: _slot, finish: _finish, textures: _set, ...rest } = p;
     parts.push({ ...rest, ...reparented(p), mesh: meshOf(p.name, own), ...own?.props });
     layers(p.name, p.name, own);
+  }
+  for (const { part, layer, glow: g } of ownNodes) {
+    const kept: Part = { ...part, ...all.find((l) => l.key === layer)?.props };
+    if (g >= 0) glowLayer.set(kept, g);
+    parts.push(kept);
   }
   return { ...asset, parts: unique(parts) };
 }

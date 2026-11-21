@@ -86,8 +86,10 @@ export interface SkinOptions {
    *  side within 8 mm behind it (an ear's rim and helix) is warmed toward `color`, the glow a
    *  backlit ear shows, painted so it reads in any light and any engine. */
   readonly translucent?: { readonly color: V; readonly region: Field };
-  /** Far LOD: every vertex takes the mean of the paint at the centres of its faces, so one
-   *  sample in a crevice (a nostril, a lid line) no longer colours a whole 2 cm triangle. */
+  /** A coarse LOD (LOD1 and LOD2): every vertex takes the mean of the paint at the centres of its
+   *  faces, so one sample in a crevice or a speckle (a nostril, a lid line) no longer colours a
+   *  whole triangle. Point-sampled at LOD1's 1 cm, the millimetre paint noise aliased into
+   *  triangle-wide patches (D552). */
   readonly far?: boolean;
 }
 

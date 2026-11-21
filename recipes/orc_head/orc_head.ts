@@ -4,7 +4,8 @@
 // skin zones, ../_lib/bust/bust.ts); lower tusks rooted in the jaw (the left one broken), scars
 // and warts as strokes, a scowl; a thick neck into huge trapezius; plate pauldrons with bone
 // spikes, a leather baldric, a fur mantle, a bead necklace, a warrior's knot and card hair; a
-// turned plinth. Design dossier, declared race deltas and proportion bands: README.md.
+// turned plinth. Skull planes and the nape's break: cranium.ts; the far LOD's solids: far.ts.
+// Design dossier, declared race deltas and proportion bands: README.md.
 
 import { defineAsset, headClips, hex } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
@@ -49,8 +50,9 @@ export const orc_head = defineAsset({
     ],
   },
   // LOD0: the skull-stage head ≈ 37k (its eyes, ears and mouth meshed finer), the card beard and
-  // brows ≈ 17k, plates, spikes, fur and the knot ≈ 41k; LOD2 keeps the silhouette, the tusks and
-  // the pauldrons as closed shells. Draws: skin, face-node gear, corneas, hair cards.
+  // brows ≈ 17k, plates, spikes, fur and the knot ≈ 41k; LOD2 is built, not decimated (far.ts):
+  // revolved pauldrons and spikes, a solid beard, and half its triangles on the head.
+  // Draws: skin, face-node gear, corneas, hair cards.
   budget: { triangles: [118000, 32000, 4400], draws: 4 },
   // Ember eyes: the whole eyeball glows (dark amber sclera, bright iris).
   glow: [{ parts: ['eye_*'], color: hex('#ff7a1a'), strength: 2.5 }],

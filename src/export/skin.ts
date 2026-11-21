@@ -10,6 +10,7 @@ import {
   type CompiledAsset,
   checkMeshAttributes,
   type Mesh,
+  quatFromAxisAngle,
   Ts23dError,
   type Vec3,
   worldTransforms,
@@ -123,9 +124,13 @@ export function writeSkin(
           cause: `socket '${p.name}' in '${asset.name}' rides bone '${bone}', which the skeleton lacks`,
           fix: `name a bone: ${sk.bones.map((x) => x.name).join(', ')}`,
         });
-      const w = world.get(p.name)?.origin ?? p.at;
+      const w = world.get(p.name) ?? { origin: p.at, yaw: p.yaw };
       detach(doc, parentOf(doc, id), id);
-      (doc.nodes[id] as Json)['translation'] = [0, 1, 2].map((k) => (w[k] ?? 0) - (b.head[k] ?? 0));
+      const node = doc.nodes[id] as Json;
+      node['translation'] = [0, 1, 2].map((k) => (w.origin[k] ?? 0) - (b.head[k] ?? 0));
+      // Joint nodes carry no rotation: the socket's local turn is its whole world yaw (D557).
+      if (w.yaw) node['rotation'] = [...quatFromAxisAngle([0, 0, 1], w.yaw)];
+      else delete node['rotation'];
       attach(doc, j, id);
     }
   }

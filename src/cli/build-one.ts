@@ -83,14 +83,17 @@ export async function buildOne(
   }
   // Images show the chosen livery; the GLBs above carry every variant regardless.
   const variant = variantOf(asset, args);
-  const look = (lod: Lod, compiled?: CompiledAsset): CompiledAsset =>
-    variant ? compileOnce(asset, { lod, variant }) : (compiled ?? compileOnce(asset, { lod }));
+  // Reuse a LOD this build compiled only when it is that LOD: `--lods 1,2` has no LOD0 (D559).
+  const look = (lod: Lod): CompiledAsset =>
+    variant
+      ? compileOnce(asset, { lod, variant })
+      : (lods.find((a) => a.lod === lod) ?? compileOnce(asset, { lod }));
   const png = (name: string): string => (variant ? `${name}_${variant}.png` : `${name}.png`);
   let hero: string | undefined;
   let thumb: string | undefined;
   let sheet: string | undefined;
   if (args.cmd === 'build' && args.shot) {
-    const top = look(0, lods[0]);
+    const top = look(0);
     hero = await write(
       png('hero'),
       beauty(top, { ...args.render, ...(painted ? { sheet: painted } : {}) }),
@@ -98,7 +101,7 @@ export async function buildOne(
   }
   if (args.cmd === 'shot' || args.shot) {
     // Base colour as in the hero (D297): compile first, the preview sheet follows the materials.
-    const [top, far] = [look(0, lods[0]), look(2, lods.at(-1))];
+    const [top, far] = [look(0), look(2)];
     const tones = previewSheet([top, far]);
     thumb = await write(png('thumb'), thumbnail(top, { sheet: tones }));
     sheet = await write(png('sheet'), contactSheet(top, { far, sheet: tones }));

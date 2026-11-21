@@ -25,7 +25,7 @@ export function plinth(ctx: BuildContext): Mesh {
   ];
   return lathe({
     profile,
-    segments: ctx.pick([64, 32, 10]),
+    segments: ctx.pick([64, 32, 8]),
     color: C.plinth,
     strip: 'stone',
   });

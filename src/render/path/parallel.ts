@@ -73,6 +73,7 @@ export function shareWorld(d: WorldData): WorldData {
     tex,
     cls: u8(d.cls),
     mip: u8(d.mip),
+    strand: f32(d.strand),
   };
 }
 

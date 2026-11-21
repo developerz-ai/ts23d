@@ -95,4 +95,49 @@ describe('clips on an asset', () => {
     const out = compile(jawed([clip([rot([0, 1]), lid])]));
     expect(out.clips?.map((c) => c.name)).toEqual(['bite']);
   });
+
+  it('turns a used child bone keys by its yaw, not its part keys (D556)', () => {
+    const s = Math.SQRT1_2;
+    const tracks: Track[] = [
+      // 90° about +Y, and 1 m along +X.
+      {
+        bone: 'jaw',
+        path: 'rotation',
+        times: new Float32Array([0]),
+        values: new Float32Array([0, s, 0, s]),
+      },
+      {
+        bone: 'jaw',
+        path: 'translation',
+        times: new Float32Array([0]),
+        values: new Float32Array([1, 0, 0]),
+      },
+      {
+        part: 'lid',
+        path: 'translation',
+        times: new Float32Array([0]),
+        values: new Float32Array([1, 0, 0]),
+      },
+    ];
+    const child = jawed([clip(tracks)]);
+    const parent = defineAsset({
+      name: 'pack',
+      kind: 'creature',
+      budget: { triangles: [10, 10, 10] },
+      build(ctx) {
+        ctx.group('stand', { yaw: Math.PI / 4 });
+        ctx.use(child, { prefix: 'a', parent: 'stand', yaw: Math.PI / 4 });
+      },
+    });
+    const keys = compile(parent).clips?.[0]?.tracks.map((t) =>
+      [...t.values].map((v) => Math.round(v * 1e5) / 1e5),
+    );
+    const r = Math.round(s * 1e5) / 1e5;
+    // World yaw 90°: +Y → −X, +X → +Y. The lid's keys sit in its own (turned) frame already.
+    expect(keys).toEqual([
+      [-r, 0, 0, r],
+      [0, 1, 0],
+      [1, 0, 0],
+    ]);
+  });
 });

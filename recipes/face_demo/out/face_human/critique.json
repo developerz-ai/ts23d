@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Collar is a real band with a clean hem; the stubble is now sparser and lighter (fewer cut-hair dots) so the jaw reads as short growth over skin rather than grit in hero.png, and pores and a few freckles sit on the nose and cheek centres; the lids are slightly cooler and the ear glows less; the stubble dots are still one uniform size and still run down the neck well past the jaw line, and the shirt is a flat rib.",
+      "reason": "The collar is a real band with a clean hem; the stubble dots on the neck are now round and even instead of the short vertical streaks they made under the jaw before, and pores and a few freckles sit on the nose and cheek centres. The hair carries more dark strand lines and fewer pale flat card patches on the crown, but no sheen band is visible in hero.png. The stubble dots are still one size and still run down the neck past the jaw line; the shirt is a flat rib, which now runs unbroken across the near shoulder in hero.png with no triangular patches.",
       "fixes": [
         "vary stubble dot size and fade it out under the jaw line instead of down the neck",
         "a linen strip with slub noise on the shirt"
@@ -27,10 +27,11 @@
     },
     "detail": {
       "score": 7,
-      "reason": "Hair locks, ear shape, a collared shirt, eyes under a shadowed lid with a lash line, and now pores and stubble that read as hair dots in hero.png; no creases at the portrait distance.",
+      "reason": "Hair locks with finer strand lines on the crown, ear shape, a collared shirt, eyes under a shadowed lid with a lash line, and pores and stubble that read as hair dots in hero.png; small red specks sit at the inner and outer eye corners at 4x; no creases at the portrait distance.",
       "fixes": [
         "LOD0 crease displacement (nasolabial fold, under-eye)",
-        "stitching along the shirt neckline"
+        "stitching along the shirt neckline",
+        "clean the red specks at the eye corners"
       ]
     },
     "wear": {
@@ -50,14 +51,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 54.2k / 11.5k / 2.8k tris, 4 / 4 / 3 draws.",
+      "reason": "QA clean; 56.0k / 12.3k / 3.2k tris, 4 / 4 / 3 draws.",
       "fixes": [
         "cheaper hair cards at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "99406778a4b6098d2ca90961685058bdbf4525ca524d3f1631bf79e4b3acad3e",
-    "sheet.png": "975b2f41cfbed5d5e58dbaff8bb151f30e9b1284451e9dbe8a2032fe0783f83e"
+    "hero.png": "5e852449393541873e226362d97154abf8abba244de8642b8d41e3819e50ecb4",
+    "sheet.png": "ce69c649d7375c47cc61889537894b85efc891a428568cb7f474ed6e4e0136ba"
   }
 }

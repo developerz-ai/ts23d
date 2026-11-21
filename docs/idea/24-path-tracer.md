@@ -19,7 +19,7 @@ iteration, contact sheets, review close-ups and the calibrated metric vector.
 | Lights | `sky.ts`, `nee.ts` | procedural studio sky (tabulated CDF) + sun disc, MIS with the BSDF |
 | Surfaces | `surf.ts`, `bsdf.ts`, `ggx-table.ts` | glTF BRDF (GGX, Smith, Schlick, clearcoat), tabulated multiple-scatter compensation: white furnace within 1% |
 | Textured parts | `../texture-sets.ts`, `../set-shade.ts` | a part's own texture set (ADR 016): albedo × vertex colour, ORM or the set's factors, normal map in the exporter's per-vertex tangent frame (glTF: green up, v down); shared with the raster and the contact sheet |
-| Fur / hair | `hair.ts` | diffuse + R / TT / TRT lobes about the strand; cutout cards alpha-tested on the coverage-preserving mips |
+| Fur / hair | `hair.ts` | a many-fibre term (mostly back to the lit side) + R / TT / TRT lobes about the strand tangent, which is blended per vertex along each card; smooth fibres (roughness under 0.48: head hair) gather 60 % of the many-fibre term into a sheen band about the specular cone and narrow R / TRT, rough fibres (fur) stay matte; cutout cards alpha-tested on the coverage-preserving mips |
 | Skin | `sss.ts`, `classes.ts` | Burley normalised diffusion, disk-probe exit points; skin = `skin*` finish, or plain parts of characters/creatures |
 | Image | `film.ts`, `denoise.ts` | 32 px tiles merged by index; asset layer + floor shadow-catcher layer; the asset layer variance-guided à-trous denoised (SVGF-style, using the film's per-pixel variance), the shadow layer à-trous |
 | Threads | `parallel.ts`, `worker.ts` | shared arrays, atomic tile counter; same bytes on 1 or N threads |

@@ -152,6 +152,31 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
   s.metal = look.metallic >= 0 ? look.metallic : (texel[2] ?? 0);
   s.cls = w.cls[t] ?? 0;
   s.tri = t;
+  if (s.cls === CLS.hair && w.strand.length > 0)
+    strandTangent(w.strand, ia, ib, ic, b0, b1, b2, s.t);
+}
+
+/** The strand tangent at a point of a hair card: its vertices' tangents blended (D540: one
+ *  tangent per triangle lit each flat segment of a bent card as a plate). Keeps `t` where the
+ *  blend cancels out. */
+function strandTangent(
+  S: Float32Array,
+  ia: number,
+  ib: number,
+  ic: number,
+  b0: number,
+  b1: number,
+  b2: number,
+  t: Float64Array,
+): void {
+  const x = (S[ia] ?? 0) * b0 + (S[ib] ?? 0) * b1 + (S[ic] ?? 0) * b2;
+  const y = (S[ia + 1] ?? 0) * b0 + (S[ib + 1] ?? 0) * b1 + (S[ic + 1] ?? 0) * b2;
+  const z = (S[ia + 2] ?? 0) * b0 + (S[ib + 2] ?? 0) * b1 + (S[ic + 2] ?? 0) * b2;
+  const l = dmath.hypot(x, y, z);
+  if (!(l > 1e-6)) return;
+  t[0] = x / l;
+  t[1] = y / l;
+  t[2] = z / l;
 }
 
 /**

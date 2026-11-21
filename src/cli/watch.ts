@@ -34,11 +34,24 @@ export function recipeEntries(dir: string): string[] {
   return out;
 }
 
+const isDir = (p: string): boolean => existsSync(p) && statSync(p).isDirectory();
+
 /** Files and directories → recipe entry files (a directory expands to its entries). */
 export function entriesOf(paths: readonly string[]): string[] {
-  return paths.flatMap((p) =>
-    existsSync(p) && statSync(p).isDirectory() ? recipeEntries(p) : [p],
-  );
+  return paths.flatMap((p) => (isDir(p) ? recipeEntries(p) : [p]));
+}
+
+/** Each directory argument holding no recipe entry: building it would build nothing (D560). */
+export function emptyRecipeDirs(paths: readonly string[]): { dir: string; error: Ts23dError }[] {
+  return paths
+    .filter((p) => isDir(p) && recipeEntries(p).length === 0)
+    .map((dir) => ({
+      dir,
+      error: new Ts23dError('T3D_RECIPE_NOT_FOUND', {
+        cause: `directory '${dir}' holds no recipe: no <dir>/<name>/<name>.ts or <dir>/<name>.ts entry`,
+        fix: `point at a recipe file or the folder that holds them (e.g. recipes/), or add ${join(dir, '<name>', '<name>.ts')} exporting defineAsset({...})`,
+      }),
+    }));
 }
 
 const transpiler = new Bun.Transpiler({ loader: 'ts' });

@@ -46,7 +46,8 @@ export const human_head = defineAsset({
   },
   // LOD0: the head's skin ≈ 28k (eyes, ears and mouth meshed finer), hair ≈ 10k, the garments
   // ≈ 21k. Draws: skin, face-node cloth, static fittings, corneas, hair cards.
-  budget: { triangles: [72000, 20500, 3100], draws: 5 },
+  // (LOD2 from 3100: its face box holds the sockets, nose and lips, ~400–630 triangles, D551.)
+  budget: { triangles: [72000, 20500, 3500], draws: 5 },
   // The eyeballs' cornea (a clear lacquer over the painted iris) and the skin: the pore strip's
   // own roughness (matte cheeks, a glossier T-zone) under a soft grazing sheen. The wool and the
   // linen are strips of their own (../_lib/bust/cloth-strips.ts), no finish.

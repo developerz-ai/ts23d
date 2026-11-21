@@ -13,6 +13,7 @@ import { setAlpha } from '../texture-sets.ts';
 import { footprintMip } from '../vis-buffer.ts';
 import { type HitFilter, PathBvh } from './bvh.ts';
 import { CLS, triangleClasses } from './classes.ts';
+import { strandTangents } from './hair.ts';
 import { type ShadowPass, shadowPass } from './shadow.ts';
 import type { Sky } from './sky.ts';
 
@@ -22,6 +23,8 @@ export interface WorldData {
   readonly tex: SheetTextures;
   readonly cls: Uint8Array;
   readonly mip: Uint8Array;
+  /** Unit strand tangent per vertex of the hair cards (hair.ts `strandTangents`); empty: no hair. */
+  readonly strand: Float32Array;
   readonly sky: Sky;
   /** Floor plane height (the asset's lowest point); NaN = no floor. */
   readonly floorZ: number;
@@ -95,6 +98,7 @@ export function worldData(
     tex,
     cls,
     mip: cameraMips(scene, cam, tex.size, cls),
+    strand: strandTangents(scene, cls),
     sky: o.sky,
     floorZ: o.floor === false ? Number.NaN : scene.min[2],
     floorAlbedo: o.floorAlbedo ?? 0.35,

@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Smooth grey collar band, matte scalp, green skin with pores and mottling, and the ear and lids are a shade cooler with no change in read; the tusks grade from a darker tan root at a thin gum line to a pale tip in FRONT and hero.png, and the lower lip is green, a little darker and warmer than the chin; green still washes onto the tunic shoulders above the collar in hero.png, and the tunic is a flat ribbed brown.",
+      "reason": "Smooth grey collar band, matte scalp, green skin with pores and mottling that is now even with no streaking, tusks grading from a darker root at a thin gum line to a pale tip, and a green lower lip a little darker than the chin. The crest has a little more strand variation but is still a dark grey mass of flat cards with no sheen in hero.png. Green still washes onto the tunic shoulders above the collar, the tunic is a flat ribbed brown, though the rib now runs unbroken across the near shoulder in hero.png.",
       "fixes": [
         "end the skin colour at the collar so no green bleeds onto the tunic shoulders",
         "a leather or wool strip on the tunic instead of the flat rib"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "196aa957cc0d2fa481e1532364eb463ad07f36f74651ee3e01a5a5b0ef75079d",
-    "sheet.png": "aa6edf63b03c817b207ed56559515fc38d4aeda6e024a189ad836eab0b955a94"
+    "hero.png": "c5771278cc4b528095209509fdd38e1f5fe5d3083aa433ca75192da626636823",
+    "sheet.png": "fc86d503dc076ce9fd10efce838c2a5321e18e8ed3cc01ade99a6d66ac27d262"
   }
 }

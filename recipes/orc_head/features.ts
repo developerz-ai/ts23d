@@ -17,6 +17,7 @@ import {
   wart,
 } from '@developerz.ai/ts23d';
 import { cone2, creaseOn, ell, type Surface, spline, type V } from '../_lib/bust/kit.ts';
+import { craniumEdits } from './cranium.ts';
 import { C } from './palette.ts';
 import { H, SK } from './spec.ts';
 import { TUSK_R, tuskExit, tuskPath } from './tusks.ts';
@@ -24,7 +25,8 @@ import { TUSK_R, tuskExit, tuskPath } from './tusks.ts';
 const at = (a: V, x: number, y: number, z: number): V => [a[0] + x * H, a[1] + y * H, a[2] + z * H];
 
 export function featureEdits(stage: number, s: Surface, lod: number, rng: Rng): SculptEdit[] {
-  const out: SculptEdit[] = [];
+  // The skull's own structure first (planes and breaks), then the features on it.
+  const out: SculptEdit[] = craniumEdits(s);
   // The closed mouth sealed behind the lips (the base's slit is thinner than the head cell and
   // meshed as a row of pits), its line then drawn as a crease a cell wide.
   const cy = Math.abs(SK.cheilion[1]);

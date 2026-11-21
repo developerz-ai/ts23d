@@ -5,7 +5,7 @@
   "scores": {
     "silhouette": {
       "score": 6,
-      "reason": "Pointed ears show and the flat hair slab behind the ear is gone (now a tied tail of locks), but the hair still reads as straw: stray strands stick out sideways at the temples in FRONT and hero.png, and the tail is a solid tube in hero.png.",
+      "reason": "Pointed ears show and the tail is tied, but the hair still reads as straw in outline: stray strands stick out sideways at the temples in FRONT and hero.png, long straight cards cross the near shoulder, and the tail is a solid smooth tube in hero.png; the shading change did not touch any of this.",
       "fixes": [
         "clip flyaways so none stick out sideways at the temples",
         "split the tail into several locks so it is not a solid tube"
@@ -20,10 +20,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Freckles cluster over the nose bridge and cheekbones and leave forehead and jaw clean, the lids are now a cooler thin grey fold, and the orange hot spot that sat inside the ear in the previous hero.png is gone: the ear rim carries a soft pink warmth that reads as thin skin; the V-neck trim is a crisp gold band; but the eyebrows are flat mustard-yellow slabs with no hair texture in FRONT and hero.png, the hair is golden but still matte straw, and the tunic is a flat ribbed green.",
+      "reason": "Freckles cluster over the nose bridge and cheekbones and are now smaller and more even, the lids are a cool thin grey fold, the ear rim carries a soft pink warmth, and the V-neck trim is a crisp gold band. The hair is less saturated with darker roots at the hairline, so it reads less like yellow straw, but it is still matte with no sheen band in hero.png and the card edges are still blocky at 3x. The eyebrows are flat mustard-yellow slabs with no hair texture; the tunic is a flat ribbed green whose rib now runs unbroken across the near shoulder in hero.png.",
       "fixes": [
         "brow strip with hair-direction strokes and a darker blond so the brows stop reading as painted slabs",
-        "hair strip with a visible anisotropic sheen band and a root-to-tip value range",
+        "a hair sheen band bright enough to read in hero.png",
         "a wool or silk strip on the tunic instead of the flat rib"
       ]
     },
@@ -54,14 +54,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 64.1k / 13.6k / 3.4k tris, 4 / 4 / 3 draws; many stray hair cards.",
+      "reason": "QA clean; 65.8k / 14.4k / 3.8k tris, 4 / 4 / 3 draws; many stray hair cards.",
       "fixes": [
         "fewer, wider hair cards at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "0d50ced66bdaebfe334236f9bad53ac38cdce54a54fb153de6fd6869aa65837f",
-    "sheet.png": "39bf420eb203ec7f9cc719a5068177501562e71522c6a2f2963d44ba9f32e6c7"
+    "hero.png": "f5a236076925668a8c326109e7debeb36283c94acb4b2a20c3a530b0d0b85e43",
+    "sheet.png": "39a592fc99b69d668f3838ab8f1bcf2a193d91005eeaa906e01449b48e93d8cb"
   }
 }

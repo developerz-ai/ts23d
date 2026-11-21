@@ -260,11 +260,12 @@ describe('strandPainter', () => {
     strandPainter(STRAND_LAYOUT.hair_locks)(c, paintKit(c, 9));
     const rgba = c.rgba ?? new Uint8Array(0);
     const lock = STRAND_LAYOUT.hair_locks.indexOf('lock');
-    // Down one column across the band mid-lock: the opaque texels' grey, spread as max / min.
+    // Down one column across the band mid-lock: the grey of the texels that pass the alpha cut
+    // (a fine strand's core is under two texels wide), spread as max / min.
     const x = lock * 512 + 256;
     const greys: number[] = [];
     for (let y = 9; y < 55; y++)
-      if (alphaAt(rgba, 4096, x, y) >= 0.9) greys.push(rgba[(y * 4096 + x) * 4] ?? 0);
+      if (alphaAt(rgba, 4096, x, y) >= 0.5) greys.push(rgba[(y * 4096 + x) * 4] ?? 0);
     expect(greys.length).toBeGreaterThan(4);
     // sRGB-encoded grey: a 1.2× linear spread is ~1.09× encoded.
     expect(Math.max(...greys) / Math.min(...greys)).toBeLessThan(1.2);
