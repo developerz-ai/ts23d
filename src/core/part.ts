@@ -244,4 +244,9 @@ export interface Part extends PartPhysics {
   readonly connect?: Connect;
   /** Own texture set (ADR 016); absent = the shared trim sheet. */
   readonly textures?: TextureSet;
+  /**
+   * Set by the finish and the hero bake on the LOD0 parts they unwrap: `mesh.uvs` address that
+   * layer's own atlas (export/finish-glb.ts), not the trim sheet, so nothing reads them as strips.
+   */
+  readonly atlas?: 'finish' | 'hero';
 }

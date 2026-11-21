@@ -36,9 +36,6 @@ export const inRowOrder = (ids: Iterable<string>): string[] => [...new Set(ids)]
 /** Every defined id, in row order. */
 export const customIds = (): readonly string[] => inRowOrder(rows.keys());
 
-/** The defined ids holding custom row `row`, by name. */
-export const idsOnRow = (row: number): string[] => customIds().filter((id) => rows.get(id) === row);
-
 /** U span (metres) a custom strip was registered with, or undefined. */
 export const customSpan = (id: string): number | undefined => spans.get(id);
 

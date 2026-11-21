@@ -212,15 +212,19 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
      the asset that uses them; a constant no build reads records nothing and is never an error.
   3. *The UVs, as a last resort.* A mesh that names nothing for a custom row it samples (UVs
      written by hand; a copy made by code that dropped `mapped`) is taken as the material the
-     compile recorded on that row, or as the one defined material holding it when the compile
-     recorded none (`T3D_MATERIAL_UNKNOWN` when several do). It is refused, not guessed, when a
-     mesh built outside every compile was mapped onto ANOTHER material of that row: the part may
-     be that mesh with its record lost (`T3D_MATERIAL_UNKNOWN`, fix: `mappedOnto(mesh, id)`).
+     compile recorded on that row. It is refused, not guessed, when a mesh built outside every
+     compile was mapped onto ANOTHER material of that row: the part may be that mesh with its
+     record lost (`T3D_MATERIAL_UNKNOWN`, fix: `mappedOnto(mesh, id)`). On a row the compile did
+     not record it holds no material, however many defined materials hold that row: the answer
+     never depends on what else the process imported (a test run, `t3d mcp` and the gallery
+     workers load many recipes; D532). Parts whose UVs address a texture of their own are not
+     read at all: `textures` (ADR 016) and the finish / hero layer's `atlas` (D533).
 
   What stays unrecorded: coordinates copied out of a rectangle while no compile runs and written
   into a mesh by hand, with no `mappedOnto`. Say what such a mesh maps onto, or build it inside
-  `build()`. `src/primitives/mapped.test.ts` fails when a file in `core`, `primitives` or
-  `passes` maps onto a strip or builds a mesh literal without carrying the record.
+  `build()`. `src/primitives/mapped.test.ts` fails when a file in `core`, `primitives`,
+  `passes`, `finish`, `export` or `cli` maps onto a strip or builds a mesh literal without
+  carrying the record.
 - **CLI.** `t3d build --sheet external` (default) writes `<out>/trim_sheet_*.png` holding the
   materials of every asset of the run while they fit on one sheet; an asset whose material sits on
   a row an earlier asset of the run holds gets `<out>/<asset>/trim_sheet_*.png` and its GLBs point
@@ -237,7 +241,9 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
 - To restyle a built-in for one project, override its recipe:
   `sheetFor(compiled, { ...DEFAULT_SHEET, strips: { ...DEFAULT_SHEET.strips, oak: {...} } })`.
 - `materialOf(id)` returns the recipe, origin (classic/library/defined), description and sources.
-  `resetMaterials()` is for tests and long-lived workers.
+  `resetMaterials()` is for tests and long-lived workers; `builtinMaterialsOnly()` (snapshot, reset,
+  and the function that puts them back) is for a test that reads the whole defined set itself
+  (`liveSheet`, the no-argument `previewSheet`). Compiling and exporting one asset never needs it.
 
 ## Nature: ground, rock, vegetation, bark, liquids
 

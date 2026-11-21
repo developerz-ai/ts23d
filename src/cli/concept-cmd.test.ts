@@ -10,7 +10,6 @@ import { resolveConfig } from './config.ts';
 const dir = join(import.meta.dir, '../../tmp/cli-concept-test');
 afterAll(() => rm(dir, { recursive: true, force: true }));
 const lib = join(import.meta.dir, '../index.ts');
-const file = join(dir, 'crate', 'crate.ts');
 const RECIPE = `import { box, defineAsset } from '${lib}';
 export const crate = defineAsset({
   name: 'crate',
@@ -21,14 +20,21 @@ export const crate = defineAsset({
 });
 `;
 
+/** The crate recipe in a folder of its own, so no test sees another's concept.ts or cache. */
+async function crateFile(test: string): Promise<string> {
+  const file = join(dir, test, 'crate', 'crate.ts');
+  await Bun.write(file, RECIPE);
+  return file;
+}
+
 describe('t3d concept', () => {
   it('no recipe or brief → usage error (exit 2)', async () => {
     expect(await conceptMain([], { json: true, config: resolveConfig({}) })).toBe(2);
   });
 
   it('CPU: a silhouette sheet with scores and concept.ts (prompts + seeds as code), kept on rerun', async () => {
-    await Bun.write(file, RECIPE);
-    const out = join(dir, 'renders');
+    const file = await crateFile('cpu');
+    const out = join(dir, 'cpu', 'renders');
     const r = await concept(file, resolveConfig({}), { variants: 4, out });
     expect(r.scores.length).toBe(4);
     expect(decodePng(await Bun.file(r.sheet ?? '').bytes()).width).toBeGreaterThan(0);
@@ -44,9 +50,9 @@ describe('t3d concept', () => {
   });
 
   it('with an image adapter: fills every request in concept.ts into neural/', async () => {
-    await Bun.write(file, RECIPE);
+    const file = await crateFile('adapter');
     await Bun.write(
-      join(dir, 'crate', 'concept.ts'),
+      join(dir, 'adapter', 'crate', 'concept.ts'),
       conceptSource('crate', 'a crate')
         .replace("'z-image'", "'mock-image'")
         .replaceAll('width: 1536', 'width: 64')
@@ -56,14 +62,14 @@ describe('t3d concept', () => {
     );
     const r = await concept(file, resolveConfig({ neural: { image: mockAdapter() } }), {
       variants: 2,
-      out: join(dir, 'renders'),
+      out: join(dir, 'adapter', 'renders'),
     });
     expect(r.images.length).toBe(2);
-    expect((await readdir(join(dir, 'crate', 'neural'))).length).toBe(2);
+    expect((await readdir(join(dir, 'adapter', 'crate', 'neural'))).length).toBe(2);
   });
 
   it('renderAdapter: the recipe on white, passing the input-image rules', async () => {
-    await Bun.write(file, RECIPE);
+    const file = await crateFile('render');
     const a = renderAdapter(file);
     const run = await a.run({
       task: 'image',

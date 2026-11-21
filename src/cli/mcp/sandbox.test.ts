@@ -7,6 +7,8 @@ import { confine, sandboxOf } from './sandbox.ts';
 const base = join(import.meta.dir, '../../../tmp/mcp-sandbox-test');
 const root = join(base, 'project');
 afterAll(() => rm(base, { recursive: true, force: true }));
+// Made once for the file, not by its first test: the tests run in any order (`--randomize`).
+await mkdir(join(root, 'recipes'), { recursive: true });
 
 const code = (f: () => unknown): string | undefined => {
   try {
@@ -17,8 +19,7 @@ const code = (f: () => unknown): string | undefined => {
   return undefined;
 };
 
-it('refuses paths that climb out of the project', async () => {
-  await mkdir(join(root, 'recipes'), { recursive: true });
+it('refuses paths that climb out of the project', () => {
   const box = sandboxOf(root);
   expect(code(() => confine(box, '../secret.ts', 'recipe'))).toBe('T3D_CLI_USAGE');
   expect(code(() => confine(box, '/etc/passwd', 'recipe'))).toBe('T3D_CLI_USAGE');

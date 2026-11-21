@@ -6,14 +6,16 @@ import { run } from './run.ts';
 const out = join(import.meta.dir, '../../tmp/cli-test');
 afterAll(() => rm(out, { recursive: true, force: true }));
 
-it('writes one folder per asset with LODs, sheet and manifest', async () => {
-  const fixture = join(out, 'crate.ts');
-  await Bun.write(
-    fixture,
-    `import { box, defineAsset } from '${join(import.meta.dir, '../index.ts')}';
+// Written once for the file, not by its first test: the tests run in any order (`--randomize`).
+const fixture = join(out, 'crate.ts');
+await Bun.write(
+  fixture,
+  `import { box, defineAsset } from '${join(import.meta.dir, '../index.ts')}';
 export const crate = defineAsset({ name: 'crate', kind: 'prop', budget: { triangles: [12, 12, 12] },
   build: (ctx) => ctx.part('body', box({ size: [1, 1, 1], color: [1, 1, 1] })) });`,
-  );
+);
+
+it('writes one folder per asset with LODs, sheet and manifest', async () => {
   const log = console.log;
   console.log = () => {};
   const code = await run([
@@ -40,7 +42,6 @@ export const crate = defineAsset({ name: 'crate', kind: 'prop', budget: { triang
 });
 
 it('builds only the LODs asked for', async () => {
-  const fixture = join(out, 'crate.ts');
   const log = console.log;
   console.log = () => {};
   const code = await run([
@@ -65,7 +66,6 @@ it('builds only the LODs asked for', async () => {
 });
 
 it('writes only the single MSFT_lod file with --lods single, only split files with split', async () => {
-  const fixture = join(out, 'crate.ts');
   const log = console.log;
   console.log = () => {};
   const flags = ['--sheet', 'none', '--no-shot'];
@@ -93,15 +93,7 @@ it('fails a bad --size with a coded error, before writing anything', async () =>
   console.log = (m: string) => {
     printed += m;
   };
-  const code = await run([
-    'hero',
-    join(out, 'crate.ts'),
-    '--out',
-    join(out, 'bad'),
-    '--size',
-    '9x9',
-    '--json',
-  ]);
+  const code = await run(['hero', fixture, '--out', join(out, 'bad'), '--size', '9x9', '--json']);
   console.log = log;
   expect(code).toBe(2);
   expect(JSON.parse(printed).error.code).toBe('T3D_CLI_USAGE');
@@ -109,7 +101,6 @@ it('fails a bad --size with a coded error, before writing anything', async () =>
 });
 
 it('renders a hero and a review pack', async () => {
-  const fixture = join(out, 'crate.ts');
   const log = console.log;
   console.log = () => {};
   const hero = await run([
@@ -165,7 +156,6 @@ export const van = defineAsset({ name: 'van', kind: 'prop', budget: { triangles:
 });
 
 it('t3d blueprint writes <out>/<asset>/blueprint.png only', async () => {
-  const fixture = join(out, 'crate.ts');
   const log = console.log;
   console.log = () => {};
   const code = await run(['blueprint', fixture, '--out', join(out, 'bp')]);

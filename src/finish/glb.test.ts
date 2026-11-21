@@ -2,11 +2,12 @@
 // everything but LOD0's trim material identical to the plain export — nodes, pivots, animations,
 // LOD1/2 meshes. HTTP adapter: request shape and failures carry T3D_FINISH_* codes.
 
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
+import { afterAll, describe, expect, it } from 'bun:test';
 import { validateBytes } from 'gltf-validator';
-import { compile } from '../core/index.ts';
+import { compile, defineAsset } from '../core/index.ts';
 import { exportLodGlb, readGlbChunks } from '../export/index.ts';
-import { materialSnapshot, resetMaterials } from '../material/index.ts';
+import { defineMaterial, materialSnapshot, materialsOf } from '../material/index.ts';
+import { box } from '../primitives/index.ts';
 import { cart, repaint } from './fixtures.ts';
 import { finishAsset, finishedGlb, httpFinish, mockFinish } from './index.ts';
 
@@ -32,14 +33,6 @@ async function validate(glb: Uint8Array) {
 }
 
 describe('finishedGlb', () => {
-  // Against the built-in materials only: recipes loaded earlier in the same process leave theirs
-  // defined, and two of them sharing a custom row made the finished meshes ambiguous (D527).
-  let restore: () => void = () => {};
-  beforeAll(() => {
-    restore = materialSnapshot();
-    resetMaterials();
-  });
-  afterAll(() => restore());
   it('refuses a rejected finish unless forced, and records why', async () => {
     const bad = await finishAsset(compile(cart, { lod: 0 }), {
       ...SMALL,
@@ -101,6 +94,45 @@ describe('finishedGlb', () => {
         );
     });
     expect(swapped).toBe(3); // bed + two wheels; the glass lamp keeps its material
+  });
+});
+
+describe('the finished asset is not read as trim-sheet UVs (D533)', () => {
+  // Put back the registry as it was before this test defined its materials.
+  afterAll(materialSnapshot());
+
+  it('fails before D533: its atlas UVs were read as strips, so a module-level mesh on another material of a row the asset holds made the export T3D_MATERIAL_UNKNOWN', async () => {
+    const plank = defineMaterial({ id: 'atlas_plank', roughness: 0.7, albedo: '#806040', row: 3 });
+    const banner = defineMaterial({
+      id: 'atlas_banner',
+      roughness: 0.5,
+      albedo: '#a02020',
+      row: 3,
+    });
+    // Another recipe's module-level mesh on the same row (built while no compile runs).
+    box({ size: [1, 1, 1], color: [1, 1, 1], strip: banner });
+    const wagon = defineAsset({
+      ...cart,
+      name: 'atlas_wagon',
+      build(ctx) {
+        cart.build(ctx);
+        ctx.part(
+          'plank',
+          box({ size: [1, 0.2, 0.05], at: [0, 0, 0.7], color: [1, 1, 1], strip: plank }),
+        );
+      },
+    });
+    const [lod0, ...rest] = [0, 1, 2].map((lod) => compile(wagon, { lod: lod as 0 | 1 | 2 }));
+    if (!lod0) throw new Error('LOD0 expected');
+    const r = await finishAsset(lod0, { ...SMALL, model: mockFinish(), prompt: 'rust' });
+    expect(r.asset.parts.filter((p) => p.atlas === 'finish').map((p) => p.name)).toEqual([
+      'bed',
+      'wheel_l',
+      'wheel_r',
+      'plank',
+    ]);
+    expect(materialsOf(r.asset)).toEqual(['atlas_plank']);
+    expect(readGlbChunks(finishedGlb(r, rest)).json['materials']).toBeDefined();
   });
 });
 

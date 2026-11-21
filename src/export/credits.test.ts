@@ -1,20 +1,17 @@
 import { afterAll, describe, expect, it } from 'bun:test';
-import { compile, defineAsset, encodePng } from '../core/index.ts';
+import { compile, defineAsset, encodePng, MeshBuilder } from '../core/index.ts';
 import {
+  builtinMaterialsOnly,
   defineMaterial,
-  materialSnapshot,
   NATURAL,
   provideTextures,
-  resetMaterials,
 } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { creditsOf } from './credits.ts';
 import { toGlb } from './glb.ts';
 
-// Put back what other test files' recipes defined at import (materialSnapshot).
-const restoreMaterials = materialSnapshot();
-resetMaterials();
-afterAll(restoreMaterials);
+// Start from the built-ins; put back what other test files' recipes defined at import after.
+afterAll(builtinMaterialsOnly());
 
 const png = encodePng(2, 2, new Uint8Array(16).fill(128));
 const sha256 = new Bun.CryptoHasher('sha256').update(png).digest('hex');
@@ -60,5 +57,30 @@ describe('texture credits', () => {
     expect(line).toContain('A. Scanner');
     expect(line).toContain('CC0-1.0');
     expect(json(toGlb(asset(scan)))).toContain('https://polyhaven.com/a/scan');
+  });
+});
+
+describe('an asset exports the same whatever else the process defined (D532)', () => {
+  // Hand-written UVs over the whole sheet, no `mappedOnto`: the asset names no project material.
+  const sloppy = defineAsset({
+    name: 'credits_sloppy',
+    kind: 'prop',
+    budget: { triangles: [12, 12, 12] },
+    build(ctx) {
+      const b = new MeshBuilder();
+      const at = (x: number, z: number) =>
+        b.vertex({ p: [x, 0, z], n: [0, -1, 0], uv: [x, z], color: [1, 1, 1] });
+      ctx.part('sheet', b.quad(at(0, 0), at(1, 0), at(1, 1), at(0, 1)).build());
+    },
+  });
+
+  it('fails before D532: two materials of other recipes on one custom row made it T3D_MATERIAL_UNKNOWN', () => {
+    const glb = toGlb(compile(sloppy));
+    // What a test run, the MCP server or a gallery worker has after loading two more recipes.
+    defineMaterial({ id: 'credits_rival_a', roughness: 0.4, row: 0 });
+    defineMaterial({ id: 'credits_rival_b', roughness: 0.6, row: 0 });
+    const c = compile(sloppy);
+    expect(creditsOf(c)).toEqual([]);
+    expect(toGlb(c)).toEqual(glb);
   });
 });

@@ -143,7 +143,11 @@ export function heroTier(lod0: CompiledAsset, o: HeroOptions): HeroResult {
   const heroParts = lod0.parts.map((p): Part => {
     const a = scene.atlas.parts.get(p.name);
     return a
-      ? { ...p, mesh: { ...a.mesh, colors: new Float32Array(a.mesh.colors.length).fill(1) } }
+      ? {
+          ...p,
+          mesh: { ...a.mesh, colors: new Float32Array(a.mesh.colors.length).fill(1) },
+          atlas: 'hero',
+        }
       : p;
   });
   return {

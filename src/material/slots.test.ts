@@ -4,7 +4,7 @@ import { CC0_MATERIALS } from './cc0.ts';
 import { CREATURE_MATERIALS } from './creature.ts';
 import { defineMaterial, materialSnapshot, resetMaterials } from './define.ts';
 import type { MaterialDef } from './material-def.ts';
-import { customIds, customIndex, homeSlot, idsOnRow } from './slots.ts';
+import { customIds, customIndex, homeSlot } from './slots.ts';
 import { CUSTOM_STRIP_SLOTS, type StripId, stripRect } from './trim-sheet.ts';
 
 // Put back, last of all hooks, what other test files' recipes defined at import (D334).
@@ -49,7 +49,7 @@ it('lets any number of ids hold one row, in either order, each on the row its de
     defineMaterial({ id: second, roughness: 0.5 });
     defineMaterial({ id: 'clash_placed', roughness: 0.5, row: home });
     expect(customIds()).toEqual(['clash_a', other, 'clash_placed'].sort());
-    expect(idsOnRow(home)).toEqual([...customIds()]);
+    expect(customIds().map(customIndex)).toEqual([home, home, home]);
     expect(vOf(first)).toBe(vOf(second));
   }
 });

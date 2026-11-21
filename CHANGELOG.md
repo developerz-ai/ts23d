@@ -4,6 +4,11 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+An asset compiles and exports the same however many other recipes the process has loaded: a test run, `t3d mcp` and the gallery workers no longer fail on materials other recipes share a row with.
+
+### Fixed
+- An asset's project materials come from the asset alone: a mesh with hand-written UVs on a custom row its compile did not record is no longer given whichever defined material holds that row (or refused with `T3D_MATERIAL_UNKNOWN` when two recipes loaded earlier both hold it), and the finished and hero-baked LOD0 parts (`atlas`) are no longer read as trim-sheet UVs. `builtinMaterialsOnly()` isolates a test that reads the whole defined set.
+
 ## [0.18.0] - 2026-11-21
 
 Skin reads as skin: true-scale pores, grain, freckles and stubble, soft tone zones instead of bruise rings, and light that passes through thin ears; orc tusks rise from the lower jaw as they should.

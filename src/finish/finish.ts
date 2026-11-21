@@ -80,7 +80,7 @@ export interface FinishResult {
 export const FINISH_NOTE =
   "albedo projected from model images (part-masked, n·v weighted); roughness and metal from the trim sheet; detail normal from the part's strip height graph (options.graphs) when one is given, else flat";
 
-/** The finished LOD0: finishable parts take their atlas mesh with white vertex colour. */
+/** The finished LOD0: finishable parts take their atlas mesh with white vertex colour (`atlas`). */
 function finishedAsset(
   lod0: CompiledAsset,
   atlas: ReturnType<typeof finishScene>['atlas'],
@@ -88,7 +88,11 @@ function finishedAsset(
   const parts = lod0.parts.map((p): Part => {
     const a = atlas.parts.get(p.name);
     return a
-      ? { ...p, mesh: { ...a.mesh, colors: new Float32Array(a.mesh.colors.length).fill(1) } }
+      ? {
+          ...p,
+          mesh: { ...a.mesh, colors: new Float32Array(a.mesh.colors.length).fill(1) },
+          atlas: 'finish',
+        }
       : p;
   });
   return { ...lod0, parts };

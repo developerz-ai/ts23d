@@ -1,12 +1,22 @@
-import { describe, expect, it } from 'bun:test';
+import { afterAll, describe, expect, it } from 'bun:test';
 import { type CompiledAsset, compile, defineAsset, type Vec3 } from '../core/index.ts';
-import { DEFAULT_SHEET, decodePng, paintTrimSheet, stripRect } from '../material/index.ts';
+import {
+  builtinMaterialsOnly,
+  DEFAULT_SHEET,
+  decodePng,
+  paintTrimSheet,
+  stripRect,
+} from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { renderBeauty } from './beauty.ts';
 import { fromSrgb } from './lighting.ts';
 import { contactSheet } from './sheet.ts';
 import { previewSheet, sheetTones, toneAt } from './sheet-tones.ts';
 import { thumbnail } from './thumbnail.ts';
+
+// The no-argument previewSheet paints every defined material: start from the built-ins, whatever
+// recipes earlier files loaded (two of theirs on one row are a conflict), and put them back after.
+afterAll(builtinMaterialsOnly());
 
 const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const CELL = 64;

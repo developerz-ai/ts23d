@@ -13,8 +13,8 @@ export function creditsOf(asset: CompiledAsset): string[] {
   const own = materialsOf(asset);
   for (const set of textureSetsOf(asset.parts)) if (set.credit) out.add(set.credit);
   for (const p of asset.parts) {
-    // A textured part's UVs address its own set, not a strip of the sheet.
-    const uv = p.textures ? undefined : p.mesh?.uvs;
+    // A textured part's UVs address its own set, a finished part's its layer's atlas: no strip.
+    const uv = p.textures || p.atlas ? undefined : p.mesh?.uvs;
     if (!uv) continue;
     const v = new Float32Array(uv.length >> 1);
     for (let i = 0; i < v.length; i++) v[i] = uv[i * 2 + 1] ?? 0;

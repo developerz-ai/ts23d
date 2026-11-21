@@ -4,16 +4,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type Asset, defineAsset } from '../core/index.ts';
 import { readGlbChunks } from '../export/index.ts';
-import { defineMaterial, materialSnapshot, resetMaterials } from '../material/index.ts';
+import { builtinMaterialsOnly, defineMaterial } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { parseArgs } from './args.ts';
 import { buildOne } from './build-one.ts';
 import { runSheets } from './run-sheets.ts';
 
-// Put back what other test files' recipes defined at import (materialSnapshot).
-const restoreMaterials = materialSnapshot();
-resetMaterials();
-afterAll(restoreMaterials);
+// Start from the built-ins; put back what other test files' recipes defined at import after.
+afterAll(builtinMaterialsOnly());
 /** Every output directory a test made: removed after the file, whatever failed. */
 const made: string[] = [];
 afterAll(async () => {

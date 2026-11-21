@@ -76,6 +76,8 @@ describe('heroTier', () => {
       const h = r.asset.parts.find((q) => q.name === p.name);
       expect(h?.mesh?.indices.length).toBe(p.mesh?.indices.length);
       expect([...(h?.mesh?.colors ?? [])].every((c) => c === 1)).toBe(true);
+      // Its UVs address the hero atlas, not the trim sheet (D533).
+      expect(h?.atlas).toBe('hero');
     }
   });
 

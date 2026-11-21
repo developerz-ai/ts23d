@@ -143,6 +143,19 @@ export function materialSnapshot(): () => void {
   };
 }
 
+/**
+ * Forget every defined material until the returned function puts them back (`materialSnapshot`,
+ * then `resetMaterials`): for a test that reads the process-wide set itself (`liveSheet`, the
+ * no-argument `previewSheet`, row tables). Compiling and exporting one asset never needs it: what
+ * other modules defined does not change an asset's materials (D532).
+ * @example afterAll(builtinMaterialsOnly());
+ */
+export function builtinMaterialsOnly(): () => void {
+  const restore = materialSnapshot();
+  resetMaterials();
+  return restore;
+}
+
 export interface MaterialInfo {
   readonly id: StripId;
   /** classic = greyscale strip tinted by vertex colour; library/defined carry their own colour. */
