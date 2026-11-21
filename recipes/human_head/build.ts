@@ -4,15 +4,16 @@
 // are their own closed solids, one per layer (clothes.ts): `clothes` (linen shirt, wool tunic,
 // braid) and the wool `mantle`, under the same `face` node (they breathe with the chest). Parts: `head`, `bust`
 // (split under the collar), `clothes`, `mantle`, `brooch`, `hair`, `eye_l` / `eye_r`, `plinth`.
-// LOD2 keeps the brow and nose as masses the coarse cell can hold and the garments' colours.
+// LOD2 keeps the orbit, brow and cheekbones as masses its face box holds, the mouth and brows
+// inked on its mesh, and the garments' colours.
 
-import { type BuildContext, hex, type SculptEdit, sculpt } from '@developerz.ai/ts23d';
+import { type BuildContext, hex, sculpt } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { structureEdits } from '../_lib/bust/face-forms.ts';
 import { mix } from '../_lib/bust/hair.ts';
 import { neckEdits } from '../_lib/bust/human/neck.ts';
 import { C, CHARACTER, EAR, EYE, L, SK, SPEC, STRUCTURE } from '../_lib/bust/human/spec.ts';
-import { chain, cone2, creaseOn } from '../_lib/bust/kit.ts';
+import { creaseOn } from '../_lib/bust/kit.ts';
 import { buildDressedBust } from '../_lib/bust/layers.ts';
 import { armCut } from '../_lib/bust/torso.ts';
 import { groomHair } from '../_lib/face/hair-groom.ts';
@@ -81,7 +82,7 @@ export const HUMAN_BUST: BustRecipe = {
   stubble: beardline,
   plinth: { radius: 0.13, color: C.plinth },
   // (The head a little coarser than the bare-headed busts': hair and beard cover half of it.)
-  cells: { head: [0.0066, 0.011, 0.026], bust: [0.012, 0.013, 0.03] },
+  cells: { head: [0.0066, 0.011, 0.028], bust: [0.012, 0.013, 0.03] },
   // Sun freckles over the bridge and cheekbones above the beard (D520).
   complexion: { freckles: 0.35 },
   pores: true,
@@ -103,6 +104,13 @@ export const HUMAN_BUST: BustRecipe = {
         ]
       : []),
   ],
+  // The far LOD's orbit, brow shelf and cheekbones, as masses its face box holds (D614): the
+  // shelf 2.8 mm and the orbit ×1.3, a fifth bolder than LOD0's so the 1.4 cm cell keeps them
+  // (at LOD0's own values the far brow cards stood 32 mm off the melted ridge), and without the
+  // lateral rim's plane: at that cell the cut opened the orbit's side and the ball showed
+  // through beside the eye as a loose shard.
+  far: (skin) =>
+    structureEdits(SK, EYE, SPEC.H, skin, { ...STRUCTURE, brow: 0.012, depth: 1.3, rim: 0 }, 2),
   hair: hairBaseEdits,
   outfit: outfitEdits,
   extras: (ctx, skin) => ({
@@ -115,36 +123,13 @@ export const HUMAN_BUST: BustRecipe = {
   }),
 };
 
-/** The far LOD's face: the brow ridge and the nose as masses its 2 cm cell can hold (the
- *  anatomical ones flatten into the egg). */
-export function farFace(): SculptEdit[] {
-  const g = SK.glabella;
-  const tip = SK.pronasale;
-  return [
-    cone2([g[0] - 0.008, 0, g[2] - 0.012], [tip[0] - 0.012, 0, tip[2] + 0.004], 0.011, 0.014, {
-      blend: 0.008,
-      mirror: false,
-    }),
-    chain(
-      [
-        [g[0] - 0.012, -0.05, g[2] + 0.002],
-        [g[0] - 0.004, 0, g[2] + 0.004],
-        [g[0] - 0.012, 0.05, g[2] + 0.002],
-      ],
-      0.011,
-      { blend: 0.01, mirror: false },
-    ),
-  ];
-}
-
 export function buildHuman(ctx: BuildContext): void {
   buildDressedBust(ctx, HUMAN_BUST, {
     layers: outfitLayers,
+    // The far LOD's colour blocks end on the garments' edges (D616).
+    farEdges: true,
     hidden: hiddenBody,
     body: bodyEdits,
-    built: {
-      hair: (scalp, lod) => [...hairBaseEdits(scalp, lod), ...(lod === 2 ? farFace() : [])],
-    },
     // Weeks on the road: dust settled on the mantle's shoulders, the wool bleached on top.
     wear: {
       layers: ['mantle', 'far'],

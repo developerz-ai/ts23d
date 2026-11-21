@@ -4,7 +4,8 @@
 // overhangs it; the LIDS, shells of real thickness wrapping the ball with an almond aperture
 // through the canthi; the BROW SHELF over the orbit, the lateral orbital rim turned back to the
 // temple; the CHEEKBONE as a ridge with the buccal plane dropped under it. face-check.ts measures
-// each of them on the built skin. Left side; the sculpt mirrors.
+// each of them on the built skin. Left side; the sculpt mirrors. The far LOD's mouth and brows are
+// ink on its mesh (`farInk`, D615).
 
 import { dmath, type SculptEdit } from '@developerz.ai/ts23d';
 import type { EyeSpec } from './eye.ts';
@@ -247,4 +248,105 @@ export function structureEdits(
   const eye: EyeSpec =
     lod === 0 ? e : { ...e, lid: Math.max(e.lid, 0.005), upper: e.upper * 0.5, lower: 0 };
   return [...boneEdits(k, e, H, skin, s), ...orbitEdits(k, eye, s)];
+}
+
+/** The landmarks the far ink is drawn from (a skull's, left side). */
+export interface InkPoints {
+  readonly stomion: V;
+  readonly cheilion: V;
+  readonly brow: V;
+  readonly browOuter: V;
+}
+
+/** The far LOD's inked features: the outlines to slice the mesh along (`phi` = 0 where
+ *  `within` holds) and the flat colour of a triangle centred at a point (undefined: the skin as
+ *  painted). */
+export interface FarInk {
+  readonly cuts: readonly {
+    readonly phi: (p: V) => number;
+    readonly within: (p: V) => boolean;
+  }[];
+  readonly colour: (p: V) => V | undefined;
+}
+
+/**
+ * What a hand-made far LOD paints on its face (D615): the lips as a patch of their colour, the
+ * mouth as a dark line through them from corner to corner, the brows as bands along the ridge,
+ * each a shape of its own on the skull's landmarks, in the frontal (y, z) plane. Vertex paint
+ * alone cannot hold them: LOD2's face vertices stand 1.1–1.3 cm apart and average their faces'
+ * paint, so a 4 mm line is gone and the lips are a faint blush. layers.ts `inked` slices the
+ * mesh along these outlines and fills them.
+ */
+export function farInk(
+  k: InkPoints,
+  H: number,
+  c: { readonly lips: V; readonly dark: V; readonly brows?: V },
+): FarInk {
+  const s = k.stomion;
+  const cy = Math.abs(k.cheilion[1]);
+  const end = cy * 0.94;
+  /** The mouth's line: its height at y (corner → stomion → corner). */
+  const zl = (y: number): number => s[2] + (k.cheilion[2] - s[2]) * Math.min(1, Math.abs(y) / cy);
+  // The zones' own lips (../face/zones.ts), a little fuller: an upper and a lower ellipse, each
+  // riding the line (a smile lifts the corners 6 mm over the stomion: ellipses level with it lost
+  // the upper lip under the line).
+  const lip = (p: V, dz: number, ry: number, rz: number): number =>
+    (dmath.hypot(p[1] / ry, (p[2] - zl(p[1]) - dz) / rz) - 1) * rz;
+  const upper = (p: V): number => lip(p, 0.01 * H, cy, 0.014 * H);
+  const lower = (p: V): number => lip(p, -0.012 * H, cy * 0.9, 0.017 * H);
+  const front = s[0] - 0.07 * H;
+  const head: V = [k.brow[0], Math.abs(k.brow[1]) - 0.05 * H, k.brow[2] - 0.004 * H];
+  const tail: V = [
+    k.browOuter[0],
+    Math.abs(k.browOuter[1]) + 0.008 * H,
+    k.browOuter[2] - 0.004 * H,
+  ];
+  const midY = (head[1] + tail[1]) / 2;
+  const midZ = (head[2] + tail[2]) / 2 + 0.01 * H;
+  /** The brow's centre line: its height at |y| (head → arch → tail). */
+  const zb = (y: number): number => {
+    const a = Math.abs(y);
+    return a < midY
+      ? head[2] + ((midZ - head[2]) * (a - head[1])) / (midY - head[1])
+      : midZ + ((tail[2] - midZ) * (a - midY)) / (tail[1] - midY);
+  };
+  // (The brow's tail turns onto the head's side, behind the mouth's plane.)
+  const back = tail[0] - 0.03 * H;
+  const LINE = 0.009 * H;
+  // (Thinning to its tail.)
+  const browHalf = (y: number): number =>
+    0.013 *
+    H *
+    (1 - 0.45 * Math.min(1, Math.max(0, (Math.abs(y) - head[1]) / (tail[1] - head[1]))));
+  const onMouth = (p: V): boolean => p[0] > front && Math.abs(p[1]) < end;
+  const onBrow = (p: V): boolean =>
+    p[0] > back && Math.abs(p[1]) > head[1] && Math.abs(p[1]) < tail[1];
+  const line = [
+    c.dark[0] * 0.6 + c.lips[0] * 0.4,
+    c.dark[1] * 0.6 + c.lips[1] * 0.4,
+    c.dark[2] * 0.6 + c.lips[2] * 0.4,
+  ] as const;
+  return {
+    cuts: [
+      { phi: (p) => p[2] - zl(p[1]) - LINE, within: onMouth },
+      { phi: (p) => p[2] - zl(p[1]) + LINE, within: onMouth },
+      { phi: upper, within: (p) => p[0] > front && p[2] > zl(p[1]) },
+      { phi: lower, within: (p) => p[0] > front && p[2] < zl(p[1]) },
+      ...(c.brows
+        ? [
+            { phi: (p: V) => p[2] - zb(p[1]) - browHalf(p[1]), within: onBrow },
+            { phi: (p: V) => p[2] - zb(p[1]) + browHalf(p[1]), within: onBrow },
+          ]
+        : []),
+    ],
+    colour: (p) => {
+      if (p[0] > front) {
+        if (Math.abs(p[1]) < end && Math.abs(p[2] - zl(p[1])) < LINE) return line;
+        if (Math.min(upper(p), lower(p)) < 0) return c.lips;
+      }
+      return c.brows && onBrow(p) && Math.abs(p[2] - zb(p[1])) < browHalf(p[1])
+        ? c.brows
+        : undefined;
+    },
+  };
 }

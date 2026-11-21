@@ -6,6 +6,7 @@
 
 import type { PerspectiveCamera } from './camera.ts';
 import { type DepthMap, openness, visibility } from './depth-map.ts';
+import { seenFromBehind } from './facing.ts';
 import type { Rig } from './lighting.ts';
 import { OPAQUE } from './looks.ts';
 import type { Scene } from './scene.ts';
@@ -144,8 +145,8 @@ export function shadeSample(
   vy /= vl;
   vz /= vl;
   let nl = hyp(nrm[0] ?? 0, nrm[1] ?? 0, nrm[2] ?? 1) || 1;
-  // Double-sided view: a normal facing away from the eye is lit as its back face.
-  if ((nrm[0] ?? 0) * vx + (nrm[1] ?? 0) * vy + (nrm[2] ?? 0) * vz < 0) nl = -nl;
+  // Double-sided view: the side the eye sees is the triangle's, not the interpolated normal's (D610).
+  if (seenFromBehind(P, ia, ib, ic, nrm[0] ?? 0, nrm[1] ?? 0, nrm[2] ?? 0, vx, vy, vz)) nl = -nl;
   for (let k = 0; k < 3; k++) {
     nrm[k] = (nrm[k] ?? 0) / nl;
     geo[k] = nrm[k] ?? 0;

@@ -1,16 +1,32 @@
 // The bust's far LODs hold the head's planes (D551): LOD2 keeps the brow over the eye sockets, the
 // nose and the lips that LOD1 has (a face box at half the head's cell), and LOD1's skin paint is
-// filtered over each vertex's faces, not point-sampled into triangle-wide blotches (D552).
+// filtered over each vertex's faces, not point-sampled into triangle-wide blotches (D552). LOD2's
+// face has its lips, mouth line and brows inked into the mesh and eyes with an iris (D614, D615);
+// its garments' colour blocks end on the garments' edges (D616).
 
 import { describe, expect, it } from 'bun:test';
-import { type CompiledAsset, compile, dmath, type Lod, type Mesh } from '@developerz.ai/ts23d';
+import {
+  type CompiledAsset,
+  compile,
+  dmath,
+  type Lod,
+  type Mesh,
+  sculpt,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { ELF_BUST } from '../../elf_head/build.ts';
 import { elf_head } from '../../elf_head/elf_head.ts';
 import { GOBLIN_BUST } from '../../goblin_head/build.ts';
 import { hiddenBody } from '../../goblin_head/clothes.ts';
 import { goblin_head } from '../../goblin_head/goblin_head.ts';
+import { HUMAN_BUST } from '../../human_head/build.ts';
+import { human_head } from '../../human_head/human_head.ts';
 import { skullLandmarks, skullOf } from '../face/skull.ts';
 import { type BustRecipe, bustEdits, SECTION } from './bust.ts';
+import { eyeball } from './eye.ts';
+import { farInk } from './face-forms.ts';
+import * as HUMAN from './human/spec.ts';
+import { edgedColours, faceBlocks, type GarmentLayer, slice } from './layers.ts';
 
 /** Front-most x of `m` on the line through (·, y, z) along x. */
 function front(m: Mesh, y: number, z: number): number {
@@ -192,3 +208,180 @@ describe('bust garments', () => {
     }
   });
 });
+
+/** A far head's triangles by what the bust's ink names at their centre: [inked as named, all]. */
+function inked(m: Mesh, b: BustRecipe, want: Vec3): [number, number, number[]] {
+  if (!b.skull) throw new Error('the fixture bust has no skull stage');
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  // (Marker colours: this only asks the ink where each shape lies.)
+  const ink = farInk(k, b.spec.H, { lips: [1, 0, 0], dark: [0, 0, 1], brows: [0, 1, 0] });
+  let hit = 0;
+  let all = 0;
+  const ys: number[] = [];
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const v = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+    const c: Vec3 = [0, 1, 2].map(
+      (e) => v.reduce((s, i) => s + (m.positions[i * 3 + e] ?? 0), 0) / 3,
+    ) as [number, number, number];
+    const named = ink.colour(c);
+    if (!named || named[0] !== want[0] || named[1] !== want[1]) continue;
+    all++;
+    ys.push(c[1]);
+    if (v.every((i) => lum(m, i) === lum(m, v[0] ?? 0))) hit++;
+  }
+  return [hit, all, ys];
+}
+
+// (The human and the elf: the goblin gives no far forms and keeps its plain far face.)
+describe('bust far faces (D614, D615)', () => {
+  const far = { ...at(2), human: compile(human_head, { lod: 2 }) };
+  const busts = [
+    ['human', HUMAN_BUST],
+    ['elf', ELF_BUST],
+  ] as const;
+  it('fails on a mask without a mouth: lips, a dark line corner to corner and brows are inked', () => {
+    for (const [name, b] of busts) {
+      const head = part(far[name], 'head');
+      const k = skullLandmarks(skullOf(b.skull ?? ELF_BUST.skull ?? never(), b.spec));
+      // The mouth's line: flat-coloured triangles of their own across 80 % of the mouth.
+      const [flat, all, ys] = inked(head, b, [0.4, 0, 0.6]);
+      expect({ name, line: all }).toEqual({ name, line: Math.max(all, 6) });
+      expect(flat).toBe(all);
+      expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(
+        1.6 * 0.8 * Math.abs(k.cheilion[1]),
+      );
+      expect(inked(head, b, [1, 0, 0])[1]).toBeGreaterThanOrEqual(6);
+      expect(inked(head, b, [0, 1, 0])[1]).toBeGreaterThanOrEqual(6);
+    }
+  }, 120_000);
+  it('the ink is the bust’s own colours, not the skin’s', () => {
+    for (const [name, b] of busts) {
+      const head = part(far[name], 'head');
+      const k = skullLandmarks(skullOf(b.skull ?? ELF_BUST.skull ?? never(), b.spec));
+      // Darkest vertex within 3 mm of the mouth's line against the cheek beside the nose.
+      let line = 1;
+      let cheek = 0;
+      let n = 0;
+      for (let i = 0; i < head.positions.length / 3; i++) {
+        const [x, y, z] = [
+          head.positions[i * 3] ?? 0,
+          head.positions[i * 3 + 1] ?? 0,
+          head.positions[i * 3 + 2] ?? 0,
+        ];
+        if (x < k.stomion[0] - 0.07 * b.spec.H) continue;
+        if (Math.abs(y) < Math.abs(k.cheilion[1]) * 0.8 && Math.abs(z - k.stomion[2]) < 0.003)
+          line = Math.min(line, lum(head, i));
+        if (dmath.hypot(Math.abs(y) - Math.abs(k.cheek[1]), z - k.cheek[2]) < 0.012) {
+          cheek += lum(head, i);
+          n++;
+        }
+      }
+      // (Uninked, the mouth was the skin's own value: 0.9–1.0 of the cheek's.)
+      expect({ name, ratio: line / (cheek / Math.max(1, n)) < 0.75 }).toEqual({
+        name,
+        ratio: true,
+      });
+    }
+  });
+  it('fails on a blind far eye: four vertices or more stand on the iris, in its colour', () => {
+    const e = HUMAN.EYE;
+    const irisAt = (m: Mesh): number => {
+      let n = 0;
+      for (let i = 0; i < m.positions.length / 3; i++)
+        if (
+          Math.abs((m.colors[i * 3] ?? 0) - e.colours.iris[0]) < 0.02 &&
+          Math.abs((m.colors[i * 3 + 2] ?? 0) - e.colours.iris[2]) < 0.02
+        )
+          n++;
+      return n;
+    };
+    // The near ball at the far LOD's old 1 cm cell: no vertex in the iris's own colour.
+    expect(irisAt(eyeball(e, 0.01))).toBe(0);
+    expect(irisAt(eyeball(e, e.r * 0.6, 0, true))).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('far garment edges (D616)', () => {
+  const quad: Mesh = {
+    positions: Float32Array.from([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
+    normals: Float32Array.from([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+    uvs: new Float32Array(8),
+    colors: new Float32Array(12).fill(1),
+    indices: Uint32Array.from([0, 1, 2, 0, 2, 3]),
+  };
+  /** The furthest any triangle of `m` reaches across the line x = `x0`, metres. */
+  const across = (m: Mesh, x0: number): number => {
+    let worst = 0;
+    for (let t = 0; t < m.indices.length; t += 3) {
+      const xs = [0, 1, 2].map((k) => (m.positions[(m.indices[t + k] ?? 0) * 3] ?? 0) - x0);
+      worst = Math.max(worst, Math.min(Math.max(...xs), -Math.min(...xs)));
+    }
+    return worst;
+  };
+  it('slice: no triangle is left across the line, and the surface keeps its area', () => {
+    expect(across(quad, 0.3)).toBeGreaterThan(0.25);
+    const cut = slice(
+      quad,
+      (p) => p[0] - 0.3,
+      () => true,
+    );
+    // (Bisected to 1/256 of a 1 m edge.)
+    expect(across(cut, 0.3)).toBeLessThan(5e-3);
+    expect(cut.indices.length / 3).toBe(6);
+    // Outside `within` nothing is cut.
+    expect(
+      slice(
+        quad,
+        (p) => p[0] - 0.3,
+        () => false,
+      ),
+    ).toBe(quad);
+  });
+  it('fails on a toothed colour edge: a garment’s blocks end on its own edge', () => {
+    const shell = (name: string, r: number, color: Vec3, from: number): GarmentLayer => ({
+      name,
+      strip: 'plain',
+      color,
+      cell: [0.01, 0.01, 0.01],
+      part: 'clothes',
+      edits: [
+        {
+          field: (p) => Math.max(Math.abs(dmath.hypot(p[0], p[1], p[2]) - r) - 0.002, from - p[0]),
+          bounds: [
+            [-0.2, -0.2, -0.2],
+            [0.2, 0.2, 0.2],
+          ],
+          color,
+        },
+      ],
+    });
+    // A vest over a shirt, ending at x = 13 mm: an edge that follows no line of the far grid.
+    const shirt = shell('shirt', 0.1, [1, 1, 1], -1);
+    const vest = shell('vest', 0.106, [0.3, 0.15, 0.05], 0.013);
+    const far = sculpt({
+      edits: [{ shape: 'sphere', at: [0, 0, 0], size: 0.104 }],
+      resolution: 0.02,
+      color: [0, 0, 0],
+    });
+    /** How far a triangle in the vest's colour reaches past the vest's edge, metres. */
+    const teeth = (m: Mesh): number => {
+      let worst = 0;
+      for (let t = 0; t < m.indices.length; t += 3) {
+        const v = [0, 1, 2].map((k) => m.indices[t + k] ?? 0);
+        if ((m.colors[(v[0] ?? 0) * 3] ?? 0) > 0.6) continue;
+        worst = Math.max(worst, 0.013 - Math.min(...v.map((i) => m.positions[i * 3] ?? 0)));
+      }
+      return worst;
+    };
+    // Blocks on the far cell's own triangles (the vest's colour by vertex): teeth a cell deep.
+    const colors = new Float32Array(far.colors.length);
+    for (let i = 0; i < far.positions.length / 3; i++)
+      colors.set((far.positions[i * 3] ?? 0) > 0.013 ? [0.3, 0.15, 0.05] : [1, 1, 1], i * 3);
+    expect(teeth(faceBlocks({ ...far, colors }))).toBeGreaterThan(0.006);
+    expect(teeth(edgedColours(far, [shirt, vest]))).toBeLessThan(0.003);
+  });
+});
+
+function never(): never {
+  throw new Error('the fixture bust has no skull stage');
+}

@@ -57,7 +57,7 @@ export const ELF_BUST: BustRecipe = {
   // The scalp under the cards: the cap's shadowed gold, never skin (D57).
   scalp: [{ line: hairline, color: SCALP }],
   plinth: { radius: 0.12, color: C.plinth },
-  cells: { head: [0.0064, 0.011, 0.022], bust: [0.01, 0.012, 0.03] },
+  cells: { head: [0.0064, 0.011, 0.024], bust: [0.01, 0.012, 0.03] },
   pores: true,
   finish: 'skin',
   body: () => bodyEdits(),
@@ -68,6 +68,9 @@ export const ELF_BUST: BustRecipe = {
     // no thinner than itself.
     ...earGraft(SK, lod === 0 ? GRAFT : { ...GRAFT, thick: 0.012, simple: true }),
   ],
+  // The far LOD's orbit, brow and cheekbones, as masses its face box holds (D614).
+  // (Without the lateral rim's plane: at that cell the cut opened the orbit's side.)
+  far: (skin) => structureEdits(SK, EYE, SPEC.H, skin, { ...STRUCTURE, rim: 0 }, 2),
   hair: hairBaseEdits,
   outfit: outfitEdits,
   extras: (ctx, skin) => ({
@@ -80,7 +83,7 @@ export const ELF_BUST: BustRecipe = {
   }),
 };
 
-/** The built skin's hair edits: the far LOD adds the ears as blades its 2.2 cm cell can hold
+/** The built skin's hair edits: the far LOD adds the ears as blades its 2.4 cm cell can hold
  *  (features, and with them the cartilage graft, are not sculpted there: the pointed ear, the
  *  elf's signature, was missing at LOD2). */
 export function builtHair(scalp: Field, lod: number): SculptEdit[] {
@@ -95,6 +98,8 @@ export function builtHair(scalp: Field, lod: number): SculptEdit[] {
 export function buildElf(ctx: BuildContext): void {
   buildDressedBust(ctx, ELF_BUST, {
     layers: outfitLayers,
+    // The far LOD's colour blocks end on the garments' edges (D616).
+    farEdges: true,
     hidden: hiddenBody,
     body: bodyEdits,
     built: { hair: builtHair },

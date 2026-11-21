@@ -4,6 +4,12 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Raster renders lose the black lines along folds, and the human and elf busts keep a readable face and clean garment edges at their far LOD.
+
+### Fixed
+- Human and elf busts at LOD2 keep a face: the orbit and bones as far forms, lips, a mouth line and brows cut into the mesh as flat shapes, eyes with an iris (D614, D615), and their garments' colour blocks end on clean edges instead of zigzags (D616).
+- Raster renders no longer print black lines along folds: the lit side of a pixel comes from its triangle, not the interpolated normal (D610).
+
 ## [0.20.0] - 2026-11-21
 
 Renders stop borrowing colour from neighbouring texture rows, busts get carved faces, real ears, sewn clothes and far-LOD hair shells, and the RTS faction gets rain-stained walls, recessed windows, worn roofs and a lighter scene.

@@ -4,155 +4,159 @@
   "overall": 4.4,
   "scores": {
     "silhouette": {
-      "score": 5,
-      "reason": "panel-1: Reads as a bearded man's bust on a plinth in every view, but the outline is generic: the hair is a swept-back cap with stray card spikes on top, the beard is a soft blob under the jaw, and the shoulders/garment are a lumpy pillow with no collar, seam or sleeve break. In silhouette.png the head-to-neck transition is a thin stalk with no trapezius slope. | panel-2: The outline reads as a bearded male bust on a plinth: swept-back hair mass, pointed beard and nose all show in the side view. But the shoulders are a lumpy rounded block with no clavicle or deltoid shape, the hair outline is a fringe of stray straight wires rather than clumped locks, and the ear barely breaks the outline in front view. | panel-3: Reads as a bearded man's bust on a plinth from front and side; the beard wedge and hair crest are clear. But the hair cap sits high on the skull with a hard band of bare scalp over the ear (it looks like an undercut nobody designed), the neck column is long and thin between shoulders, and the shoulder block is a lumpy pillow rather than a deltoid/trapezius mass, so the black outline is generic.",
+      "score": 5.2,
+      "reason": "panel-1: Reads at once as a bearded man's bust on a plinth, with hair mass, nose, beard and shoulders all legible in side view. The outline is weakened by a boxy, block-like torso, shoulders with no deltoid or trapezius slope, and wiry hair cards that break off the crown as jagged zig-zags. | panel-2: Side view names a bearded man at once: swept-back hair mass, brow, nose, pointed beard, ear. But the front outline is a plain oval on a box of shoulders, the nose barely breaks the profile, the lips do not read under the beard, and stray hair cards make a ragged spiky fringe on top that reads as loose polygons rather than locks. The shoulders are a lumpy rounded block with no clavicle or deltoid shape. | panel-3: Reads at once as a bearded man on a bust plinth, and the swept hair and chin beard give a usable side profile. The outline is let down by jagged zig-zag hair strands at the crown, a slab-like boxy shoulder block, and a torso that ends in a lumpy mass with no clear bust cut.",
       "fixes": [
-        "Give the neck a trapezius slope into the shoulders so the bust reads as a torso, not a head on a post",
-        "Trim the stray hair cards that spike above the crown; groom them to lie with the flow",
-        "Shape the beard with a defined jawline mass and chin point rather than a uniform blob",
-        "Shape the shoulder mass with a clear trapezius slope and a deltoid cap instead of one rounded slab",
-        "Group the outermost hair cards into 6-10 tapered clumps so the hair edge is locks, not single-strand wires",
-        "Push the ear helix outward a few millimetres so it breaks the front silhouette",
-        "Extend the hair cards down over the temples and behind the ears so the hairline meets the sideburns; no bare band between hair and beard",
-        "Add trapezius slope from neck to acromion and round deltoid caps so the shoulder outline is anatomical, not a cushion",
-        "Thicken the neck to ~0.8x jaw width and blend the sternocleidomastoid into the clavicle notch"
+        "Replace the squared shoulder blocks with a sloped trapezius-to-deltoid line and a tapered bust cut",
+        "Clump the crown hair into tapered locks and remove the zig-zag strand ends that stick out of the outline",
+        "Give the beard a less pointed side profile that follows the jaw and chin",
+        "Give the nose more projection and a clear bridge-to-tip break so the profile reads at thumbnail size",
+        "Group the top hair cards into 5-7 clumps with a clean outer contour; remove single flyaway cards that stick out past the hair mass",
+        "Shape the bust cut: sloped trapezius into defined shoulder caps instead of one rounded box",
+        "Taper crown hair strands to a point and remove the zig-zag ribbon folds that break the top outline",
+        "Reshape the shoulders with a trapezius slope, deltoid curve and a deliberate sculpted bust cut instead of the boxy block"
       ]
     },
     "proportions": {
       "score": 4.5,
-      "reason": "panel-1: The face reads doll-like: eyes are large and sit shallow in the orbits with little brow ridge overhang, the nose is small and soft, and the forehead is tall and smooth. The neck is long and narrow for an adult male; front view shows the head small relative to very broad, boxy shoulders. The bare strip of scalp between the hair cap and temples (hero, raking_detail) makes the hairline look receded and the skull shape odd behind the ear. | panel-2: Overall head height to width is plausible and the eyes sit near mid-height, but the face is flat and mask-like: the brow ridge and orbits are shallow, the eyes sit on the surface instead of inside sockets, the ear is small, set low and far back with almost no depth, and the forehead is tall with a hard-edged hairline that looks like a cap. The neck is thick and runs straight into shoulders that are narrow for the head, with the trapezius missing. The mouth is small and pinched under the moustache. | panel-3: Neck is too long and narrow (side view shows a gap of nearly a full head-quarter between jaw and collar). Face is flat and small for the cranium: eyes sit shallow with almost no orbital overhang, brow ridge and nose bridge are weak, giving a doll-like mask. Ears are low and set too far back in side view. Cheeks are puffy and the chin is lost under the beard.",
+      "reason": "panel-1: Broad head landmarks are close, but the anatomy is off: the eyes are large and doll-like, the face is smooth and childlike under an adult beard, the forehead and temple are wide and bare, the hairline cuts in a hard diagonal, the neck is long and tubular, and the chest and arms are a shapeless mass with no clavicles or real shoulder structure. | panel-2: Overall head height and width are believable and the ear sits between brow and nose base. Errors by eye: the eyes sit almost flush with the face with no depth in the orbits and no upper lid fold, so they bulge and stare; the brow ridge is flat; the forehead is tall and the hairline recedes hard at the temple in a straight shaved line; the neck is long and nearly as wide as the jaw with no sternomastoid or Adam's apple; the cranium is shallow behind the ear in side view; the jaw under the beard has no angle. | panel-3: Eye line and basic facial thirds are near plausible, but the face is doll-like: eyes are large and sit shallow with little orbital depth, the brow ridge and cheekbones are soft, and the nose and lips are small and undefined. The neck is long and tube-like in profile, the back of the skull is carried mostly by hair, and the shoulders are too high and square for the head.",
       "fixes": [
-        "Deepen the orbits and push the brow ridge forward so the eyes sit under it; reduce eyeball scale ~10%",
-        "Shorten and thicken the neck (sternocleidomastoid and trapezius volumes), narrow the shoulder block",
-        "Bring the hair cap down to a natural hairline at temples and sideburns so no bare skull band shows",
-        "Strengthen the nose bridge and nasal tip planes; add cheekbone and jaw angle definition",
-        "Deepen the orbits and set the eyeballs 10-12 mm behind the brow ridge; add upper lid thickness",
-        "Enlarge the ear to brow-to-nose-base height and move it forward to sit behind the jaw's vertical midline",
-        "Widen the shoulders to roughly 2.3 head widths at the bust cut and add the trapezius slope",
-        "Lower and soften the hairline with a temple recession instead of a straight band",
-        "Shorten the neck by ~20% and widen it at the base",
-        "Sink the eyeballs into deeper orbits under a stronger supraorbital ridge; set the eye line at half head height",
-        "Raise the ears so the top aligns with the brow and the lobe with the nose base; move them forward to the jaw-ramus line",
-        "Define the zygomatic arch and mandible angle under the beard"
+        "Reduce the visible eye opening and seat the eyeballs deeper under a defined brow ridge",
+        "Add adult bone structure: brow, zygomatic arch, jaw angle and nasolabial planes",
+        "Shorten the neck and model sternocleidomastoid, clavicles and pit of the neck",
+        "Rebuild the hairline with a natural temple recession instead of the straight diagonal cut",
+        "Set the eyeballs 10-12 mm deeper and add upper and lower lid volumes that wrap the ball",
+        "Build a brow ridge that overhangs the eye by a few millimetres and a glabella between the brows",
+        "Shorten the neck by about 10% and taper it; add sternomastoid ridges and the pit of the neck",
+        "Add depth to the back of the skull behind the ear and a defined jaw angle below the ear",
+        "Shorten the neck by about 15% and add sternomastoid and trapezius forms that tie it into the clavicles",
+        "Reduce the visible eye opening, seat the eyeballs deeper under a defined brow ridge and add real upper and lower lid thickness",
+        "Sharpen the nose bridge, alar wings, philtrum and lip planes, and strengthen the zygomatic and jaw planes",
+        "Lower and widen the shoulder line so it slopes from the neck rather than rising as a block"
       ]
     },
     "materials": {
-      "score": 4.5,
-      "reason": "panel-1: Skin, hair, wool, linen, gilt trim and the dark plinth separate by hue, but skin is flat waxy orange with no subsurface warmth or roughness variation around nose/lips, the eyes have no wet highlight, the red garment is a uniform soft plastic, and the gold trim has no metallic response. Hair cards show grey glinting seams (raking_detail) that read as broken alpha rather than sheen. | panel-2: Skin, hair, cloth and brass separate by hue, but skin is a flat even peach with a waxy look and blotchy dark smudges, the hair has grey mirror-like streaks that read as metal strips, the beard is a dark matte patch painted on the jaw with a hard edge on the cheek, and the cloth shows fine stripes with no weave or fold shading. The brass clasp is the only material that reads as itself. | panel-3: Skin has a reasonable warm albedo but no subsurface warmth at ears/nose and a uniform plastic sheen; it reads as painted resin. Hair cards have a shiny wet streak band that reads as plastic. Cloth (red tunic, blue vest) is flat matte colour with a faint stripe pattern; the gold trim reads as yellow paint, not metal. Plinth is fine.",
+      "score": 4.6,
+      "reason": "panel-1: Skin, cloth, hair, gold trim and plinth separate by hue, and the skin has some warm variation. Skin still reads as matte painted clay, the eyes lack wet highlights, the gold has little metallic response, the red cloth looks like ribbed felt, and hair shows grey sheen patches rather than a coherent anisotropic highlight. | panel-2: Skin, hair, cloth and brass separate by hue, and the hair has a strand sheen. Skin is waxy and uniform with orange blotches, no specular variation on nose, forehead or lips. The cloth is flat saturated red and blue with no weave at reading scale and no folds, so it looks like painted clay. The beard reads as a dark smear with a hard painted edge on the cheek. A grey-white patch on the back of the hair looks like a texture error, not a highlight. Eyes are flat blue discs with almost no wet highlight or dark limbal ring. | panel-3: Skin, cloth, gold trim and hair separate by hue, and the skin has a warm base. Skin still looks like matte painted vinyl with no convincing subsurface or roughness variation, the eyes lack wet highlights, the gold reads as yellow clay rather than metal, and the red cloth has a uniform ribbed look with blotchy dark patches.",
       "fixes": [
-        "Add skin roughness variation (oilier T-zone, rougher cheeks) and redder ears/nose/lips",
-        "Give the eyes a wet cornea highlight and darker limbal ring",
-        "Make the gold trim metallic with lower roughness; give the wool a fibre/weave roughness",
-        "Fix hair card alpha/normal so flat grey patches do not show through the strands",
-        "Cut hair specular and raise roughness so there are no grey mirror streaks; use an anisotropic highlight band instead",
-        "Break the beard edge with short cards that fade in density across the cheek rather than a painted boundary",
-        "Add skin hue zones (redder cheeks, nose and ears, cooler jaw) and roughness variation (shinier forehead and nose)",
-        "Give tunic and mantle a visible weave normal and different roughness for wool against linen",
-        "Add red tint/translucency at ears, nose tip and lips; vary skin roughness (oilier T-zone, matte cheeks)",
-        "Lower hair specular and add an anisotropic highlight following card direction instead of a broad glossy patch",
-        "Give the gold collar metalness ~1 with roughness 0.3 and darker cavity values; add fabric weave/sheen to the cloth"
+        "Add skin roughness variation plus subsurface-style warmth at ears, nose and lips",
+        "Give the cornea a glossy layer with a clear catchlight and darken the lash line",
+        "Make the gold trim properly metallic with roughness breakup",
+        "Replace the blotchy hair sheen with a continuous anisotropic highlight band along strand flow",
+        "Add a skin roughness map: lower roughness on nose, forehead, lower lip; redder hue on cheeks, nose and ears, cooler on the jaw",
+        "Fix the grey patch on the rear hair cards (bad UV row or wrong strip) so the highlight follows the strands",
+        "Give the cloth a visible weave normal and sculpted folds at the armpit and collar",
+        "Add a cornea highlight, darker limbal ring and a pupil to the eyes",
+        "Soften the beard edge on the cheek with thin alpha cards instead of a painted hard line",
+        "Add skin roughness breakup with oilier T-zone, redness at nose, cheeks and ears, and a subsurface-like warm terminator",
+        "Give the eyes a glossy cornea, a catchlight, a tear line and a darker limbal ring",
+        "Make the collar and studs true metal with low roughness and darkened recesses",
+        "Replace the uniform cloth ribbing with a weave at correct scale and remove the blotchy dark patches on the sleeve"
       ]
     },
     "detail": {
-      "score": 4.5,
-      "reason": "panel-1: Eyebrows are almost absent: one brow is a sparse dotted stub, the other barely there. No eyelids/lashes reading, no lip line definition, no nasolabial fold, no ear helix detail visible at a distance. Garment has no folds, seams or buttons beyond the gold collar; the stubble on the chest is a dotted decal. Holds up only at mid distance. | panel-2: 63k triangles are spent mostly on hair strands. The face has no eyelids with thickness, no nasolabial folds, no lip definition, no pores or wrinkles; eyebrows are a thin stippled stripe; chest hair is noise speckles. The garment has no folds, seams or hem thickness; the white collar edge is ragged. It does not hold up in a third-person close-up. | panel-3: 63k triangles but most go to hair strands. Face lacks secondary forms: no nasolabial fold, eyelid creases, lip edge definition or philtrum; eyebrows are a dotted texture smear. The beard is a solid brown shell with sparse dots rather than groomed clumps. Clothing has no seams, buttons only on the collar, and the tunic sleeves are featureless blobs.",
+      "score": 4.7,
+      "reason": "panel-1: There is real effort in hair strands, beard texture, collar trim, brooches and stubble specks. Close up the facial forms are soft, the eyebrows are sparse scribbles that do not match, the ears are simplified, the stubble reads as dirt-like dots, and the clothing has no convincing folds or seams. | panel-2: Hair strand cards, stubble dots on the cheek and chest, stitched collar trim and brass studs are present. Up close the face lacks secondary forms: no nasolabial fold, no philtrum, no lid creases, no lip line, simple ear with no inner helix shape. One eyebrow is a thin stippled dash and the other is nearly absent. The density map shows detail concentrated in hair and beard while the face and cloth are almost empty. Does not hold a third-person close-up of the face. | panel-3: Individual hair strands, stubble specks and a jewelled collar give some LOD0 interest. In close-up the hair shows combed ribbon artefacts and a hard shaved-edge hairline, the eyebrows are scattered dots, the beard is a noisy mass with a hard edge on the cheek, and the ear and eyelids lack secondary form. Clothing has no convincing folds or seams.",
       "fixes": [
-        "Add full eyebrow hair cards following brow ridge, plus upper lashes and lid creases",
-        "Sculpt nasolabial folds, philtrum, lip border and ear helix/antihelix",
-        "Add cloth folds at the armpit and shoulder, a seam line on the sleeve and a shirt collar edge",
-        "Model eyelids, tear duct, nostril wings, philtrum and a defined lip line",
-        "Build eyebrows from short hair cards following brow direction instead of stipple",
-        "Add cloth folds at the shoulder and a stitched hem at the neckline with real thickness",
-        "Replace chest speckle with sparse short cards or remove it",
-        "Sculpt upper/lower eyelids with thickness, nasolabial folds, philtrum and a defined vermilion border",
-        "Replace the eyebrow dot texture with short hair cards following brow direction",
-        "Build the beard from layered clumped cards with a tapered edge instead of a shell",
-        "Add tunic seams, a shoulder seam line and fold creases at the armpit"
+        "Groom matching eyebrows with directional hairs rooted in the brow ridge",
+        "Sculpt eyelids, tear ducts, philtrum, lip edges and full ear helix and antihelix",
+        "Replace speckled chest and cheek stubble with fine directional hair density",
+        "Add gravity folds, seams and layered garment edges to the tunic and cloak",
+        "Build both eyebrows as full hair-card arcs of equal weight following the brow ridge",
+        "Sculpt nasolabial folds, philtrum, lip seam with corners, and lid creases",
+        "Model the ear's helix, antihelix, tragus and concha",
+        "Add seams, a neck opening hem and a few folds to the tunic",
+        "Rebuild eyebrows as directional hair clumps following brow growth and match both sides",
+        "Feather the hairline and beard border with graded density instead of a hard cut",
+        "Model the ear helix, antihelix, tragus and concha at readable depth",
+        "Add tension folds at shoulder and chest, a sewn neckline and visible hem seams"
       ]
     },
     "wear": {
-      "score": 3.5,
-      "reason": "panel-1: Nothing tells a history: the skin is clean and even, the garment has a dark gradient at the hem but no stains, fraying or wrinkles, the plinth is pristine. The man reads as a mannequin rather than someone who lived anywhere. | panel-2: Almost nothing tells a history. The skin smudges read as texture error rather than dirt, sun or age; the cloth has darker lower edges but no fraying, staining or creases; hair has no flyaway logic; face is symmetric with no scars, moles or weathering. | panel-3: Some stubble dots on the chest and darkening at the tunic hem, but the face is perfectly clean and symmetric with no pores, blemishes or weathering; cloth has no dirt, fraying or creasing. No story beyond 'generic peasant'.",
+      "score": 4,
+      "reason": "panel-1: Dark grime at the cloth hem and the specks on skin try to add history, but they read as smudges and airbrushed patches. There are no scars, sun damage, frayed fabric, scuffed gold or believable facial asymmetry, so the figure does not suggest a lived life. | panel-2: Some darkening at the lower edge of the sleeves and chest stubble suggest life, but the skin has no pores, scars, sun damage or wrinkles, the cloth has no fraying, stains or fading, and the brass has no tarnish. The darkening on the cloth is a soft airbrushed gradient, not dirt in creases. The face is symmetric and ageless. | panel-3: Dark grime on the sleeves and stubble on the chest try to add history, but they read as airbrushed smudges and speckle noise rather than wear. The face has no pores, scars, sun damage or age, and the cloth and gold show no believable rubbing or fraying.",
       "fixes": [
-        "Add skin imperfections: pores, faint redness, a scar or freckles, under-eye darkening",
-        "Fray the garment edges, add worn/faded patches at the shoulders and grime in folds",
-        "Chip and dust the plinth edges",
-        "Add deliberate asymmetry: a scar, a broken nose line or uneven brow",
-        "Add sun and age to the skin: crow's feet, forehead lines, redness on nose and cheeks",
-        "Fray and fade the mantle at the shoulder seam and darken the collar where it touches the neck",
-        "Tarnish the brass clasp in its recesses",
-        "Add sun-weathering on nose and cheekbones, slight asymmetry in brows and mouth corners",
-        "Grime in collar and cloth folds, frayed edges on the tunic opening, tarnish in the gold collar cavities"
+        "Replace airbrushed cloth darkening with wear at folds, hems and contact points",
+        "Add frayed edges, stitch repairs and scuffs on the gold trim",
+        "Add subtle facial asymmetry, weathering around eyes and one small scar or blemish",
+        "Add crow's feet, forehead lines and one asymmetry (scar, broken nose, uneven brow)",
+        "Put grime in the cloth seams and collar fold, and fade the cloth on the shoulder tops",
+        "Tarnish the brass studs in the recesses and brighten the worn edges",
+        "Replace the sleeve smudges with wear masks driven by folds and edges",
+        "Add face history: crow's feet, forehead lines, a small scar and weathered colour on nose and cheeks",
+        "Fray the neckline and hems, and rub the gold highlights on raised edges with tarnish in recesses"
       ]
     },
     "lod": {
-      "score": 3,
-      "reason": "panel-1: LOD2 breaks: the white shirt becomes a jagged star-shaped cutout against the blue, the beard turns into a noisy cut-alpha lace that reveals skin, the eye sockets become boxy pits and the face loses its brow, and the plinth turns octagonal. Colour blocks shift visibly; the switch would pop. | panel-2: LOD2 changes the asset visibly. The white collar turns into a spiky star of triangles over the blue tunic, the brass trim disappears, a dark band appears across the eye region, the eye becomes a pale blob, the beard becomes a ragged noise cluster detached from the jaw, the hair loses most of its volume and exposes the scalp, and the nose becomes a sharp faceted wedge. This would pop at game distance. | panel-3: LOD2 breaks badly: the face becomes a boxy mask with the eyes collapsed into flat sockets, the beard turns into a noisy scribble cluster, and the white shirt collar explodes into a jagged star of spikes that shifts the colour blocks of the chest. The gold collar vanishes entirely. The switch would pop visibly.",
+      "score": 3.7,
+      "reason": "panel-1: LOD2 keeps the general pose and colour blocks but changes visibly: hair mass collapses to a bald painted cap with a few wires, the beard becomes a noisy brown scribble, the eyes become pale smears, gold trim disappears, and the collar turns into jagged white and blue triangles. | panel-2: LOD2 keeps the head and shoulder outline and the main colour blocks, but several things pop: the beard turns into a lacy scribble of dark cards with skin showing through and a spike above the lip; the eyebrows change from thin stipple to solid brown bars (more visible at LOD2 than LOD0); the gold collar trim vanishes and the white shirt panel changes shape into jagged triangles over the blue; the hair thins to show the scalp and loses about a third of its volume; the eyes grow lighter and larger. | panel-3: LOD2 keeps the overall head and colour blocks but changes visibly: the hair mass collapses to a bald painted cap with stray strands, the beard turns into a holey wiry clump, the brows become flat painted bars, the gold collar vanishes, and the shirt/tunic border breaks into jagged triangles. The switch would pop.",
       "fixes": [
-        "Bake the beard into the LOD2 skin texture/vertex colour instead of thinning the cards",
-        "Keep the collar boundary as a clean edge loop at LOD2 so the shirt/tunic colours do not zigzag",
-        "Preserve brow ridge and orbit shape at LOD2; keep at least 16 plinth segments",
-        "Give LOD2 a solid collar ring instead of reducing the ragged edge strip, and keep a flat brass colour band",
-        "Replace the LOD2 beard cards with a solid shell in the beard's mean colour",
-        "Use a closed hair cap matching the LOD0 hair volume at LOD2",
-        "Remove the dark brow band: bake eye-socket shading to match LOD0 values",
-        "Keep the gold collar as a simple ring at LOD2 so the colour block survives",
-        "Replace the shirt/vest boundary at LOD2 with a clean polygonal edge instead of the jagged star",
-        "Use a single beard shell with alpha-free silhouette at LOD2 instead of decimated cards",
-        "Keep 2-3 more loops around the eyes and nose so the face does not go boxy"
+        "Use a solid hair shell with alpha-card fringe at LOD2 to preserve hair volume",
+        "Replace LOD2 beard strands with a closed textured beard mass",
+        "Bake eyes, brows and gold trim into the LOD2 colour so they survive simplification",
+        "Rebuild the LOD2 collar boundary so the neckline does not break into triangles",
+        "Replace the LOD2 beard with a solid shell in the beard colour that matches the LOD0 outline",
+        "Make the brows the same shape and value at every LOD",
+        "Keep the gold collar as a flat coloured band at LOD2 and keep the shirt panel outline the same",
+        "Use a closed hair cap under the far hair cards so the scalp never shows",
+        "Give LOD2 a closed hair shell that matches the LOD0 volume and colour, with a few alpha cards only at the edge",
+        "Replace the LOD2 beard with a solid shell in the LOD0 beard outline",
+        "Keep the collar as a simple coloured band at LOD2",
+        "Bake the tunic and shirt colour boundary into texture rather than relying on coarse vertex colours"
       ]
     },
     "technical": {
-      "score": 5.5,
-      "reason": "panel-1: QA is clean and LOD2 at 3.3k is reasonable, but 63k triangles at LOD0 for a bust is heavy, and much of it goes into hair cards that read as noise and spikes rather than form; the face itself is under-resolved where it matters (eyes, lips, ears). | panel-2: QA is clean and the three LOD budgets step sensibly, but 63k triangles for a bust that lacks eyelids, lips and cloth folds means the budget goes to hair strands that read as wires, and the LOD2 collar and beard show the reduction is not controlled. | panel-3: QA is clean. 63k triangles for a bust at LOD0 is heavy and concentrated in hair cards that still look sparse; LOD1 18k is a sensible ratio, LOD2 3.3k is within budget but spent poorly (beard noise, shirt spikes).",
+      "score": 5.8,
+      "reason": "panel-1: QA is clean with a sensible LOD chain of 63140, 18360 and 3152 triangles. The density map shows hot spots in hair, eye and beard, but many triangles in hair still create aliasing and noise instead of shape, and LOD2 budget is not spent on the features that matter. | panel-2: QA is clean and the three levels step down sensibly (63k / 18k / 3k). 63k for a bust is acceptable but the triangles go to hair and beard cards while the face, where the eye looks, is under-modelled; many single hair cards are visible as flat polygons with hard ends. The value check shows the face as the focus, which is right. | panel-3: QA is clean and the LOD steps of 63140 / 18360 / 3152 are sensible. Too many LOD0 triangles appear to go into thin hair strands that alias and fold, while the face, ears and clothing that carry the asset remain under-formed. The 3152-triangle LOD2 is spent on a beard that still breaks up.",
       "fixes": [
-        "Cut hair card count at LOD0 and spend the budget on eyelids, lips and ear geometry",
-        "Reduce garment tessellation where it is flat; LOD1 at 18k can drop toward 12k",
-        "Move triangles from single-strand hair cards into facial features and cloth folds",
-        "Use fewer, wider textured hair cards with alpha instead of thousands of thin strands",
-        "Add a check comparing LOD2 colour blocks to LOD0 so the collar and brow band are caught",
-        "Cut hair card count with wider clumped cards to recover ~20k triangles and spend part on face loops",
-        "Audit LOD2 so beard and shirt triangles go to silhouette, not interior noise"
+        "Move triangles from stray hair strands into eyelids, lips and ear forms",
+        "Use fewer, wider tapered hair cards to reduce aliasing",
+        "Reallocate LOD2 triangles toward eye sockets, beard outline and collar edge",
+        "Move a few thousand triangles from top hair cards into eyelids, lips, nose and ear",
+        "Taper hair card tips with alpha or narrowing geometry so card ends do not show as squares",
+        "Move LOD0 budget from hair ribbons to face, ear and clothing forms",
+        "Use fewer, wider, properly oriented hair cards and fix strand self-folding",
+        "Spend LOD2 triangles on closed hair and beard shells"
       ]
     }
   },
   "renders": {
     "hero.png": "4f6e06fd81ffb25553cbb31cff9d7fa75c7aad9e7233b9b3ae1e59e7b698030b",
-    "sheet.png": "d844da493cb9cbfcc9e5ab104c95388a0781107368c9849ecbf1ac6d393f42f5",
-    "raking.png": "5ff0742b27a058f37d5ee77bc1495b58ccfde55516cc77fa5f73eb7cb502dba3",
-    "raking_detail.png": "9c26f74421e688b6aed692ce06d8e1b41a356890a1a1d38f83cc03ebc8602c16",
-    "lods.png": "97c3cd0b0db13cb2b4ed0e4ff2e23338043fafcea87158ac559e38267c0c3dea",
-    "silhouette.png": "452021701e118e58d18b98f92c5c8bdd74b6701320e8723dd795cbbfe3b8d7c8",
-    "value.png": "5bfb2f31619ce3a4021c76c84b24d63d6681aaf23d1fc6ad636b514c443906e7",
-    "detail.png": "011005e9d701b3cf4280e5cc04d5c94d10e11d6daee1d426e4f82ad0e5f88951"
+    "sheet.png": "35bc1d66b92bf12f8faeabfdac5490620e4345d3c316ea2b0bb72ec51e040c0d",
+    "raking.png": "42f02292887eef77fff951ffb4dc1eb14f49a90ad93183bbe9a1d4f75a94afdb",
+    "raking_detail.png": "822d2422e0bae05168e918ff6c4e565d91f7835d792460d9c9160e57ff7b8f7f",
+    "lods.png": "e1778f5908c7e51bf83c6e624f54c416859d4d516a9b163aac07325a867e0e13",
+    "silhouette.png": "1c6e66e268107280f536db2efe4f70f1a0e8961afbbf8572c9d7148faa0b089f",
+    "value.png": "a85d73a7e6f6f1187729af2a580204a74acec83d9265413a9731e6c0b9d3d188",
+    "detail.png": "924d40b00a6ca015efc6fac28b385c1f0b8d048db239ef028f178d3a135c57ae"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 0.931
+        "iou": 0.917
       },
       {
         "view": "side",
-        "iou": 0.937
+        "iou": 0.934
       },
       {
         "view": "3/4",
-        "iou": 0.947
+        "iou": 0.936
       }
     ],
     "focal": {
       "peakPart": "hair",
       "peak": [
-        282,
-        129
+        321,
+        61
       ],
       "focalShare": 0.019,
       "focalArea": 0.415,
       "top": [
         {
           "part": "hair",
-          "share": 0.963
+          "share": 0.964
         },
         {
           "part": "head",
@@ -197,38 +201,38 @@
         "overall": 4.2,
         "scores": {
           "silhouette": 5,
-          "proportions": 4.5,
-          "materials": 4.5,
-          "detail": 4,
-          "wear": 3.5,
-          "lod": 3,
-          "technical": 5
+          "proportions": 4.2,
+          "materials": 4.3,
+          "detail": 4.4,
+          "wear": 3.8,
+          "lod": 3.6,
+          "technical": 5.8
         }
       },
       {
         "reviewer": "panel-2",
-        "overall": 4.4,
+        "overall": 5.1,
         "scores": {
-          "silhouette": 5.5,
-          "proportions": 5,
-          "materials": 4.5,
-          "detail": 4.5,
-          "wear": 3.5,
-          "lod": 3,
-          "technical": 5.5
+          "silhouette": 6,
+          "proportions": 5.3,
+          "materials": 5,
+          "detail": 5,
+          "wear": 4,
+          "lod": 4.3,
+          "technical": 6
         }
       },
       {
         "reviewer": "panel-3",
         "overall": 4.4,
         "scores": {
-          "silhouette": 5,
-          "proportions": 4,
-          "materials": 4.5,
-          "detail": 4.5,
-          "wear": 3.5,
-          "lod": 3,
-          "technical": 5.5
+          "silhouette": 5.2,
+          "proportions": 4.5,
+          "materials": 4.6,
+          "detail": 4.7,
+          "wear": 4,
+          "lod": 3.7,
+          "technical": 5.6
         }
       }
     ]
