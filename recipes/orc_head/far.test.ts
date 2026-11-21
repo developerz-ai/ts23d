@@ -73,6 +73,39 @@ function skinFront(m: Mesh, y: number, z: number): number {
   return best;
 }
 
+/** Bumps along the face's midline profile (the skin front at y = 0, every 5 mm up the face):
+ *  forward peaks standing at least `rise` proud of the profile 3 cm above and below. A brow, a
+ *  nose and a chin each make one; a smooth egg makes none, however many triangles it has. */
+function profilePeaks(m: Mesh, rise = 0.004): number {
+  let lo = Number.POSITIVE_INFINITY;
+  let hi = Number.NEGATIVE_INFINITY;
+  for (let i = 2; i < m.positions.length; i += 3) {
+    lo = Math.min(lo, m.positions[i] ?? 0);
+    hi = Math.max(hi, m.positions[i] ?? 0);
+  }
+  const zs: number[] = [];
+  for (let z = lo + 0.03; z <= hi - 0.03; z += 0.005) zs.push(z);
+  const x = zs.map((z) => skinFront(m, 0, z));
+  let peaks = 0;
+  for (let i = 6; i < zs.length - 6; i++) {
+    const at = x[i] ?? Number.NEGATIVE_INFINITY;
+    if (!Number.isFinite(at)) continue;
+    const isMax = x.slice(i - 2, i + 3).every((v) => v <= at);
+    const below = x[i - 6] ?? Number.POSITIVE_INFINITY;
+    const above = x[i + 6] ?? Number.POSITIVE_INFINITY;
+    if (isMax && at - below >= rise && at - above >= rise) peaks++;
+  }
+  return peaks;
+}
+
+/** A smooth head: an egg sculpted at the far cell, with no brow, nose or jaw. */
+const egg = (): Mesh =>
+  sculpt({
+    edits: [{ shape: 'ellipsoid', at: [0, 0, 0.2], size: [0.1, 0.09, 0.13] }],
+    resolution: 0.012,
+    color: C.plate,
+  });
+
 /** The orbit's rim at the far cell: the skin's front beside and under the left eye, 1.4 ball
  *  radii off its axis (not above: that is the brow shelf, which overhangs every orc eye). */
 function orbitRim(head: Mesh): number {
@@ -124,8 +157,12 @@ describe('orc far LOD (D549)', () => {
   it('the far beard is a solid mass and only the brows stay cards', () => {
     expect(beardFindings(tris)).toEqual([]);
   });
-  it('the far head keeps a brow, a nose and a jaw: at least 1,800 triangles of the budget', () => {
-    expect(tris('head')).toBeGreaterThan(1800);
+  it('a smooth egg of a head has no brow, nose or chin on its profile and is caught', () => {
+    expect(profilePeaks(egg())).toBe(0);
+  });
+  it('the far head keeps a brow, a nose and a jaw on its midline profile', () => {
+    const head = part('head')?.mesh;
+    expect(head ? profilePeaks(head) : 0).toBeGreaterThanOrEqual(2);
     expect(tris('pauldrons') + tris('spikes')).toBeLessThan(900);
   });
 });

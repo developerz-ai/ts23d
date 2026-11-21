@@ -109,7 +109,14 @@ it('draws the hero LOD0 and the far LOD2 whatever --lods builds (D559)', async (
     const all = await shot('0,1,2');
     expect(await shot('1')).toEqual(all);
     expect(await shot('0')).toEqual(all);
+    // `build` (shots on by default) draws the hero from LOD0 too, whatever --lods builds.
+    const hero = async (picked: string): Promise<Uint8Array> => {
+      const dir = join(out, `build-${picked}`);
+      await buildOne(lodpick, parseArgs(['build', 'lodpick.ts', '--lods', picked, '--out', dir]));
+      return new Uint8Array(await Bun.file(join(dir, 'lodpick', 'hero.png')).arrayBuffer());
+    };
+    expect(await hero('1')).toEqual(await hero('0,1,2'));
   } finally {
     await rm(out, { recursive: true, force: true });
   }
-});
+}, 60_000);

@@ -45,7 +45,7 @@ export const C = {
   hairRoot: hex('#2a2018'),
   hairTip: hex('#6e5842'),
   hairBand: hex('#5b3a22'),
-  /** Forged plate: a tint over the cast-iron strip's own dark albedo (blackened iron). */
+  /** Forged plate: a dark steel tint over the `aluminium` metal strip (`PLATE_STRIP`). */
   plate: hex('#5c5955'),
   /** The wire every plate edge is rolled over, on the fitting strip: rubbed, brighter steel. */
   plateRim: hex('#8a857c'),

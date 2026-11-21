@@ -17,17 +17,21 @@ export interface UsedDeclarations {
   readonly checks: readonly Check[];
 }
 
-/** The parent's parts under `prefix`, renamed and re-rooted as the child built them. */
+/**
+ * The parent's parts under the instance group `prefix`, renamed and re-rooted as the child built
+ * them. Descendants of the group, not every name starting with the prefix: a sibling instance
+ * 'a_b' is not part of 'a' (parents precede children in `parts`).
+ */
 function childView(asset: CompiledAsset, prefix: string): CompiledAsset {
   const head = `${prefix}_`;
-  const own = (name: string): string | null =>
-    name.startsWith(head) ? name.slice(head.length) : null;
-  const parts: Part[] = asset.parts.flatMap((p) => {
-    const name = own(p.name);
-    if (name === null) return [];
-    const parent = p.parent === null || p.parent === prefix ? null : own(p.parent);
-    return [{ ...p, name, parent }];
-  });
+  const inside = new Set([prefix]);
+  const parts: Part[] = [];
+  for (const p of asset.parts) {
+    if (p.parent === null || !inside.has(p.parent) || !p.name.startsWith(head)) continue;
+    inside.add(p.name);
+    const parent = p.parent === prefix ? null : p.parent.slice(head.length);
+    parts.push({ ...p, name: p.name.slice(head.length), parent });
+  }
   return { ...asset, parts };
 }
 

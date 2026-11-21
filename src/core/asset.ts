@@ -33,7 +33,7 @@ import {
   checkUsePrefix,
 } from './validate-asset.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
-import { worldTransforms } from './world.ts';
+import { transformOf } from './world.ts';
 
 export * from './definition.ts';
 export * from './finish.ts';
@@ -188,7 +188,8 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
       }
     }
     for (const w of sub.weather ?? []) weather.push({ ...w, target: `${o.prefix}_${w.target}` });
-    const xf = worldTransforms([...parts.values()]).get(o.prefix) ?? { origin: [0, 0, 0], yaw: 0 };
+    // The instance's own ancestor chain, not the whole growing scene: N uses stay linear.
+    const xf = transformOf(parts, o.prefix);
     for (const j of sub.joints ?? []) joint(useJoint(j, o.prefix, xf));
     for (const b of sub.skeleton?.bones ?? []) bone(useBone(b, o.prefix, xf));
     for (const c of sub.clips ?? []) usedClips.push(useClip(c, o.prefix, xf.yaw));

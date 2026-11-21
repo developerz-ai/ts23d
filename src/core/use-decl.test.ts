@@ -74,4 +74,23 @@ describe('ctx.use carries the child declarations (D558)', () => {
       'the door skin folds at the hinge',
     ]);
   });
+
+  it("sees only its own instance's parts when a sibling's prefix starts with its own", () => {
+    const pair = defineAsset({
+      name: 'pair',
+      kind: 'prop',
+      budget: { triangles: [9999, 9999, 9999] },
+      build(ctx) {
+        ctx.use(lamp, { prefix: 'a' });
+        ctx.use(lamp, { prefix: 'a_b', at: [3, 0, 0] });
+      },
+    });
+    const c = compile(pair);
+    seen = [];
+    for (const check of c.checks) check(c);
+    expect(seen.map((s) => s.names)).toEqual([
+      ['frame', 'door', 'lens'],
+      ['frame', 'door', 'lens'],
+    ]);
+  });
 });

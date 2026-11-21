@@ -3,7 +3,8 @@
 // over a flaring SKIRT plate whose lip is rolled over a wire, the two held by a ring of domed
 // rivets through the lap; two overlapping lames down the arm, each rolled at its lower edge and
 // riveted at its ends and centre (where the leather inside hangs them); a boss on the crown and
-// bone spikes in iron collars. Bare blackened iron on the `iron_cast` strip (metal, not paint),
+// bone spikes in iron collars. Bare dark steel: the `aluminium` metal strip under a dark steel tint
+// (`PLATE_STRIP`, `C.plate`; metal, not paint),
 // hammer-peened all over and dented by blows at LOD0, then worn by `weather`: edges rubbed
 // bright, scratches across the open plate and rust under the rivets (D547, D548). LOD1 coarsens the rings; the far LOD's solids are far.ts.
 
