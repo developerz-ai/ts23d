@@ -1,11 +1,11 @@
 # Brief: does a confirmed security fix need a release today?
 
 Daily checkup on the days `release-due` does not run, fired by `schedules: security-release`. This
-is the one off-cycle release; everything else waits for Wednesday's `.dz/briefs/release-due.md`.
+is the one off-cycle release; everything else waits for Wednesday's `.dz/schedules/release-due.md`.
 
 ## Run
 
-Run `.dz/briefs/release-due.md` § Decide first and use its `$last` and window. If any command there
+Run `.dz/schedules/release-due.md` § Decide first and use its `$last` and window. If any command there
 fails, stop and report `unknown: <failure>` with the evidence: an unknown window is never empty.
 Then look in the window for a commit that fixes a security advisory.
 
@@ -24,7 +24,7 @@ advisory waits for Wednesday.
 
 ## When it qualifies
 
-Cut a patch release now, following `.dz/briefs/release-due.md` § Cut, with the advisory id and its
+Cut a patch release now, following `.dz/schedules/release-due.md` § Cut, with the advisory id and its
 source URL first in the PR body. Otherwise change nothing and end the run summary with
 `no release: <reason>`.
 
