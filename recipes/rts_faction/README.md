@@ -14,8 +14,8 @@ designs. `rts_faction` is the lineup scene; each asset has its own folder:
 | `rts_resource*` | [`rts_resource/`](../rts_resource/README.md) | Sunstone deposit + harvested variant |
 | `rts_faction` | here | All of the above in one compound (`rts_faction.ts` places the roster, `ground.ts` builds the forecourt, perimeter and stores), one team slot |
 
-Shared code: [`style.ts`](style.ts) (palette, team slot, shape helpers), [`finish.ts`](finish.ts)
-(materials per role colour, wear presets, the `Kit` that weathers parts together), [`figure.ts`](figure.ts)
+Shared code: [`style.ts`](../_lib/rts/style.ts) (palette, team slot, shape helpers), [`finish.ts`](../_lib/rts/finish.ts)
+(materials per role colour, wear presets, the `Kit` that weathers parts together), [`figure.ts`](../_lib/rts/figure.ts)
 (the one body both infantry units use). Test: [`rts_faction.test.ts`](rts_faction.test.ts).
 
 ## Style guide (the art bible, enforced where it can be)
