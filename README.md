@@ -556,7 +556,7 @@ policy is committed in [`.dz/maintainer/maintainer.yml`](.dz/maintainer/maintain
 | an outside change to CI, release or publish automation | declined: the npm OIDC pipeline is the maintainers' |
 | a change that breaks a rule in `CLAUDE.md` (game code, runtime deps, decimation, non-determinism) | declined with the rule quoted |
 
-Scheduled checkups, briefs in [`.dz/briefs/`](.dz/briefs/): daily `health` catches what nothing
+Scheduled checkups, briefs in [`.dz/schedules/`](.dz/schedules/): daily `health` catches what nothing
 announces (red `main`, a gallery that did not deploy, a release npm does not serve); daily
 `security-release` ships a confirmed advisory fix the same day; weekly `release-due` judges whether
 users get something and cuts the release; monthly `improve` lands up to three evidenced
