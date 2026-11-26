@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
-# Run the full verify gate, then render the CI contact sheets.
+# Run the pinned full verify gate, then the pinned CI contact sheets.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mise exec bun@$(cat .bun-version) -- bun run verify
 
-mise exec bun@$(cat .bun-version) -- bun run shots
+pin=$(< .bun-version)
+# Never report a gate result from the wrong bun: mise when present, else the exact pin on PATH.
+if command -v mise >/dev/null 2>&1; then
+  run() { mise exec "bun@$pin" -- "$@"; }
+else
+  actual=$(bun --version 2>/dev/null || true)
+  if [[ $actual != "$pin" ]]; then
+    echo "check needs bun $pin on PATH (found: ${actual:-none}); install mise or bun $pin, then re-run ./bin/check" >&2
+    exit 1
+  fi
+  run() { "$@"; }
+fi
+
+run bun run verify
+run bun run shots

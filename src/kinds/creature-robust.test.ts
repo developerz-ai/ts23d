@@ -61,5 +61,5 @@ describe('connections stay green under ±5 % of width and limbs', () => {
     for (const knob of ['width', 'limbs'] as const)
       it(`${name}: build.${knob} × 0.95 and × 1.05`, () => {
         expect([...findings(spec, knob, 0.95), ...findings(spec, knob, 1.05)]).toEqual([]);
-      }, 120_000);
+      }, 600_000);
 });

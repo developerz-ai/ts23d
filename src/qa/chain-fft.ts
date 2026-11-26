@@ -17,14 +17,23 @@ function fft(re: Float64Array, im: Float64Array, sign: 1 | -1): void {
       [im[i], im[j]] = [im[j] ?? 0, im[i] ?? 0];
     }
   }
+  // One twiddle per stage serves every block. The angle is still `step * k` with the stage's own
+  // `step`, so `dmath` receives the same arguments and the output stays bit-identical.
+  const twiddleCos = new Float64Array(n / 2);
+  const twiddleSin = new Float64Array(n / 2);
   for (let size = 2; size <= n; size *= 2) {
     const half = size / 2;
     const step = (sign * 2 * Math.PI) / size;
+    for (let k = 0; k < half; k++) {
+      twiddleCos[k] = dmath.cos(step * k);
+      twiddleSin[k] = dmath.sin(step * k);
+    }
     for (let start = 0; start < n; start += size)
       for (let k = 0; k < half; k++) {
-        const c = dmath.cos(step * k);
-        const s = dmath.sin(step * k);
-        const [a, b] = [start + k, start + k + half];
+        const c = twiddleCos[k] ?? 0;
+        const s = twiddleSin[k] ?? 0;
+        const a = start + k;
+        const b = a + half;
         const x = (re[b] ?? 0) * c - (im[b] ?? 0) * s;
         const y = (re[b] ?? 0) * s + (im[b] ?? 0) * c;
         re[b] = (re[a] ?? 0) - x;
