@@ -1,7 +1,8 @@
 version: 2
 
-# Owner, 2026-11-26: weekly at most, grouped, quiet; advisories come through here (dz devops.watch
-# is off), batched into one security PR per ecosystem.
+# Owner, 2026-11-26: grouped and quiet; advisories come through here (dz devops.watch is off).
+# Security updates ignore the schedule and PR limit, so they can land any day; the security groups
+# batch the fixes one run finds into one PR per ecosystem.
 #
 # Grouped, with a 14-day cooldown: most yanked versions and supply-chain incidents surface inside
 # that window. Cadence follows developerz-ai/wurk: the shipped and build dependencies move weekly;
