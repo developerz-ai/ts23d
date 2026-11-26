@@ -2,6 +2,14 @@
 # Run the full verify gate, then render the CI contact sheets.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mise exec bun@$(cat .bun-version) -- bun run verify
-
-mise exec bun@$(cat .bun-version) -- bun run shots
+pin=$(< .bun-version)
+if [[ ${T3D_NO_MISE:-} == '' ]] && command -v mise > /dev/null 2>&1; then
+  run() { mise exec "bun@$pin" -- "$@"; }
+elif [[ $(bun --version 2> /dev/null || true) != "$pin" ]]; then
+  echo "T3D_BUN_VERSION: bun $(bun --version) does not match .bun-version ($pin); install bun $pin or mise." >&2
+  exit 1
+else
+  run() { "$@"; }
+fi
+run bun run verify
+run bun run shots

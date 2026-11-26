@@ -3,6 +3,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source bin/stop --library
+pin=$(< .bun-version)
+use_mise=0
+if [[ ${T3D_NO_MISE:-} == '' ]] && command -v mise > /dev/null 2>&1; then
+  use_mise=1
+elif [[ $(bun --version 2> /dev/null || true) != "$pin" ]]; then
+  echo "T3D_BUN_VERSION: bun $(bun --version) does not match .bun-version ($pin); install bun $pin or mise." >&2
+  exit 1
+fi
 mkdir -p tmp
 # Keep one stable lock inode: reclaim, publish and cleanup are one ownership lease.
 # Only the owner holds the descriptor; descendants must not prolong the lease.
@@ -46,7 +54,13 @@ publish
 set -m
 bash -c '
   trap ":" TERM INT HUP
-  mise exec bun@$(cat .bun-version) -- bun run site:dev &
+  pin=$0
+  use_mise=$1
+  launcher=()
+  if [[ $use_mise == 1 ]]; then
+    launcher=(mise exec "bun@$pin" --)
+  fi
+  "${launcher[@]}" bun run site:dev &
   server=$!
   wait "$server"
   status=$?
@@ -54,7 +68,7 @@ bash -c '
   mv tmp/dev-session/result.tmp tmp/dev-session/result
   # Remain the group anchor until the owner has cleaned all descendants.
   while :; do sleep 1; done
-' 9>&- &
+' "$pin" "$use_mise" 9>&- &
 group=$!
 group_start=$(identity "$group")
 publish

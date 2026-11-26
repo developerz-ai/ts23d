@@ -1,7 +1,7 @@
 // Keep the local check aligned with CI verification and contact-sheet rendering.
 
 import { expect, it } from 'bun:test';
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -82,10 +82,10 @@ it.each([
   { name: 'propagates a shots failure', verify: 0, shots: 42, expected: 42 },
 ])('bin/check $name', ({ verify, shots, expected }) => {
   const root = resolve(import.meta.dir, '..');
-  const fixture = mkdtempSync(join(tmpdir(), 'ts23d-ci-parity-'));
+  const sandbox = mkdtempSync(join(tmpdir(), 'ts23d-ci-parity-'));
   try {
-    const log = join(fixture, 'calls');
-    const mise = join(fixture, 'mise');
+    const log = join(sandbox, 'calls');
+    const mise = join(sandbox, 'mise');
     writeFileSync(
       mise,
       `#!/usr/bin/env bash
@@ -98,12 +98,12 @@ case "$*" in
 esac
 `,
     );
-    chmodSync(mise, 0o755);
+    chmodSync(join(sandbox, 'mise'), 0o755);
     const result = Bun.spawnSync(['bash', join(root, 'bin/check')], {
-      cwd: fixture,
+      cwd: sandbox,
       env: {
         ...process.env,
-        PATH: `${fixture}:${process.env['PATH'] ?? ''}`,
+        PATH: `${sandbox}:${process.env['PATH'] ?? ''}`,
         CHECK_LOG: log,
         VERIFY_EXIT: String(verify),
         SHOTS_EXIT: String(shots),
@@ -116,9 +116,73 @@ esac
     if (verify === 0) calls.push(root, `exec bun@${pin} -- bun run shots`);
     expect(readFileSync(log, 'utf8').trim().split('\n')).toEqual(calls);
   } finally {
-    rmSync(fixture, { recursive: true, force: true });
+    rmSync(sandbox, { recursive: true, force: true });
   }
 });
+
+it.each(['setup', 'check'] as const)(
+  'bin/%s refuses a wrong Bun version without mise',
+  (wrapper) => {
+    const sandbox = mkdtempSync(join(tmpdir(), 'ts23d-no-mise-'));
+    try {
+      const calls = join(sandbox, 'calls');
+      writeFileSync(
+        join(sandbox, 'bun'),
+        `#!/usr/bin/env bash\nif [[ \${1:-} != --version ]]; then printf 'called\\n' >> '${calls}'; fi\nprintf '0.0.1\\n'\n`,
+        { mode: 0o755 },
+      );
+      const result = Bun.spawnSync(['bash', resolve(import.meta.dir, '..', 'bin', wrapper)], {
+        cwd: sandbox,
+        env: {
+          ...process.env,
+          PATH: `${sandbox}:/bin:/usr/bin`,
+          // mise is a system binary here; opt out to model a machine without it.
+          T3D_NO_MISE: '1',
+          BASH_ENV: '/dev/null',
+        },
+      });
+      const pin = readFileSync(resolve(import.meta.dir, '..', '.bun-version'), 'utf8').trim();
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr.toString()).toContain(`bun ${pin}`);
+      expect(existsSync(calls)).toBe(false);
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  },
+);
+
+it.each(['setup', 'check'] as const)(
+  'bin/%s runs directly when Bun matches the pin and mise is absent',
+  (wrapper) => {
+    const sandbox = mkdtempSync(join(tmpdir(), 'ts23d-no-mise-'));
+    try {
+      const probe = join(sandbox, 'probe');
+      const pin = readFileSync(resolve(import.meta.dir, '..', '.bun-version'), 'utf8').trim();
+      writeFileSync(
+        join(sandbox, 'bun'),
+        `#!/usr/bin/env bash\nif [[ \${1:-} != --version ]]; then printf '%s\\n' "$*" >> '${probe}'; fi\nprintf '%s\\n' '${pin}'\n`,
+        { mode: 0o755 },
+      );
+      const result = Bun.spawnSync(['bash', resolve(import.meta.dir, '..', 'bin', wrapper)], {
+        cwd: sandbox,
+        env: {
+          ...process.env,
+          PATH: `${sandbox}:/bin:/usr/bin`,
+          // mise is a system binary here; opt out to model a machine without it.
+          T3D_NO_MISE: '1',
+          BASH_ENV: '/dev/null',
+        },
+      });
+      expect(result.stderr.toString()).toBe('');
+      expect(result.exitCode).toBe(0);
+      expect(readFileSync(probe, 'utf8').trim().split('\n')).toEqual(
+        wrapper === 'setup' ? ['run setup'] : ['run verify', 'run shots'],
+      );
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  },
+);
 
 it('setup and check forward the Bun pin and propagate failures without running real gates', async () => {
   const f = await fixture();

@@ -3,10 +3,30 @@
 // however narrow the frequency band. Bluestein's chirp transform gives the exact DFT at any length
 // (the samples stay on the clip's keys) through power-of-two FFTs, in O(n log n).
 
-/** In-place radix-2 FFT; `re.length` must be a power of two. `sign` −1 forward, +1 inverse. */
 import { dmath } from '../core/index.ts';
 
-function fft(re: Float64Array, im: Float64Array, sign: 1 | -1): void {
+/** One cosine/sine table per stage, indexed by stage from size 2 upwards. */
+type Twiddles = { cos: Float64Array[]; sin: Float64Array[] };
+
+/** Build each stage's twiddles once, in the butterfly's k order, for one transform sign. */
+function twiddlesOf(size: number, sign: 1 | -1): Twiddles {
+  const cos: Float64Array[] = [];
+  const sin: Float64Array[] = [];
+  for (let half = 1; half < size; half *= 2) {
+    const step = (sign * 2 * Math.PI) / (2 * half);
+    const stageCos = new Float64Array(half);
+    const stageSin = new Float64Array(half);
+    for (let k = 0; k < half; k++) {
+      stageCos[k] = dmath.cos(step * k);
+      stageSin[k] = dmath.sin(step * k);
+    }
+    cos.push(stageCos);
+    sin.push(stageSin);
+  }
+  return { cos, sin };
+}
+
+function fft(re: Float64Array, im: Float64Array, twiddles: Twiddles): void {
   const n = re.length;
   for (let i = 1, j = 0; i < n; i++) {
     let bit = n >> 1;
@@ -17,14 +37,18 @@ function fft(re: Float64Array, im: Float64Array, sign: 1 | -1): void {
       [im[i], im[j]] = [im[j] ?? 0, im[i] ?? 0];
     }
   }
+  let stage = 0;
   for (let size = 2; size <= n; size *= 2) {
     const half = size / 2;
-    const step = (sign * 2 * Math.PI) / size;
+    const stageCos = twiddles.cos[stage];
+    const stageSin = twiddles.sin[stage];
+    stage++;
     for (let start = 0; start < n; start += size)
       for (let k = 0; k < half; k++) {
-        const c = dmath.cos(step * k);
-        const s = dmath.sin(step * k);
-        const [a, b] = [start + k, start + k + half];
+        const c = stageCos?.[k] ?? 0;
+        const s = stageSin?.[k] ?? 0;
+        const a = start + k;
+        const b = a + half;
         const x = (re[b] ?? 0) * c - (im[b] ?? 0) * s;
         const y = (re[b] ?? 0) * s + (im[b] ?? 0) * c;
         re[b] = (re[a] ?? 0) - x;
@@ -64,14 +88,17 @@ export function harmonicPowers(y: readonly number[]): Float64Array {
     bre[k] = bre[back] = cos[k] ?? 0;
     bim[k] = bim[back] = -(sin[k] ?? 0);
   }
-  fft(are, aim, -1);
-  fft(bre, bim, -1);
+  // The two forward transforms and the inverse share one table per sign and stage.
+  const forward = twiddlesOf(size, -1);
+  const inverse = twiddlesOf(size, 1);
+  fft(are, aim, forward);
+  fft(bre, bim, forward);
   for (let i = 0; i < size; i++) {
     const r = (are[i] ?? 0) * (bre[i] ?? 0) - (aim[i] ?? 0) * (bim[i] ?? 0);
     aim[i] = (are[i] ?? 0) * (bim[i] ?? 0) + (aim[i] ?? 0) * (bre[i] ?? 0);
     are[i] = r;
   }
-  fft(are, aim, 1);
+  fft(are, aim, inverse);
   // The chirp has unit size, so the power needs only the convolution's own magnitude.
   const scale = 2 / (n * size);
   for (let m = 0; m < out.length; m++)

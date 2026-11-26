@@ -2,4 +2,12 @@
 # one-command setup, owned by this repository's maintainers. One command; adjust as the repo grows.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mise install bun@$(cat .bun-version) && mise exec bun@$(cat .bun-version) -- bun run setup
+pin=$(< .bun-version)
+if [[ ${T3D_NO_MISE:-} == '' ]] && command -v mise > /dev/null 2>&1; then
+  mise install "bun@$pin" && mise exec "bun@$pin" -- bun run setup
+elif [[ $(bun --version 2> /dev/null || true) != "$pin" ]]; then
+  echo "T3D_BUN_VERSION: bun $(bun --version) does not match .bun-version ($pin); install bun $pin or mise." >&2
+  exit 1
+else
+  bun run setup
+fi
