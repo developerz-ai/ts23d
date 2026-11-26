@@ -21,12 +21,12 @@ tone:
   language: en
 
 triage:
-  stale_after_days: 30
+  stale_after_days: 60
   stale_action: comment_then_close
   ask_for_repro: true
   required_fields: [steps, expected, actual, version]
   qualify_into: [bug, feature, dupe, question]
-  close_unanswered_repro_after_days: 14
+  close_unanswered_repro_after_days: 60
   # From CLAUDE.md's rules: changes someone could propose that this project will not take. A pull
   # request matching one is closed with it quoted; an issue is answered with it.
   non_goals:
@@ -51,9 +51,9 @@ pr:
   auto_merge: true
   auto_merge_scope: any
   required_checks: [verify]
-  # A PR waiting on its author (red check, unresolved thread, conflict) is pinged at 7 and 14 days
-  # and closed at 21 with the reason and how to reopen. One waiting on us or on CI is never timed.
-  close_awaiting_author_after_days: 21
+  # A PR waiting on its author (red check, unresolved thread, conflict) is pinged, then closed after
+  # 60 days with the reason and how to reopen. One waiting on us or on CI is never timed.
+  close_awaiting_author_after_days: 60
 
 review:
   enabled: true
@@ -118,9 +118,10 @@ schedules:
 # Added by the developerz.ai maintainer agent: blocks from the current template this file did not have. Each states the value already in effect; edit it like any other key.
 
 # branches: a branch with no new commit this long is tagged archive/<branch>/<date> at its last
-# commit, then deleted. 14 (owner, 2026-11-26: keep the repos cleaned). false keeps every branch.
+# commit, then deleted. 60 (owner, 2026-11-26: open-source repos drop what sits idle 60 days, the
+# same clock as stale PRs and issues). false keeps every branch.
 branches:
-  close_inactive_after_days: 14
+  close_inactive_after_days: 60
 
 # scout: the platform's daily survey of this repo files only what is already BROKEN
 # (red CI, failing tests, a security advisory, a broken build or link) — never an
