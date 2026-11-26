@@ -87,18 +87,21 @@ escalate:
 
 # The checkups nothing else triggers. Each brief says what it may change.
 schedules:
-  # Weekly and judged: a merge never cuts a release by itself.
+  # Weekly and judged, Monday (owner, 2026-11-26): the only lane that cuts a release, at most one a
+  # week. A merge, a fix or an interactive session never cuts one by itself.
   - name: release-due
-    days: [wed]
+    days: [mon]
     hours_utc: [3]
     brief_file: .dz/schedules/release-due.md
-  # The one exception to the weekly slot: a confirmed security fix ships the same day.
+  # The one exception to the weekly slot: a fix for a published high/critical (CVSS >= 7.0) or
+  # KEV-listed advisory against what npm ships. Everything else waits for Monday.
   - name: security-release
-    days: [mon, tue, thu, fri, sat, sun]
+    days: [tue, wed, thu, fri, sat, sun]
     hours_utc: [5]
     brief_file: .dz/schedules/security-release.md
+  # Weekly (owner, 2026-11-26: not so many daily PRs).
   - name: health
-    days: [mon, tue, wed, thu, fri, sat, sun]
+    days: [mon]
     hours_utc: [7]
     brief_file: .dz/schedules/health.md
   # Monthly: the schema has weekdays, not days of the month, so these fire weekly and each brief
@@ -114,14 +117,18 @@ schedules:
 
 # Added by the developerz.ai maintainer agent: blocks from the current template this file did not have. Each states the value already in effect; edit it like any other key.
 
-# branches: on at 60 because this file exists. A branch with no new commit
-# this long is tagged archive/<branch>/<date> at its last commit, then deleted.
-# false keeps every branch. See /docs/maintainer-yml.
+# branches: a branch with no new commit this long is tagged archive/<branch>/<date> at its last
+# commit, then deleted. 14 (owner, 2026-11-26: keep the repos cleaned). false keeps every branch.
 branches:
-  close_inactive_after_days: 60
+  close_inactive_after_days: 14
 
 # scout: the platform's daily survey of this repo files only what is already BROKEN
 # (red CI, failing tests, a security advisory, a broken build or link) — never an
 # improvement idea. `full` lets it file ideas too; `off` stops the survey.
 scout:
   survey: broken_only
+
+# devops: off (owner, 2026-11-26: one PR per advisory was too much noise). Advisories arrive through
+# Dependabot instead, batched weekly per ecosystem (.github/dependabot.yml).
+devops:
+  watch: "off"  # quoted: YAML 1.1 parsers read a bare off as false

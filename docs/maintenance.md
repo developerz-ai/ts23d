@@ -5,7 +5,7 @@ release or keep the toolchain current. This page is the contract that makes that
 what wears out in a repo nobody touches, and which automated lane catches each thing before a user
 notices. The lanes are developerz.ai checkups configured in
 [`.dz/maintainer/maintainer.yml`](../.dz/maintainer/maintainer.yml); each runs from a brief in
-[`.dz/briefs/`](../.dz/briefs/) read at `main`'s HEAD, so changing a brief changes the next run.
+[`.dz/schedules/`](../.dz/schedules/) read at `main`'s HEAD, so changing a brief changes the next run.
 
 ## The loop
 
@@ -13,11 +13,11 @@ notices. The lanes are developerz.ai checkups configured in
 |---|---|---|---|
 | review + merge | every PR | reviews, drives `verify` green, merges (any author) | [`maintainer.yml`](../.dz/maintainer/maintainer.yml) `pr:` / `review:` |
 | triage | every issue | qualifies, asks for a repro, hands ready work to the coding fleet, sweeps stale | `maintainer.yml` `triage:` / `handoff:` |
-| `health` | daily | red `main`, gallery not deployed, a release npm does not serve, stuck Dependabot | [`health.md`](../.dz/briefs/health.md) |
-| `security-release` | daily | a first-tier-confirmed advisory fix ships the same day | [`security-release.md`](../.dz/briefs/security-release.md) |
-| `release-due` | weekly (Wed) | judges whether users get something; cuts and merges `chore: release x.y.z` | [`release-due.md`](../.dz/briefs/release-due.md) |
-| `improve` | monthly (1st Mon) | gate regressions, bugs, stale claims, one roadmap step | [`improve.md`](../.dz/briefs/improve.md) |
-| `cleanup` | monthly (1st Tue) | branches, stale plans, generated files, weight, links, dead code, the Bun pin; each January the yearly review below | [`cleanup.md`](../.dz/briefs/cleanup.md) |
+| `health` | weekly (Mon) | red `main`, gallery not deployed, a release npm does not serve, stuck Dependabot | [`health.md`](../.dz/schedules/health.md) |
+| `security-release` | daily | only a fix for a published high/critical (CVSS ≥ 7.0) or KEV-listed advisory ships off-cycle | [`security-release.md`](../.dz/schedules/security-release.md) |
+| `release-due` | weekly (Mon) | judges whether users get something; cuts and merges `chore: release x.y.z`; the only lane that cuts a release | [`release-due.md`](../.dz/schedules/release-due.md) |
+| `improve` | monthly (1st Mon) | gate regressions, bugs, stale claims, one roadmap step | [`improve.md`](../.dz/schedules/improve.md) |
+| `cleanup` | monthly (1st Tue) | branches, stale plans, generated files, weight, links, dead code, the Bun pin; each January the yearly review below | [`cleanup.md`](../.dz/schedules/cleanup.md) |
 | Dependabot | weekly (Bun deps), monthly (Actions) | version PRs with a 14-day cooldown; merged by the review lane on green | [`.github/dependabot.yml`](../.github/dependabot.yml) |
 
 Every change still passes the same gate a human's would: `bun run verify` (11 steps, including

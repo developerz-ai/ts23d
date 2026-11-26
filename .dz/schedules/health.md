@@ -1,6 +1,6 @@
 # Brief: is the project healthy?
 
-Daily checkup fired by `schedules: health`: the failures no issue or PR announces. Judge and file only; never push, tag or publish.
+Weekly checkup (Mondays) fired by `schedules: health`: the failures no issue or PR announces. Judge and file only; never push, tag or publish.
 
 | Signal | Command | Healthy |
 |---|---|---|

@@ -1,5 +1,8 @@
 version: 2
 
+# Owner, 2026-11-26: weekly at most, grouped, quiet; advisories come through here (dz devops.watch
+# is off), batched into one security PR per ecosystem.
+#
 # Grouped, with a 14-day cooldown: most yanked versions and supply-chain incidents surface inside
 # that window. Cadence follows developerz-ai/wurk: the shipped and build dependencies move weekly;
 # the CI actions move monthly (a weekly cadence there is mostly one PR per patch for no change in
@@ -12,22 +15,29 @@ updates:
     directory: /
     schedule: { interval: weekly, day: monday }
     cooldown: { default-days: 14 }
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     labels: [dependencies]
     commit-message: { prefix: 'chore(deps)' }
     groups:
-      tooling:
-        patterns: ['@biomejs/*', 'typescript', 'lefthook', '@types/*', 'vite']
-      runtime:
+      # One PR a week for every minor and patch; a major arrives alone, one decision each.
+      bun-minor:
         patterns: ['*']
-        exclude-patterns: ['@biomejs/*', 'typescript', 'lefthook', '@types/*', 'vite']
+        update-types: [minor, patch]
+      # Every security bump as one PR, not one per advisory.
+      bun-security:
+        applies-to: security-updates
+        patterns: ['*']
 
   - package-ecosystem: github-actions
     directories: ['/', '/.github/actions/*']
     schedule: { interval: monthly }
     cooldown: { default-days: 14 }
     labels: [dependencies, ci]
+    open-pull-requests-limit: 3
     commit-message: { prefix: 'chore(ci)' }
     groups:
       actions:
+        patterns: ['*']
+      actions-security:
+        applies-to: security-updates
         patterns: ['*']
