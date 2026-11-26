@@ -1,7 +1,12 @@
 # Brief: is a release needed?
 
-Weekly checkup, fired by `schedules: release-due`. The agent judges and, when a release is due, cuts
-it. A member can still cut by hand at any time.
+Weekly checkup, Mondays 03:00 UTC, fired by `schedules: release-due`. The agent judges and, when a
+release is due, cuts it. This is the only lane that cuts a release, at most one a week (owner,
+2026-11-26): a merge, a fix, a fix count or an interactive session never cuts one, unless the owner
+explicitly asks for that specific release. The one off-cycle release is
+[`security-release.md`](security-release.md): a fix for a *published* first-tier advisory rated
+high or critical (CVSS ≥ 7.0) or KEV-listed, against what npm ships. Our own hardening with no
+published advisory waits for Monday.
 
 A release is a merged `chore: release x.y.z` PR: `release-tag.yml` tags it and `release.yml` runs
 the full gate and publishes `@developerz.ai/ts23d` to npm through OIDC (`PUBLISHING.md`). Never tag,

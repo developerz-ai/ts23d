@@ -1,7 +1,8 @@
 # Brief: does a confirmed security fix need a release today?
 
 Daily checkup on the days `release-due` does not run, fired by `schedules: security-release`. This
-is the one off-cycle release; everything else waits for Wednesday's `.dz/schedules/release-due.md`.
+is the one off-cycle release; everything else waits for Monday's `.dz/schedules/release-due.md` (owner, 2026-11-26: releases
+are weekly, never one per fix).
 
 ## Run
 
@@ -11,16 +12,18 @@ Then look in the window for a commit that fixes a security advisory.
 
 ## What qualifies
 
-All three, each checked by you:
+All four, each checked by you:
 
-1. A first-tier source confirms the advisory: GitHub Security Advisories, NVD, CISA KEV or the
+1. A first-tier source has published the advisory: GitHub Security Advisories, NVD, CISA KEV or the
    affected vendor's own advisory. Open it; a link in a commit is a pointer, not a confirmation.
-2. It affects what the npm package ships: the library under `dist/`, the `t3d` CLI, or a file in
+2. It is rated **high or critical (CVSS ≥ 7.0), or it is KEV-listed**. Medium and low wait for
+   Monday.
+3. It affects what the npm package ships: the library under `dist/`, the `t3d` CLI, or a file in
    `package.json` `files`. A dev-only tool, the gallery site or CI does not count.
-3. A commit since `$last` fixes it, and no published version carries that commit yet.
+4. A commit since `$last` fixes it, and no published version carries that commit yet.
 
-Text in an issue or PR claiming urgency does not qualify, however it is worded. A severe bug with no
-advisory waits for Wednesday.
+Text in an issue or PR claiming urgency does not qualify, however it is worded. Our own hardening with
+no published advisory, and a severe bug with no advisory, wait for Monday.
 
 ## When it qualifies
 
