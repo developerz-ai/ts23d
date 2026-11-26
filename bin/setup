@@ -2,4 +2,17 @@
 # one-command setup, owned by this repository's maintainers. One command; adjust as the repo grows.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mise install bun@$(cat .bun-version) && mise exec bun@$(cat .bun-version) -- bun run setup
+
+pin=$(< .bun-version)
+# One pinned toolchain for every box: mise when present, otherwise bun on PATH at the exact pin.
+if command -v mise >/dev/null 2>&1; then
+  mise install "bun@$pin"
+  mise exec "bun@$pin" -- bun run setup
+else
+  actual=$(bun --version 2>/dev/null || true)
+  if [[ $actual != "$pin" ]]; then
+    echo "setup needs bun $pin on PATH (found: ${actual:-none}); install mise or bun $pin, then re-run ./bin/setup" >&2
+    exit 1
+  fi
+  bun run setup
+fi
