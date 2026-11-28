@@ -11,5 +11,5 @@ over a decade to the lane that catches it.
 | `maintainer/maintainer.yml` | the policy: triage and stale sweeps, fleet handoff, auto-merge on `verify` for every author, review lane, schedules |
 | `maintainer/reviewer.md` | this repo's layer of the reviewer prompt |
 | `pipeline/agent-pipeline.json` | merge gate for the agent pipeline: CI only, standing authorization |
-| `schedules/` | what each checkup works from, read at `main`'s HEAD when it fires: `release-due.md` (weekly, Monday: judge and cut a release; the only lane that cuts one), `improve.md` (monthly: gate regressions, bugs, stale claims), `cleanup.md` (monthly: branches, stale plans, generated files, weight, links, dead code, the Bun pin; each January a yearly review of runtimes, actions and publishing) |
+| `schedules/` | what each checkup works from, read at `main`'s HEAD when it fires: `release-due.md` (weekly, Monday: judge and cut a release; the only lane that cuts one), `improve.md` (first and third Monday: gate regressions, bugs, stale claims), `cleanup.md` (monthly: branches, stale plans, generated files, weight, links, dead code, the Bun pin; each January a yearly review of runtimes, actions and publishing) |
 | `onboarding/scorecard.md` | written by the platform's onboarding run |

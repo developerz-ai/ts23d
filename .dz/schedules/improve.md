@@ -3,7 +3,7 @@
 Fired on the first and third Monday of each month by `schedules: improve` (`weeks_of_month: [1, 3]`).
 
 ts23d is maintained by agents only. Twice a month, leave it measurably better. `CLAUDE.md` binds
-every change. A red `main`, a missing publish and a stuck Dependabot PR belong to the platform's red-main ask and `release-due`; branches,
+every change. A red `main` and a missing publish belong to the platform's red-main ask and `release-due`; a Dependabot PR with failed checks for seven days belongs to `cleanup` (`dependencies` row); branches,
 stale plans, generated files, weight, links and dead code belong to `cleanup` (first Tuesday).
 
 ## Pick at most three, in this order
