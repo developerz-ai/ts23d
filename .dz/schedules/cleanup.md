@@ -34,8 +34,8 @@ change. Feature work and bugs belong to `improve`; a red `main` belongs to the p
 
 One PR, `chore: monthly cleanup <YYYY-MM>`, `bun run verify` green first. The body has one line per
 row: what was looked at, the numbers (tarball size, file count, branches deleted) and what changed,
-so next month's run compares against it. Deleting a branch is the only act outside the PR, and only
-for branches already merged. If every row is clean, open nothing and end the run summary with
+so next month's run compares against it. Deleting a branch and closing a Dependabot PR under the `dependencies` row are the only acts outside the PR,
+the first only for branches already merged; closing needs no cleanup PR. If every row is clean, open nothing and end the run summary with
 `clean: <rows checked>`.
 
 ## Rows

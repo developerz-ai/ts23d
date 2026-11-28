@@ -121,7 +121,9 @@ scout:
   survey: broken_only
 
 # devops: off (owner, 2026-11-26: one PR per advisory was too much noise). Advisories arrive through
-# Dependabot instead, one grouped security PR per ecosystem per run (.github/dependabot.yml).
+# Dependabot instead, one grouped security PR per ecosystem per run (.github/dependabot.yml). That covers
+# ts23d's dependencies, not an advisory against ts23d's own published package: that one reaches the repo
+# as a reported issue.
 devops:
   watch: "off"  # quoted: YAML 1.1 parsers read a bare off as false
 
