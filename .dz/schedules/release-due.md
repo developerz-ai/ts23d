@@ -18,6 +18,7 @@ git fetch --quiet --tags origin '+refs/heads/main:refs/remotes/origin/main'
 last=$(git tag --list 'v*' --sort=-v:refname | head -1)
 [ -n "$last" ] || { echo "no v* tag: unknown"; exit 1; }
 npm view "@developerz.ai/ts23d@${last#v}" version   # must print ${last#v}; otherwise file the ask and cut nothing
+npm view @developerz.ai/ts23d version               # the `latest` dist-tag: must print ${last#v} too; otherwise file the ask and cut nothing
 git log --oneline "$last"..origin/main
 gh run list --workflow ci.yml --branch main --event push --limit 1 --json conclusion,headSha
 ```
@@ -25,7 +26,7 @@ gh run list --workflow ci.yml --branch main --event push --limit 1 --json conclu
 Read the window's diffs and `## [Unreleased]` in `CHANGELOG.md`. Users get something from a release
 when the window holds a fix they can hit, a new primitive, kind, QA gate, export option or CLI flag,
 or a new recipe. Docs, CI, repo tooling and test-only changes do not earn one. A red `main`, or a
-`$last` npm does not serve, never gets a release: file the ask, cut nothing.
+`$last` npm does not serve or does not point `latest` at, never gets a release: file the ask, cut nothing.
 
 ## Cut
 
@@ -49,5 +50,5 @@ If no release is due, end the run summary with `no release: <reason>`.
 
 ## Rows
 
-- `release-window`: the window was read against a resolved `$last` that npm serves. A failed command is unknown, not "no release".
+- `release-window`: the window was read against a resolved `$last` that npm serves and tags `latest`. A failed command is unknown, not "no release".
 - `release-judged`: a release was cut and published, or the window holds nothing a user would notice.

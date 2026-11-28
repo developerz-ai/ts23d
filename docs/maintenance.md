@@ -14,7 +14,7 @@ notices. The lanes are developerz.ai checkups configured in
 | review + merge | every PR | reviews, drives `verify` green, merges (any author) | [`maintainer.yml`](../.dz/maintainer/maintainer.yml) `pr:` / `review:` |
 | triage | every issue | qualifies, asks for a repro, hands ready work to the coding fleet, sweeps stale | `maintainer.yml` `triage:` / `handoff:` |
 | red-main ask | every 5 min (platform `cron.base_red_ask`) | files a fix task when `main` is red (`ci`, `pages`) | the platform, not a brief |
-| `devops.watch: advisories` | platform | published advisories against what npm ships | [`maintainer.yml`](../.dz/maintainer/maintainer.yml) `devops:` |
+| Dependabot security updates (`devops.watch: off`) | Dependabot | published advisories against the lockfile, one grouped PR per ecosystem; not an advisory against ts23d's own package, which arrives as a reported issue | [`maintainer.yml`](../.dz/maintainer/maintainer.yml) `devops:` |
 | `release-due` | weekly (Mon) | judges whether users get something; cuts and merges `chore: release x.y.z`; the only lane that cuts a release | [`release-due.md`](../.dz/schedules/release-due.md) |
 | `improve` | twice a month (1st and 3rd Mon) | gate regressions, bugs, stale claims, one roadmap step | [`improve.md`](../.dz/schedules/improve.md) |
 | `cleanup` | monthly (1st Tue) | branches, stale plans, generated files, weight, links, dead code, the Bun pin; each January the yearly review below | [`cleanup.md`](../.dz/schedules/cleanup.md) |
