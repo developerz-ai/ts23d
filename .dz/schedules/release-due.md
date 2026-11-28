@@ -3,9 +3,8 @@
 Weekly checkup, Mondays 03:00 UTC, fired by `schedules: release-due`. The agent judges and, when a
 release is due, cuts it. This is the only lane that cuts a release, at most one a week (owner,
 2026-11-26): a merge, a fix, a fix count or an interactive session never cuts one, unless the owner
-explicitly asks for that specific release. The one off-cycle release is
-[`security-release.md`](security-release.md): a fix for a *published* first-tier advisory rated
-high or critical (CVSS ≥ 7.0) or KEV-listed, against what npm ships. Our own hardening with no
+explicitly asks for that specific release. A published high or critical (CVSS ≥ 7.0) or KEV-listed advisory against what npm ships is the one
+case for an off-cycle release, and only when the owner asks for it; our own hardening with no
 published advisory waits for Monday.
 
 A release is a merged `chore: release x.y.z` PR: `release-tag.yml` tags it and `release.yml` runs
@@ -18,7 +17,7 @@ publish or dispatch a workflow by hand; the merge does all of it.
 git fetch --quiet --tags origin '+refs/heads/main:refs/remotes/origin/main'
 last=$(git tag --list 'v*' --sort=-v:refname | head -1)
 [ -n "$last" ] || { echo "no v* tag: unknown"; exit 1; }
-npm view "@developerz.ai/ts23d@${last#v}" version   # must print ${last#v}; otherwise health owns it
+npm view "@developerz.ai/ts23d@${last#v}" version   # must print ${last#v}; otherwise file the ask and cut nothing
 git log --oneline "$last"..origin/main
 gh run list --workflow ci.yml --branch main --event push --limit 1 --json conclusion,headSha
 ```
@@ -26,7 +25,7 @@ gh run list --workflow ci.yml --branch main --event push --limit 1 --json conclu
 Read the window's diffs and `## [Unreleased]` in `CHANGELOG.md`. Users get something from a release
 when the window holds a fix they can hit, a new primitive, kind, QA gate, export option or CLI flag,
 or a new recipe. Docs, CI, repo tooling and test-only changes do not earn one. A red `main`, or a
-`$last` npm does not serve, never gets a release: that is `health`'s.
+`$last` npm does not serve, never gets a release: file the ask, cut nothing.
 
 ## Cut
 
@@ -40,7 +39,7 @@ In 0.x: patch for fixes only, minor for anything added or changed (a minor may b
 3. `bun run verify` green, then PR titled exactly `chore: release <next>`, body: the commits since
    `$last` and why this is a patch or a minor.
 4. Merge when the `verify` check is green; then confirm `release.yml` succeeded and
-   `npm view @developerz.ai/ts23d version` prints `<next>`. A failed publish is `health`'s next ask
+   `npm view @developerz.ai/ts23d version` prints `<next>`. A failed publish is filed as an ask by the next run
    and `PUBLISHING.md` has the recoveries.
 
 **1.0.0 is not the agent's call.** If the window would make it 1.0.0, file one issue,

@@ -93,25 +93,16 @@ schedules:
     days: [mon]
     hours_utc: [3]
     brief_file: .dz/schedules/release-due.md
-  # The one exception to the weekly slot: a fix for a published high/critical (CVSS >= 7.0) or
-  # KEV-listed advisory against what npm ships. Everything else waits for Monday.
-  - name: security-release
-    days: [tue, wed, thu, fri, sat, sun]
-    hours_utc: [5]
-    brief_file: .dz/schedules/security-release.md
-  # Weekly (owner, 2026-11-26: not so many daily PRs).
-  - name: health
-    days: [mon]
-    hours_utc: [7]
-    brief_file: .dz/schedules/health.md
-  # Monthly: the schema has weekdays, not days of the month, so these fire weekly and each brief
-  # acts only in the first week of the month (UTC day 1-7).
+  # Twice a month: `weeks_of_month` is the first and third Monday (decision of record 2026-11-28);
+  # cleanup is monthly, the first Tuesday.
   - name: improve
     days: [mon]
+    weeks_of_month: [1, 3]
     hours_utc: [8]
     brief_file: .dz/schedules/improve.md
   - name: cleanup
     days: [tue]
+    weeks_of_month: [1]
     hours_utc: [8]
     brief_file: .dz/schedules/cleanup.md
 
@@ -129,7 +120,12 @@ branches:
 scout:
   survey: broken_only
 
-# devops: off (owner, 2026-11-26: one PR per advisory was too much noise). Advisories arrive through
-# Dependabot instead, one grouped security PR per ecosystem per run (.github/dependabot.yml).
+# devops: advisories (decision of record 2026-11-28): ts23d ships to npm users, so the platform watches
+# published advisories itself; this replaces the retired daily security-release schedule. Dependabot
+# still groups the dependency bumps (.github/dependabot.yml).
 devops:
-  watch: "off"  # quoted: YAML 1.1 parsers read a bare off as false
+  watch: advisories
+
+# care: docs_drift off (47 tasks -> 8 docs-only merges, 33 failed over 30 days, both accounts).
+care:
+  docs_drift: "off"

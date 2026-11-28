@@ -1,10 +1,9 @@
-# Brief: monthly improvement
+# Brief: improvement
 
-Fired every Monday by `schedules: improve`. **Act only on the first Monday of the month:**
-`[ "$(date -u +%-d)" -le 7 ]`. On any other Monday stop here, file nothing, open nothing.
+Fired on the first and third Monday of each month by `schedules: improve` (`weeks_of_month: [1, 3]`).
 
-ts23d is maintained by agents only. Once a month, leave it measurably better. `CLAUDE.md` binds
-every change. A red `main`, a missing publish and a stuck Dependabot PR belong to `health`; branches,
+ts23d is maintained by agents only. Twice a month, leave it measurably better. `CLAUDE.md` binds
+every change. A red `main`, a missing publish and a stuck Dependabot PR belong to the platform's red-main ask and `release-due`; branches,
 stale plans, generated files, weight, links and dead code belong to `cleanup` (first Tuesday).
 
 ## Pick at most three, in this order

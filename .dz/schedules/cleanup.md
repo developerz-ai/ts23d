@@ -1,14 +1,10 @@
 # Brief: monthly repo hygiene
 
-Fired every Tuesday by `schedules: cleanup`. **Act only in the first week of the month:**
-
-```bash
-[ "$(date -u +%-d)" -le 7 ] || { echo "not the first Tuesday of the month: cleanup does nothing"; exit 0; }
-```
+Fired on the first Tuesday of each month by `schedules: cleanup` (`weeks_of_month: [1]`).
 
 ts23d is maintained by agents only. Once a month, sweep what accumulates when nobody owns it:
 branches, stale plans, generated files, weight, drifted docs and dead code. `CLAUDE.md` binds every
-change. Feature work and bugs belong to `improve`; a red `main` belongs to `health`.
+change. Feature work and bugs belong to `improve`; a red `main` belongs to the platform's red-main ask.
 
 ## Sweep
 

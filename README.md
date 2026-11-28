@@ -556,11 +556,11 @@ policy is committed in [`.dz/maintainer/maintainer.yml`](.dz/maintainer/maintain
 | an outside change to CI, release or publish automation | declined: the npm OIDC pipeline is the maintainers' |
 | a change that breaks a rule in `CLAUDE.md` (game code, runtime deps, decimation, non-determinism) | declined with the rule quoted |
 
-Scheduled checkups, briefs in [`.dz/schedules/`](.dz/schedules/): weekly `health` catches what nothing
-announces (red `main`, a gallery that did not deploy, a release npm does not serve); daily
-`security-release` ships only a fix for a published high/critical advisory off-cycle; weekly
-`release-due` (Monday) judges whether users get something and cuts the release, at most one a week; monthly `improve` lands up to three evidenced
-improvements; monthly `cleanup` sweeps branches, stale plans, weight, links, dead code, moves the
+Scheduled checkups, briefs in [`.dz/schedules/`](.dz/schedules/): a red `main` is filed by the platform's
+red-main ask (every 5 minutes) and published advisories by `devops.watch: advisories`; weekly
+`release-due` (Monday) judges whether users get something and cuts the release, at most one a week;
+`improve` (first and third Monday) lands up to three evidenced improvements; monthly `cleanup` (first
+Tuesday) sweeps branches, stale plans, weight, links, dead code, moves the
 Bun pin and, each January, reviews what a year wears out. [`docs/maintenance.md`](docs/maintenance.md)
 lists what decays over a decade and which lane catches each.
 

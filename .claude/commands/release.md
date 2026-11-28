@@ -6,8 +6,7 @@ argument-hint: <x.y.z>
 Version: $ARGUMENTS — follow `PUBLISHING.md`.
 
 Run this only when the owner explicitly asked for this specific release in this session. Otherwise a
-session never cuts one: releases come from the weekly Monday `release-due` checkup, or the strict
-security exception in `.dz/schedules/security-release.md` (owner, 2026-11-26).
+session never cuts one: releases come from the weekly Monday `release-due` checkup (owner, 2026-11-26).
 
 1. `bun run verify` on fresh main.
 2. `bun run release $ARGUMENTS` (stamps package.json + CHANGELOG), review the CHANGELOG section.
